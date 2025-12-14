@@ -28,7 +28,9 @@ import '../features/occurrences/presentation/occurrence_detail_screen.dart';
 import '../features/occurrences/presentation/new_occurrence_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
 import '../features/reports/presentation/visit_report_screen.dart';
-import '../features/clients/presentation/client_list_screen.dart';
+import '../features/clients/presentation/screens/client_list_screen_enhanced.dart';
+import '../features/clients/presentation/screens/client_detail_screen.dart';
+import '../features/clients/presentation/screens/client_form_screen.dart';
 import '../features/agenda/presentation/agenda_screen.dart';
 import 'package:soloforte_app/features/occurrences/domain/occurrence_model.dart';
 import 'package:latlong2/latlong.dart';
@@ -129,7 +131,28 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/dashboard/clients',
-            builder: (context, state) => const ClientListScreen(),
+            builder: (context, state) => const ClientListScreenEnhanced(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) => const ClientFormScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) =>
+                    ClientDetailScreen(clientId: state.pathParameters['id']!),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        ClientFormScreen(clientId: state.pathParameters['id']),
+                  ),
+                ],
+              ),
+            ],
           ),
           GoRoute(
             path: '/dashboard/calendar',

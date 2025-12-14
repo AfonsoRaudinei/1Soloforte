@@ -24,30 +24,31 @@ class _ClientListScreenState extends State<ClientListScreen> {
       name: 'Fazenda Santa Rita',
       email: 'contato@santarita.com.br',
       phone: '(16) 99999-8888',
+      cpfCnpj: '12.345.678/0001-90',
       address: 'Rod. SP-330, km 300, Ribeirão Preto - SP',
       city: 'Ribeirão Preto',
       state: 'SP',
       type: 'producer',
-      totalAreas: 12,
-      totalHectares: 2500.0,
       status: 'active',
       lastActivity: DateTime.now().subtract(const Duration(days: 2)),
+      farmIds: ['1', '2'],
       avatarUrl:
           'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?q=80&w=200&auto=format&fit=crop',
+      notes: 'Grande produtor de soja e milho',
     ),
     Client(
       id: '2',
       name: 'Agropecuária Boa Vista',
       email: 'financeiro@boavista.agr.br',
       phone: '(62) 98888-7777',
+      cpfCnpj: '98.765.432/0001-10',
       address: 'Zona Rural, Rio Verde - GO',
       city: 'Rio Verde',
       state: 'GO',
       type: 'producer',
-      totalAreas: 5,
-      totalHectares: 800.5,
       status: 'active',
       lastActivity: DateTime.now().subtract(const Duration(hours: 5)),
+      farmIds: ['3'],
       avatarUrl:
           'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop',
     ),
@@ -56,14 +57,14 @@ class _ClientListScreenState extends State<ClientListScreen> {
       name: 'Consultoria Solo Fértil',
       email: 'admin@solofertil.com',
       phone: '(34) 3333-2222',
+      cpfCnpj: '123.456.789-00',
       address: 'Uberaba - MG',
       city: 'Uberaba',
       state: 'MG',
       type: 'consultant',
-      totalAreas: 0,
-      totalHectares: 0,
       status: 'inactive',
       lastActivity: DateTime.now().subtract(const Duration(days: 45)),
+      farmIds: [],
     ),
   ];
 
@@ -138,9 +139,16 @@ class _ClientCard extends StatelessWidget {
             backgroundImage: client.avatarUrl != null
                 ? NetworkImage(client.avatarUrl!)
                 : null,
-            backgroundColor: Colors.grey[300],
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             child: client.avatarUrl == null
-                ? Text(client.name[0], style: const TextStyle(fontSize: 24))
+                ? Text(
+                    client.initials,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  )
                 : null,
           ),
           const SizedBox(width: 16),

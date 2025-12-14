@@ -81,7 +81,8 @@ dependencies:
   flutter_slidable: ^3.1.1
   workmanager: ^0.5.2
   flutter_local_notifications: ^18.0.1
-  syncfusion_flutter_pdfviewer: ^27.2.5
+  syncfusion_flutter_pdfviewer: ^31.2.18
+  mask_text_input_formatter: ^2.9.0
 
 dev_dependencies:
   flutter_test:
