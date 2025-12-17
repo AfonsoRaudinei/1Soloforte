@@ -15,8 +15,22 @@ import 'dart:io';
 
 class NewOccurrenceScreen extends ConsumerStatefulWidget {
   final Occurrence? initialOccurrence;
+  // Pre-filled data from other sources (e.g. Scanner)
+  final String? initialTitle;
+  final String? initialDescription;
+  final String? initialType;
+  final String? initialImagePath;
+  final double? initialSeverity;
 
-  const NewOccurrenceScreen({super.key, this.initialOccurrence});
+  const NewOccurrenceScreen({
+    super.key,
+    this.initialOccurrence,
+    this.initialTitle,
+    this.initialDescription,
+    this.initialType,
+    this.initialImagePath,
+    this.initialSeverity,
+  });
 
   @override
   ConsumerState<NewOccurrenceScreen> createState() =>
@@ -63,6 +77,17 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
       _longitude = occ.longitude;
       _existingImages = List.from(occ.images);
     } else {
+      // Pre-fill from arguments if available
+      if (widget.initialTitle != null)
+        _titleController.text = widget.initialTitle!;
+      if (widget.initialDescription != null)
+        _descriptionController.text = widget.initialDescription!;
+      if (widget.initialType != null) _selectedType = widget.initialType!;
+      if (widget.initialSeverity != null) _severity = widget.initialSeverity!;
+      if (widget.initialImagePath != null) {
+        _capturedImages.add(File(widget.initialImagePath!));
+      }
+
       _getCurrentLocation();
     }
   }

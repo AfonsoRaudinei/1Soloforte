@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/features/auth/presentation/auth_provider.dart';
 import 'package:soloforte_app/features/dashboard/presentation/side_menu.dart';
 
@@ -83,11 +82,7 @@ class DashboardLayout extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/dashboard/scanner'),
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.qr_code_scanner, color: Colors.white),
-      ),
+      // FAB removed to allow child screens to handle their own FABs
     );
   }
 

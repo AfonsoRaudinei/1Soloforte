@@ -12,7 +12,7 @@ import '../features/dashboard/presentation/executive_dashboard_screen.dart';
 import '../features/analysis/presentation/analysis_wizard_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/visits/presentation/check_in_screen.dart';
-import '../features/visits/presentation/active_visit_screen.dart';
+
 import '../features/visits/presentation/check_out_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 
@@ -44,6 +44,15 @@ import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../features/settings/presentation/settings_screen.dart';
+import 'package:soloforte_app/features/scanner/presentation/scan_result_screen.dart';
+import 'package:soloforte_app/features/scanner/domain/scan_result_model.dart';
+import 'package:soloforte_app/features/scanner/presentation/scan_history_screen.dart';
+import 'package:soloforte_app/features/scanner/presentation/pest_library_screen.dart';
+import 'package:soloforte_app/features/scanner/presentation/scanner_home_screen.dart';
+import 'package:soloforte_app/features/reports/presentation/reports_list_screen.dart';
+import 'package:soloforte_app/features/reports/presentation/new_report_screen.dart';
+import 'package:soloforte_app/features/reports/presentation/report_detail_screen.dart';
+import 'package:soloforte_app/features/visits/presentation/active_visit_screen.dart';
 
 // Keys
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -123,7 +132,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/occurrences/new',
             parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) => const NewOccurrenceScreen(),
+            builder: (context, state) {
+              final extras = state.extra as Map<String, dynamic>?;
+              return NewOccurrenceScreen(
+                initialTitle: extras?['title'],
+                initialDescription: extras?['description'],
+                initialType: extras?['type'],
+                initialImagePath: extras?['imagePath'],
+                initialSeverity: extras?['severity'],
+              );
+            },
           ),
           GoRoute(
             path: '/occurrences/edit',
@@ -245,12 +263,58 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dashboard/scanner',
         parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ScannerHomeScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/scanner/camera',
+        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ScannerScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/scanner/results',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          return ScanResultsScreen(
+            imagePath: args['imagePath'],
+            result: args['result'] as ScanResult,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/dashboard/scanner/history',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ScanHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/scanner/library',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const PestLibraryScreen(),
       ),
       GoRoute(
         path: '/check-in',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const CheckInScreen(),
+      ),
+
+      // Reports Feature
+      GoRoute(
+        path: '/reports',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ReportsListScreen(),
+      ),
+      GoRoute(
+        path: '/reports/new',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const NewReportScreen(),
+      ),
+      GoRoute(
+        path: '/reports/detail',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final report = state.extra as MockReport;
+          return ReportDetailScreen(report: report);
+        },
       ),
       GoRoute(
         path: '/visit/active',
