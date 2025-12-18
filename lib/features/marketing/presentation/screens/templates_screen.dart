@@ -34,87 +34,126 @@ class TemplatesScreen extends StatelessWidget {
   }
 
   Widget _buildTemplatesList(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.all(AppSpacing.md),
+    return Column(
       children: [
-        _buildSectionTitle('Dados e Resultados'),
-        SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildTemplateItem(
-              context,
-              'NDVI Graph',
-              Icons.show_chart,
-              TemplateType.ndviEvolution,
-            ),
-            _buildTemplateItem(
-              context,
-              'Antes/Depois',
-              Icons.compare,
-              TemplateType.beforeAfter,
-            ),
-            _buildTemplateItem(
-              context,
-              'Produtividade',
-              Icons.trending_up,
-              TemplateType.highlightResult,
-            ),
-          ],
-        ),
-        SizedBox(height: AppSpacing.lg),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.all(AppSpacing.md),
+            children: [
+              _buildSectionTitle('Dados e Resultados'),
+              SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildTemplateItem(
+                    context,
+                    'NDVI Graph',
+                    Icons.show_chart,
+                    TemplateType.ndviEvolution,
+                  ),
+                  _buildTemplateItem(
+                    context,
+                    'Antes/Depois',
+                    Icons.compare,
+                    TemplateType.beforeAfter,
+                  ),
+                  _buildTemplateItem(
+                    context,
+                    'Produtividade',
+                    Icons.trending_up,
+                    TemplateType.highlightResult,
+                  ),
+                ],
+              ),
+              SizedBox(height: AppSpacing.lg),
 
-        _buildSectionTitle('Safra e Plantio'),
-        SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildTemplateItem(
-              context,
-              'Início Safra',
-              Icons.grass,
-              TemplateType.generic,
-            ),
-            _buildTemplateItem(
-              context,
-              'Colheita',
-              Icons.agriculture,
-              TemplateType.generic,
-            ),
-            _buildTemplateItem(
-              context,
-              'Chuva',
-              Icons.water_drop,
-              TemplateType.generic,
-            ),
-          ],
-        ),
-        SizedBox(height: AppSpacing.lg),
+              _buildSectionTitle('Safra e Plantio'),
+              SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildTemplateItem(
+                    context,
+                    'Início Safra',
+                    Icons.grass,
+                    TemplateType.generic,
+                  ),
+                  _buildTemplateItem(
+                    context,
+                    'Colheita',
+                    Icons.agriculture,
+                    TemplateType.generic,
+                  ),
+                  _buildTemplateItem(
+                    context,
+                    'Chuva',
+                    Icons.water_drop,
+                    TemplateType.generic,
+                  ),
+                ],
+              ),
+              SizedBox(height: AppSpacing.lg),
 
-        _buildSectionTitle('Stories'),
-        SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildTemplateItem(
-              context,
-              'Dica Rápida',
-              Icons.lightbulb,
-              TemplateType.story,
+              _buildSectionTitle('Stories'),
+              SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildTemplateItem(
+                    context,
+                    'Dica Rápida',
+                    Icons.lightbulb,
+                    TemplateType.story,
+                  ),
+                  _buildTemplateItem(
+                    context,
+                    'Alerta Clima',
+                    Icons.warning,
+                    TemplateType.story,
+                  ),
+                  _buildTemplateItem(
+                    context,
+                    'Cotação',
+                    Icons.attach_money,
+                    TemplateType.story,
+                  ),
+                ],
+              ),
+              SizedBox(height: AppSpacing.lg),
+
+              _buildSectionTitle('Personalizados'),
+              SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  // Placeholder for custom templates
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12.0),
+                    child: Text(
+                      'Nenhum template salvo.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.all(AppSpacing.md),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // Navigate to template creator
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Criar Meu Template'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
             ),
-            _buildTemplateItem(
-              context,
-              'Alerta Clima',
-              Icons.warning,
-              TemplateType.story,
-            ),
-            _buildTemplateItem(
-              context,
-              'Cotação',
-              Icons.attach_money,
-              TemplateType.story,
-            ),
-          ],
+          ),
         ),
       ],
     );

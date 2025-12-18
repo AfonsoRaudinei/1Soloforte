@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
-import 'package:soloforte_app/core/theme/app_spacing.dart';
-import 'widgets/weather_radar.dart';
-import 'widgets/forecast_list.dart';
-import 'widgets/hourly_forecast.dart';
-import 'widgets/hourly_forecast_chart.dart';
-import 'widgets/weather_alerts.dart';
-import 'widgets/current_conditions_card.dart';
+import 'package:soloforte_app/core/theme/app_typography.dart';
+import 'package:soloforte_app/features/weather/domain/weather_model.dart';
+import 'package:soloforte_app/features/weather_radar/presentation/weather_radar_screen.dart';
 import 'widgets/notification_settings_modal.dart';
-import 'widgets/farm_management_modal.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../application/weather_provider.dart';
+import 'weather_next_24h_screen.dart';
+import 'weather_next_7d_screen.dart';
 
 class WeatherScreen extends ConsumerStatefulWidget {
   const WeatherScreen({super.key});
@@ -22,12 +20,10 @@ class WeatherScreen extends ConsumerStatefulWidget {
   ConsumerState<WeatherScreen> createState() => _WeatherScreenState();
 }
 
-class _WeatherScreenState extends ConsumerState<WeatherScreen>
-    with TickerProviderStateMixin {
+class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   String _location = 'CARREGANDO...';
   double? _latitude;
   double? _longitude;
-  List<String> _savedFarms = ['FAZENDA MODELO - SORRISO', 'SEDE - SINOP'];
 
   @override
   void initState() {
@@ -40,12 +36,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       bool serviceEnabled;
       LocationPermission permission;
 
-      // Test if location services are enabled.
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        setState(() {
-          _location = 'GPS DESATIVADO';
-        });
+        if (mounted) setState(() => _location = 'GPS DESATIVADO');
         return;
       }
 
@@ -53,17 +46,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          setState(() {
-            _location = 'PERMISSÃO NEGADA';
-          });
+          if (mounted) setState(() => _location = 'PERMISSÃO NEGADA');
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        setState(() {
-          _location = 'PERMISSÃO NEGADA';
-        });
+        if (mounted) setState(() => _location = 'PERMISSÃO NEGADA');
         return;
       }
 
@@ -87,21 +76,22 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
           final city =
               place.subAdministrativeArea ?? place.locality ?? 'Desconhecido';
           final state = place.administrativeArea ?? '';
-          setState(() {
-            _location = '$city, $state'.toUpperCase();
-          });
+          if (mounted) {
+            setState(() {
+              _location = '$city, $state'.toUpperCase();
+            });
+          }
         }
       } catch (e) {
-        // Fallback if geocoding fails (e.g. no internet)
-        setState(() {
-          _location =
-              '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}';
-        });
+        if (mounted) {
+          setState(() {
+            _location =
+                '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}';
+          });
+        }
       }
     } catch (e) {
-      setState(() {
-        _location = 'ERRO AO OBTER LOCAL';
-      });
+      if (mounted) setState(() => _location = 'ERRO AO OBTER LOCAL');
       debugPrint('Location error: $e');
     }
   }
@@ -146,17 +136,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
   Future<void> _searchLocation(String query) async {
     if (query.isEmpty) return;
 
-    setState(() {
-      _location = 'BUSCANDO...';
-    });
+    setState(() => _location = 'BUSCANDO...');
 
     try {
       List<Location> locations = await locationFromAddress(query);
       if (locations.isNotEmpty) {
-        // Get the first result coordinates
         final loc = locations.first;
-
-        // Reverse geocode to get formatted address
         List<Placemark> placemarks = await placemarkFromCoordinates(
           loc.latitude,
           loc.longitude,
@@ -177,23 +162,18 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
         }
       } else {
         if (mounted) {
-          setState(() {
-            _location = 'NÃO ENCONTRADO';
-          });
+          setState(() => _location = 'NÃO ENCONTRADO');
         }
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _location = 'ERRO NA BUSCA';
-        });
+        setState(() => _location = 'ERRO NA BUSCA');
         debugPrint('Search error: $e');
       }
     }
   }
 
   Future<void> _refresh() async {
-    // Refresh location (real fetch)
     await _initLocation();
     if (_latitude != null && _longitude != null) {
       return ref.refresh(
@@ -202,40 +182,14 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     }
   }
 
-  void _showFarmManagementModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return FarmManagementModal(
-          currentLocation: _location,
-          savedFarms: _savedFarms,
-          onLocationSelected: (location) {
-            setState(() {
-              _location = location;
-            });
-          },
-          onFarmsUpdated: (farms) {
-            setState(() {
-              _savedFarms = farms;
-            });
-          },
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_latitude == null || _longitude == null) {
-      // Check if location is error
       if (_location.contains('ERRO') ||
           _location.contains('NEGADA') ||
           _location.contains('DESATIVADO')) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Clima e Tempo')),
+          appBar: AppBar(title: const Text('Clima')),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -264,101 +218,190 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, stack) => Scaffold(
-        appBar: AppBar(title: const Text('Clima e Tempo')),
-        body: Center(child: Text('Erro ao carregar clima: $err')),
+        appBar: AppBar(title: const Text('Clima')),
+        body: Center(child: Text('Erro: $err')),
       ),
-      data: (currentForecast) {
+      data: (forecast) {
         return Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBar(
-            title: const Text('Clima e Tempo'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.pop(),
+            ),
+            title: const Text('Clima'),
             actions: [
               IconButton(
-                icon: const Icon(Icons.search),
+                icon: const Icon(Icons.location_on),
                 onPressed: () => _showSearchDialog(context),
               ),
               IconButton(
-                icon: const Icon(Icons.notifications_active_outlined),
-                onPressed: () => _showNotificationSettings(context),
+                icon: const Icon(Icons.settings),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (c) => const NotificationSettingsModal(),
+                  );
+                },
               ),
             ],
           ),
-          body: DefaultTabController(
-            length: 3,
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: NestedScrollView(
-                headerSliverBuilder: (context, innerBoxIsScrolled) {
-                  return [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.xl),
-                        child: Column(
-                          children: [
-                            // High Priority Alert Banner
-                            HighPriorityAlertBanner(
-                              alerts: currentForecast.alerts,
-                            ),
+          body: RefreshIndicator(
+            onRefresh: _refresh,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _location,
+                        style: AppTypography.h3.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Atualizado há 5 min', style: AppTypography.caption),
+                  const SizedBox(height: 24),
 
-                            // Current Conditions Card
-                            CurrentConditionsCard(
-                              forecast: currentForecast,
-                              location: _location,
-                              onLocationTap: () =>
-                                  _showFarmManagementModal(context),
-                            ),
+                  // Box 1: Condition & Temp
+                  _buildAsciiBox(
+                    child: Column(
+                      children: [
+                        Icon(
+                          _getWeatherIcon(forecast.condition),
+                          size: 64,
+                          color: Colors.orange,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${forecast.currentTemp.round()}°C',
+                          style: AppTypography.display1,
+                        ),
+                        Text(forecast.condition, style: AppTypography.h3),
+                        Text(
+                          'Sensação: ${forecast.feelsLike.round()}°C',
+                          style: AppTypography.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
-                            // Alerts
-                            if (currentForecast.alerts.isNotEmpty) ...[
-                              const SizedBox(height: 24),
-                              WeatherAlertsWidget(
-                                alerts: currentForecast.alerts,
+                  // Box 2: Details
+                  _buildAsciiBoxWithHeader(
+                    title: 'Detalhes',
+                    content: Column(
+                      children: [
+                        _buildDetailLine(
+                          Icons.air,
+                          'Vento: ${forecast.windSpeed} km/h ${forecast.windDirection}',
+                        ),
+                        _buildDetailLine(
+                          Icons.water_drop,
+                          'Umidade: ${forecast.humidity}%',
+                        ),
+                        _buildDetailLine(
+                          Icons.umbrella,
+                          'Chuva: ${forecast.precipitation} mm',
+                        ),
+                        _buildDetailLine(Icons.explore, 'Pressão: 1013 hPa'),
+                        _buildDetailLine(
+                          Icons.visibility,
+                          'Visibilidade: ${forecast.visibility} km',
+                        ),
+                        _buildDetailLine(
+                          Icons.cloud,
+                          'Nuvens: ${forecast.cloudCover}%',
+                        ),
+                        _buildDetailLine(
+                          Icons.wb_sunny,
+                          'UV: ${forecast.uvIndex.round()} (${_getUVLabel(forecast.uvIndex)})',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Box 3: Alerts
+                  if (forecast.alerts.isNotEmpty)
+                    _buildAlertBox(forecast.alerts.first),
+
+                  const SizedBox(height: 32),
+
+                  // Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    WeatherNext24hScreen(forecast: forecast),
                               ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    SliverPersistentHeader(
-                      delegate: _SliverAppBarDelegate(
-                        TabBar(
-                          labelColor: AppColors.primary,
-                          unselectedLabelColor: Colors.grey,
-                          indicatorColor: AppColors.primary,
-                          tabs: const [
-                            Tab(text: '24 Horas'),
-                            Tab(text: '7 Dias'),
-                            Tab(text: 'Radar'),
-                          ],
-                        ),
-                      ),
-                      pinned: true,
-                    ),
-                  ];
-                },
-                body: TabBarView(
-                  children: [
-                    // Hourly Tab
-                    SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        children: [
-                          HourlyForecastWidget(
-                            forecast: currentForecast.hourly,
+                            );
+                          },
+                          icon: const Icon(Icons.umbrella),
+                          label: const Text('Próximas 24h'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          const SizedBox(height: 24),
-                          HourlyForecastChart(forecast: currentForecast.hourly),
-                        ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    WeatherNext7dScreen(forecast: forecast),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.calendar_today),
+                          label: const Text('7 Dias'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const WeatherRadarScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.radar),
+                      label: const Text('Radar de Clima'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
                       ),
                     ),
-                    // Daily Tab
-                    SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: ForecastList(forecast: currentForecast.daily),
-                    ),
-                    // Radar Tab
-                    const WeatherRadarWidget(),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -367,45 +410,134 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen>
     );
   }
 
-  void _showNotificationSettings(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const NotificationSettingsModal(),
+  Widget _buildAsciiBox({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade400, width: 1.5),
+        borderRadius: BorderRadius.circular(4),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(2, 2),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
-}
 
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
-
-  _SliverAppBarDelegate(this._tabBar);
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height + 1;
-
-  @override
-  double get maxExtent => _tabBar.preferredSize.height + 1;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
+  Widget _buildAsciiBoxWithHeader({
+    required String title,
+    required Widget content,
+  }) {
     return Container(
-      color: Colors.grey[50], // Match background color to scaffold
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade400, width: 1.5),
+        borderRadius: BorderRadius.circular(4),
+        color: Colors.white,
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _tabBar,
-          const Divider(height: 1, color: Colors.grey),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade400)),
+            ),
+            child: Text(
+              title,
+              style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Padding(padding: const EdgeInsets.all(16), child: content),
         ],
       ),
     );
   }
 
-  @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
+  Widget _buildDetailLine(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.grey[700]),
+          const SizedBox(width: 12),
+          Text(text, style: AppTypography.bodyMedium.copyWith(fontSize: 15)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlertBox(WeatherAlert alert) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.red.shade300),
+        borderRadius: BorderRadius.circular(4),
+        color: Colors.red.shade50,
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.red.shade200)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(
+                  'ALERTAS (1)',
+                  style: AppTypography.label.copyWith(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  alert.title,
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text('Amanhã às 18h', style: AppTypography.bodySmall),
+                Text(alert.description, style: AppTypography.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getWeatherIcon(String condition) {
+    final c = condition.toLowerCase();
+    if (c.contains('rain') || c.contains('chuva')) return Icons.water_drop;
+    if (c.contains('cloud') || c.contains('nuv')) return Icons.cloud;
+    if (c.contains('storm') || c.contains('tempestade')) {
+      return Icons.thunderstorm;
+    }
+    return Icons.wb_sunny;
+  }
+
+  String _getUVLabel(double uv) {
+    if (uv < 3) return 'Baixo';
+    if (uv < 6) return 'Moderado';
+    if (uv < 8) return 'Alto';
+    return 'Muito Alto';
   }
 }

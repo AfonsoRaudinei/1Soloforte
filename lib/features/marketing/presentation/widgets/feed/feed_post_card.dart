@@ -11,6 +11,8 @@ class FeedPostCard extends StatefulWidget {
   final VoidCallback? onComment;
   final VoidCallback? onShare;
   final VoidCallback? onFollow;
+  final bool isMine;
+  final VoidCallback? onEdit;
 
   const FeedPostCard({
     super.key,
@@ -19,6 +21,8 @@ class FeedPostCard extends StatefulWidget {
     this.onComment,
     this.onShare,
     this.onFollow,
+    this.isMine = false,
+    this.onEdit,
   });
 
   @override
@@ -33,7 +37,6 @@ class _FeedPostCardState extends State<FeedPostCard> {
   @override
   void initState() {
     super.initState();
-    // Simulate current user state
     isLiked = false;
     likeCount = widget.post.likes;
   }
@@ -51,21 +54,164 @@ class _FeedPostCardState extends State<FeedPostCard> {
       isFollowing = !isFollowing;
     });
     widget.onFollow?.call();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isFollowing
-              ? 'Você agora segue ${widget.post.authorName}'
-              : 'Você deixou de seguir ${widget.post.authorName}',
-        ),
-        duration: const Duration(seconds: 1),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isMine) {
+      return _buildMyPostLayout();
+    }
+    return _buildFeedLayout(); // Logic from original code or kept separate if needed
+  }
+
+  Widget _buildMyPostLayout() {
+    return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Image
+          if (widget.post.imageUrls.isNotEmpty)
+            SizedBox(
+              height: 200,
+              width: double.infinity,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: widget.post.imageUrls.first.startsWith('http')
+                    ? Image.network(
+                        widget.post.imageUrls.first,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.asset(
+                        'assets/images/placeholder_field.png',
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+
+          if (widget.post.imageUrls.isNotEmpty)
+            const Divider(height: 1, color: Colors.grey),
+
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 2. Title / Status Line
+                if (widget.post.title.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Text(
+                      '🌾 ${widget.post.title}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+
+                // 3. Body
+                Text(widget.post.content, style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 8),
+
+                // 4. Hashtags
+                if (widget.post.tags.isNotEmpty)
+                  Wrap(
+                    spacing: 4,
+                    children: widget.post.tags
+                        .map(
+                          (tag) => Text(
+                            tag,
+                            style: TextStyle(color: AppColors.primary),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                const SizedBox(height: 16),
+
+                // 5. Stats
+                Row(
+                  children: [
+                    Icon(
+                      isLiked ? Icons.favorite : Icons.favorite_border,
+                      size: 16,
+                      color: isLiked ? Colors.red : Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Text('$likeCount'), // ❤️ 45
+                    const SizedBox(width: 16),
+                    const Icon(
+                      Icons.chat_bubble_outline,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Text('${widget.post.comments}'), // 💬 8
+                    const SizedBox(width: 16),
+                    const Icon(Icons.share, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    const Text('12'), // Mock share count 📤 12
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // 6. Footer (Time | Actions)
+                Row(
+                  children: [
+                    Text(
+                      timeago.format(
+                        widget.post.createdAt,
+                        locale: 'pt_BR',
+                      ), // 2 horas atrás
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    const Spacer(),
+                    Container(
+                      height: 30, // constrain height
+                      child: TextButton(
+                        onPressed: widget.onEdit,
+                        child: const Text(
+                          '[Editar]',
+                        ), // Using brackets as per ASCII
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      height: 30,
+                      child: TextButton(
+                        onPressed: widget.onShare,
+                        child: const Text('[Compartilhar]'),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedLayout() {
+    // Original implementation for general feed
     return Card(
       margin: EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -208,7 +354,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
       ),
     );
   }
-}
+} // End State
 
 class _InteractionButton extends StatelessWidget {
   final IconData icon;

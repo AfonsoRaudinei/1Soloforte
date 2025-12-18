@@ -23,6 +23,9 @@ import '../features/team/presentation/sos_screen.dart';
 import '../features/analysis/presentation/analysis_wizard_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/visits/presentation/check_in_screen.dart';
+import '../features/visits/presentation/visit_dashboard_screen.dart';
+import '../features/visits/presentation/visit_detail_screen.dart';
+import '../features/visits/domain/visit_model.dart';
 
 import '../features/visits/presentation/check_out_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
@@ -398,6 +401,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ActiveVisitScreen(),
       ),
       GoRoute(
+        path: '/visit/dashboard',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const VisitDashboardScreen(),
+      ),
+      GoRoute(
         path: '/visit/checkout',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const CheckOutScreen(),
@@ -406,6 +414,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/analysis/new',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AnalysisWizardScreen(),
+      ),
+      GoRoute(
+        path: '/visit/detail',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final visit = state.extra as Visit;
+          return VisitDetailScreen(visit: visit);
+        },
       ),
     ],
   );

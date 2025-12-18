@@ -1,11 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/visits/presentation/visit_controller.dart';
-import 'package:soloforte_app/features/visits/presentation/widgets/visit_summary_card.dart';
 
 class CheckOutScreen extends ConsumerStatefulWidget {
   const CheckOutScreen({super.key});
@@ -60,45 +58,65 @@ class _CheckOutScreenState extends ConsumerState<CheckOutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header / Resumo
-                VisitSummaryCard(
-                  clientName: visit.client.name,
-                  duration: durationStr,
-                  photosCount: visit.photos.length,
-                  occurrencesCount: visit.occurrenceIds.length,
-                ),
-                const SizedBox(height: 24),
-
-                // Photos Preview
-                if (visit.photos.isNotEmpty) ...[
-                  Text('Fotos da Visita', style: AppTypography.h3),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 100,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: visit.photos.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        return Container(
-                          width: 100,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            image: DecorationImage(
-                              image: FileImage(File(visit.photos[index])),
-                              fit: BoxFit.cover,
+                // Header Information
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Check-in realizado às ${DateTime.now().subtract(Duration(hours: 1, minutes: 45)).toString().substring(11, 16)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Tempo: $durationStr',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Talhão Norte',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(visit.client.name),
+                            const Text(
+                              'Visita técnica',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                ],
+                ),
 
-                // Checklist
-                Text('Atividades Realizadas', style: AppTypography.h3),
+                const Text(
+                  'Atividades Realizadas',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 8),
                 Card(
                   elevation: 0,
@@ -140,6 +158,68 @@ class _CheckOutScreenState extends ConsumerState<CheckOutScreen> {
                     fillColor: Colors.grey[50],
                   ),
                 ),
+                const SizedBox(height: 24),
+
+                // Next Action
+                Text('Próxima Ação', style: AppTypography.h3),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'follow_up_7',
+                      child: Text('Follow-up em 7 dias'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'follow_up_14',
+                      child: Text('Follow-up em 14 dias'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'application',
+                      child: Text('Agendar Aplicação'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'harvest',
+                      child: Text('Agendar Colheita'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'none',
+                      child: Text('Nenhuma ação imediata'),
+                    ),
+                  ],
+                  onChanged: (val) {},
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                  ),
+                  hint: const Text('Selecione a próxima ação'),
+                ),
+                const SizedBox(height: 24),
+
+                // Footer Options
+                CheckboxListTile(
+                  value: true,
+                  onChanged: (v) {},
+                  title: const Text('Gerar relatório automático'),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                CheckboxListTile(
+                  value: true,
+                  onChanged: (v) {},
+                  title: const Text('Enviar para cliente'),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                CheckboxListTile(
+                  value: false,
+                  onChanged: (v) {},
+                  title: const Text('Agendar próxima visita'),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+
                 const SizedBox(height: 32),
 
                 // Actions

@@ -7,9 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_spacing.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
-import 'package:soloforte_app/features/marketing/presentation/widgets/stamps/location_stamp.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/stamps/ndvi_chart_stamp.dart';
-import 'package:soloforte_app/features/marketing/presentation/widgets/stamps/productivity_stamp.dart';
 
 class ImageEditorScreen extends StatefulWidget {
   final XFile imageFile;
@@ -45,23 +43,17 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white), // [×]
+          onPressed: () => Navigator.pop(context),
+        ),
         backgroundColor: Colors.black,
         title: const Text('Editar Foto', style: TextStyle(color: Colors.white)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.undo),
-            onPressed: _layers.isNotEmpty
-                ? () {
-                    setState(() {
-                      _layers.removeLast();
-                    });
-                  }
-                : null,
-          ),
-          TextButton(
+          TextButton.icon(
             onPressed: _saveImage,
-            child: const Text(
+            icon: const Icon(Icons.check, color: AppColors.primary),
+            label: const Text(
               'Salvar',
               style: TextStyle(
                 color: AppColors.primary,
@@ -182,13 +174,11 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildToolIcon(Icons.palette, 'Filtros'),
-                _buildToolIcon(Icons.tune, 'Ajustes'),
-                _buildToolIcon(Icons.crop, 'Crop'),
-                _buildToolIcon(Icons.text_fields, 'Texto'),
-                _buildToolIcon(Icons.emoji_emotions, 'Sticker'),
-                _buildToolIcon(Icons.data_usage, 'Dados'),
-                _buildToolIcon(Icons.branding_watermark, 'Marca'),
+                _buildToolIcon(Icons.palette, 'Filtros'), // [🎨]
+                _buildToolIcon(Icons.crop, 'Crop'), // [✂️]
+                _buildToolIcon(Icons.text_fields, 'Texto'), // [📝]
+                _buildToolIcon(Icons.tune, 'Ajustes'), // [🔧]
+                _buildToolIcon(Icons.auto_fix_high, 'Magia'), // [✨]
               ],
             ),
           ),
@@ -199,6 +189,53 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
             color: Colors.black,
             padding: EdgeInsets.all(AppSpacing.md),
             child: _buildControlPanel(),
+          ),
+
+          // Bottom Actions
+          Container(
+            color: Colors.black,
+            padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                TextButton.icon(
+                  onPressed: _layers.isNotEmpty
+                      ? () => setState(() => _layers.removeLast())
+                      : null,
+                  icon: const Icon(Icons.undo, color: Colors.white70, size: 20),
+                  label: const Text(
+                    'Desfazer',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: null, // Placeholder for Redo
+                  icon: const Icon(Icons.redo, color: Colors.white30, size: 20),
+                  label: const Text(
+                    'Refazer',
+                    style: TextStyle(color: Colors.white30),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    _brightness = 0;
+                    _contrast = 1;
+                    _saturation = 1;
+                    _currentFilter = _noFilter;
+                    _layers.clear();
+                  }),
+                  icon: const Icon(
+                    Icons.refresh,
+                    color: Colors.redAccent,
+                    size: 20,
+                  ),
+                  label: const Text(
+                    'Resetar',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -227,7 +264,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
             ),
           ],
         );
-      case 'Ajustes':
+      case 'Ajustes': // [🔧]
         return Column(
           children: [
             _sliderRow(
@@ -244,6 +281,22 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
               0.0,
               3.0,
               (v) => _saturation = v,
+            ),
+            // Watermark toggle moved here or under Magic? ASCII puts watermark as tool or detailed control.
+            // Let's add it here for utility.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Marca d\'água',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+                Switch(
+                  value: _showWatermark,
+                  onChanged: (v) => setState(() => _showWatermark = v),
+                  activeColor: AppColors.primary,
+                ),
+              ],
             ),
           ],
         );
@@ -285,81 +338,100 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
             ],
           ),
         );
-      case 'Sticker':
+      case 'Magia': // [✨]
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Adicionar Sticker',
-              style: TextStyle(color: Colors.white),
+              'Templates SoloForte:',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Expanded(
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _stickerButton('🌾'),
+                  _templatePreviewButton('1', Colors.green),
+                  _templatePreviewButton('2', Colors.blue),
+                  _templatePreviewButton('3', Colors.orange),
+                  Container(
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.apps, color: Colors.white),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Ver +',
+                          style: TextStyle(color: Colors.white, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const VerticalDivider(
+                    color: Colors.grey,
+                    indent: 10,
+                    endIndent: 10,
+                  ),
+                  // Re-add Stickers/Data access here
                   _stickerButton('🚜'),
                   _stickerButton('📍'),
-                  _stickerButton('💪'),
-                  _stickerButton('🌞'),
-                  _stickerButton('🌧️'),
-                  _stickerButton('📈'),
-                  _stickerButton('⚠️'),
-                  _stickerButton('✅'),
-                  _stickerButton('SoloForte'),
-                ],
-              ),
-            ),
-          ],
-        );
-      case 'Dados':
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Adicionar Dados',
-              style: TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
                   _dataButton('NDVI', const NdviChartStamp()),
-                  _dataButton('Location', const LocationStamp()),
-                  _dataButton('Produt.', const ProductivityStamp()),
                 ],
               ),
-            ),
-          ],
-        );
-      case 'Marca':
-        return Column(
-          children: [
-            SwitchListTile(
-              title: const Text(
-                'Marca d\'água',
-                style: TextStyle(color: Colors.white),
-              ),
-              value: _showWatermark,
-              onChanged: (v) => setState(() => _showWatermark = v),
-              activeColor: AppColors.primary,
-            ),
-            SwitchListTile(
-              title: const Text(
-                'Logo do App',
-                style: TextStyle(color: Colors.white),
-              ),
-              value: _showLogo,
-              onChanged: (v) => setState(() => _showLogo = v),
-              activeColor: AppColors.primary,
             ),
           ],
         );
       default:
         return Container();
     }
+  }
+
+  Widget _templatePreviewButton(String label, Color color) {
+    return GestureDetector(
+      onTap: () {},
+      child: Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Column(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.3),
+                border: Border.all(color: color),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Template',
+              style: TextStyle(color: Colors.white, fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // --- Helpers ---

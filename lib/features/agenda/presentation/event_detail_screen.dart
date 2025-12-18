@@ -5,8 +5,6 @@ import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:soloforte_app/features/agenda/presentation/extensions/event_type_extension.dart';
-import 'package:soloforte_app/shared/widgets/primary_button.dart';
-import 'package:soloforte_app/shared/widgets/app_card.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final Event event;
@@ -28,277 +26,275 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = _event.type.color;
-    final duration = _event.endTime.difference(_event.startTime);
+    // ╔═════════════════════════════╗
+    // ║ Informações                 ║
+    // ╠═════════════════════════════╣
+    // ...
+    // ASCII style suggests structured boxes with headers.
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.grey[50], // Light background for contrast
       appBar: AppBar(
-        title: const Text('Detalhes do Evento'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back), // [←]
+          onPressed: () => context.pop(),
+        ),
+        title: Text(_event.title),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
+          TextButton.icon(
+            // [✏️ Editar]
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Editar evento (Em breve)')),
-              );
+              // Edit action
             },
+            icon: const Icon(Icons.edit, size: 16),
+            label: const Text('Editar'),
           ),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Card
-            AppCard(
-              child: Column(
+            // • VISITA TÉCNICA (Type Header)
+            Row(
+              children: [
+                Icon(_event.type.icon, size: 16, color: _event.type.color),
+                const SizedBox(width: 8),
+                Text(
+                  _event.type.label.toUpperCase(),
+                  style: AppTypography.label.copyWith(
+                    color: _event.type.color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(),
+            const SizedBox(height: 16),
+
+            // Box: Informações
+            // ║ 📅 28/Outubro/2025
+            // ║ 🕐 09:00 - 11:00 (2h)
+            // ║ 👤 João Silva
+            // ║ 📍 Talhão Norte - 45.3 ha
+            // ║ 🏡 Fazenda Boa Vista
+            _buildAsciiBox(
+              title: 'Informações',
+              content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: typeColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _event.type.icon,
-                          color: typeColor,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(_event.title, style: AppTypography.h3),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: typeColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                _event.type.label.toUpperCase(),
-                                style: AppTypography.caption.copyWith(
-                                  color: typeColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 32),
-                  _buildInfoRow(
-                    Icons.access_time,
-                    'Horário',
-                    '${DateFormat('HH:mm').format(_event.startTime)} - ${DateFormat('HH:mm').format(_event.endTime)} (${duration.inHours}h ${duration.inMinutes % 60}min)',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(
+                  _buildInfoLine(
                     Icons.calendar_today,
-                    'Data',
                     DateFormat(
-                      "d 'de' MMMM 'de' y",
+                      "dd/MMMM/yyyy",
                       'pt_BR',
                     ).format(_event.startTime),
                   ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(
-                    Icons.location_on,
-                    'Localização',
-                    _event.location,
-                    action: TextButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Abrindo Rota...')),
-                        );
-                      },
-                      child: const Text('Ver no Mapa'),
-                    ),
+                  _buildInfoLine(
+                    Icons.access_time,
+                    '${DateFormat('HH:mm').format(_event.startTime)} - ${DateFormat('HH:mm').format(_event.endTime)} (${_event.endTime.difference(_event.startTime).inHours}h)',
                   ),
+                  _buildInfoLine(
+                    Icons.person,
+                    'João Silva (Mock)',
+                  ), // Producer not in Event model yet, mocking
+                  _buildInfoLine(Icons.location_on, _event.location),
+                  _buildInfoLine(Icons.home, 'Fazenda Boa Vista (Mock)'),
                 ],
               ),
             ),
             const SizedBox(height: 16),
 
-            // Description
-            if (_event.description.isNotEmpty) ...[
-              Text('Descrição', style: AppTypography.h4),
-              const SizedBox(height: 8),
-              AppCard(
-                child: Text(
+            // Box: Objetivo (Description)
+            if (_event.description.isNotEmpty)
+              _buildAsciiBox(
+                title: 'Objetivo',
+                content: Text(
                   _event.description,
                   style: AppTypography.bodyMedium,
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
+            if (_event.description.isNotEmpty) const SizedBox(height: 16),
 
-            // Checklist (Mock for now, can be updated to use real ChecklistItem from model)
-            Text('Checklist de Atividades', style: AppTypography.h4),
-            const SizedBox(height: 8),
-            AppCard(
-              child: Column(
+            // Box: Checklist (Mock)
+            // ║ ☐ Inspeção visual
+            // ║ ☐ Coleta de amostras
+            _buildAsciiBox(
+              title: 'Checklist de Atividades',
+              content: Column(
                 children: [
-                  _buildChecklistItem('Verificar condições climáticas', true),
-                  const Divider(),
-                  _buildChecklistItem('Inspecionar equipamentos', false),
-                  const Divider(),
-                  _buildChecklistItem('Coletar amostras', false),
-                  const Divider(),
-                  _buildChecklistItem('Preencher relatório de visita', false),
+                  _buildCheckItem('Inspeção visual'),
+                  _buildCheckItem('Coleta de amostras'),
+                  _buildCheckItem('Fotos das áreas afetadas'),
+                  _buildCheckItem('Medição de severidade'),
+                  _buildCheckItem('Recomendação escrita'),
                 ],
               ),
             ),
             const SizedBox(height: 16),
 
-            // Weather (Mock)
-            Text('Previsão do Tempo', style: AppTypography.h4),
-            const SizedBox(height: 8),
-            AppCard(
-              child: Row(
+            // Box: Clima Previsto (Mock)
+            // ║ ☀️ Ensolarado, 28°C
+            // ║ 💨 Vento: 8 km/h
+            // ║ 🌧️ Chuva: 0%
+            _buildAsciiBox(
+              title: 'Clima Previsto',
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.wb_sunny, size: 48, color: Colors.orange),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  _buildInfoLine(Icons.wb_sunny, 'Ensolarado, 28°C'),
+                  _buildInfoLine(Icons.air, 'Vento: 8 km/h'),
+                  _buildInfoLine(Icons.water_drop, 'Chuva: 0%'),
+                  const SizedBox(height: 8),
+                  Row(
                     children: [
-                      Text('Ensolarado', style: AppTypography.h4),
+                      const Icon(Icons.check, size: 16, color: Colors.green),
+                      const SizedBox(width: 8),
                       Text(
-                        '28°C - Vento N 12km/h',
-                        style: AppTypography.bodySmall,
+                        'Bom para aplicação',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Favorável',
-                      style: AppTypography.caption.copyWith(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Box: Notificações (Mock)
+            // ║ 🔔 1 hora antes
+            // ║ 🔔 30 min antes (rota)
+            _buildAsciiBox(
+              title: 'Notificações',
+              content: Column(
+                children: [
+                  _buildInfoLine(Icons.notifications_active, '1 hora antes'),
+                  _buildInfoLine(
+                    Icons.notifications_active,
+                    '30 min antes (rota)',
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 100), // Space for bottom sheet/buttons
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: Colors.red.shade300),
-                    foregroundColor: Colors.red,
+            const SizedBox(height: 32),
+
+            // Actions
+            // [🚗 Ver Rota] [📞 Ligar]
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.directions_car, size: 16),
+                    label: const Text('Ver Rota'),
                   ),
-                  child: const Text('Cancelar'),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.phone, size: 16),
+                    label: const Text('Ligar'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // [✓ Iniciar Visita]
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.push('/check-in');
+                },
+                icon: const Icon(Icons.check),
+                label: const Text('Iniciar Visita'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: PrimaryButton(
-                  text: 'Iniciar Visita (Check-in)',
-                  icon: Icons.play_arrow,
-                  onPressed: () {
-                    context.push('/check-in');
-                  },
+            ),
+            const SizedBox(height: 16),
+            // [🗑️ Cancelar Evento]
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.delete, color: Colors.red),
+                label: const Text(
+                  'Cancelar Evento',
+                  style: TextStyle(color: Colors.red),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(
-    IconData icon,
-    String label,
-    String value, {
-    Widget? action,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: AppTypography.caption),
-              Text(
-                value,
-                style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+  Widget _buildAsciiBox({required String title, required Widget content}) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade400),
+        borderRadius: BorderRadius.circular(4),
+        color: Colors.white,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade400)),
+            ),
+            child: Text(
+              title,
+              style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-        if (action != null) action,
-      ],
+          Padding(padding: const EdgeInsets.all(12), child: content),
+        ],
+      ),
     );
   }
 
-  Widget _buildChecklistItem(String title, bool isCompleted) {
-    return Row(
-      children: [
-        Checkbox(
-          value: isCompleted,
-          onChanged: (val) {},
-          activeColor: AppColors.primary,
-        ),
-        Text(
-          title,
-          style: AppTypography.bodyMedium.copyWith(
-            decoration: isCompleted ? TextDecoration.lineThrough : null,
-            color: isCompleted ? Colors.grey : AppColors.textPrimary,
+  Widget _buildInfoLine(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[700]),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: AppTypography.bodyMedium)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.check_box_outline_blank,
+            size: 18,
+            color: Colors.grey,
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: AppTypography.bodyMedium)),
+        ],
+      ),
     );
   }
 }

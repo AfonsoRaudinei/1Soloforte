@@ -3,17 +3,15 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/map/application/drawing_controller.dart';
 import 'package:soloforte_app/features/map/application/geometry_utils.dart';
-import 'package:soloforte_app/features/map/application/kml_service.dart';
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
 import 'package:soloforte_app/core/presentation/widgets/premium_dialog.dart';
 import 'package:soloforte_app/features/map/presentation/widgets/save_area_dialog.dart';
-import 'widgets/map_controls.dart';
+import 'package:soloforte_app/features/ndvi/presentation/ndvi_detail_screen.dart';
 import 'widgets/drawing_toolbar.dart';
 import 'widgets/area_details_sheet.dart';
-import 'widgets/saved_areas_list_sheet.dart';
-import 'package:soloforte_app/features/ndvi/presentation/ndvi_detail_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   final LatLng? initialLocation;
@@ -26,115 +24,24 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
-  final KmlService _kmlService = KmlService();
-
-  @override
-  void initState() {
-    super.initState();
-    // If initial location provided, we might need to wait for map readiness or set option
-    // MapOptions has initialCenter, so we can pass it there.
-  }
-
-  void _showSaveDialog(BuildContext context, DrawingController controller) {
-    PremiumDialog.show(
-      context: context,
-      builder: (context) =>
-          SaveAreaDialog(onSave: (name) => controller.saveArea(name)),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    // Only read notifier references here, do NOT watch state at top level to avoid full rebuilds
     final drawingController = ref.read(drawingControllerProvider.notifier);
+    final drawingState = ref.watch(drawingControllerProvider);
 
     return Scaffold(
       body: Stack(
         children: [
+          // MAP FULLSCREEN
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
               initialCenter:
-                  widget.initialLocation ??
-                  const LatLng(-14.2350, -51.9253), // Brazil Center or provided
+                  widget.initialLocation ?? const LatLng(-14.2350, -51.9253),
               initialZoom: widget.initialLocation != null ? 16.0 : 4.0,
-              onTap: (tapPosition, point) {
-                // Read current state efficiently without triggering rebuilds
-                final drawingState = ref.read(drawingControllerProvider);
-
-                if (drawingState.isDrawing) {
-                  if (drawingState.activeTool == 'circle') {
-                    if (drawingState.circleCenter == null) {
-                      drawingController.addPoint(point); // Set center
-                      // Optionally set a default radius immediately so user sees something
-                      const distance = Distance();
-                      final defaultRadiusPoint = distance.offset(
-                        point,
-                        100,
-                        90,
-                      ); // 100m east
-                      drawingController.updateCircleRadius(defaultRadiusPoint);
-                    }
-                    return;
-                  }
-
-                  // Polygon logic
-                  // Check if closing polygon
-                  if (drawingState.currentPoints.isNotEmpty &&
-                      drawingState.currentPoints.length >= 3 &&
-                      GeometryUtils.isClosingPoint(
-                        drawingState.currentPoints.first,
-                        point,
-                      )) {
-                    _showSaveDialog(context, drawingController);
-                  } else {
-                    drawingController.addPoint(point);
-                  }
-                } else {
-                  // Check for tap on existing area
-                  GeoArea? tappedArea;
-                  for (final area in drawingState.savedAreas.reversed) {
-                    if (GeometryUtils.isPointInPolygon(point, area.points)) {
-                      tappedArea = area;
-                      break;
-                    }
-                  }
-
-                  drawingController.selectArea(tappedArea?.id);
-
-                  if (tappedArea != null) {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      builder: (ctx) => AreaDetailsSheet(
-                        area: tappedArea!,
-                        onDelete: () =>
-                            drawingController.deleteArea(tappedArea!.id),
-                        onEdit: () {
-                          Navigator.pop(ctx);
-                          drawingController.startEditingArea(tappedArea!);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Modo de edição ativado'),
-                              duration: Duration(seconds: 1),
-                            ),
-                          );
-                        },
-                        onAnalyze: () {
-                          Navigator.pop(ctx);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  NDVIDetailScreen(area: tappedArea!),
-                            ),
-                          );
-                        },
-                      ),
-                    ).whenComplete(() => drawingController.selectArea(null));
-                  }
-                }
-              },
+              onTap: (tapPosition, point) =>
+                  _handleMapTap(point, drawingController, drawingState),
             ),
             children: [
               TileLayer(
@@ -142,275 +49,318 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 userAgentPackageName: 'com.soloforte.app',
                 maxZoom: 19,
               ),
-
-              // Reactive Layers wrapped in Consumer
-              Consumer(
-                builder: (context, ref, child) {
-                  final drawingState = ref.watch(drawingControllerProvider);
-                  return Stack(
-                    children: [
-                      // Saved Areas
-                      PolygonLayer(
-                        polygons: drawingState.savedAreas.map((area) {
-                          final isSelected =
-                              area.id == drawingState.selectedAreaId;
-                          return Polygon(
-                            points: area.points,
-                            color: isSelected
-                                ? AppColors.primary.withValues(alpha: 0.5)
-                                : AppColors.primary.withValues(alpha: 0.3),
-                            borderColor: isSelected
-                                ? Colors.white
-                                : AppColors.primary,
-                            borderStrokeWidth: isSelected ? 3 : 2,
-                          );
-                        }).toList(),
-                      ),
-
-                      // Current Drawing Polygon (Preview)
-                      if (drawingState.isDrawing &&
-                          drawingState.currentPoints.isNotEmpty)
-                        PolygonLayer(
-                          polygons: [
-                            Polygon(
-                              points: drawingState.currentPoints,
-                              color: AppColors.secondary.withValues(alpha: 0.2),
-                              borderColor: AppColors.secondary,
-                              borderStrokeWidth: 2,
-                            ),
-                          ],
-                        ),
-
-                      // Current Drawing Circle (Preview)
-                      if (drawingState.isDrawing &&
-                          drawingState.activeTool == 'circle' &&
-                          drawingState.circleCenter != null) ...[
-                        CircleLayer(
-                          circles: [
-                            CircleMarker(
-                              point: drawingState.circleCenter!,
-                              radius: drawingState.circleRadius,
-                              useRadiusInMeter: true,
-                              color: AppColors.secondary.withValues(alpha: 0.2),
-                              borderColor: AppColors.secondary,
-                              borderStrokeWidth: 2,
-                            ),
-                          ],
-                        ),
-                        MarkerLayer(
-                          markers: [
-                            // Center Marker
-                            Marker(
-                              point: drawingState.circleCenter!,
-                              width: 24,
-                              height: 24,
-                              child: GestureDetector(
-                                onPanUpdate: (details) {
-                                  final p = _mapController.camera
-                                      .screenOffsetToLatLng(
-                                        details.globalPosition,
-                                      );
-                                  drawingController.moveCircleCenter(p);
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: AppColors.secondary,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.open_with,
-                                    size: 14,
-                                    color: AppColors.secondary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Radius Handle
-                            if (drawingState.circleRadius > 0)
-                              Marker(
-                                point: const Distance().offset(
-                                  drawingState.circleCenter!,
-                                  drawingState.circleRadius,
-                                  90,
-                                ),
-                                width: 24,
-                                height: 24,
-                                child: GestureDetector(
-                                  onPanUpdate: (details) {
-                                    final p = _mapController.camera
-                                        .screenOffsetToLatLng(
-                                          details.globalPosition,
-                                        );
-                                    drawingController.updateCircleRadius(p);
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: AppColors.secondary,
-                                        width: 2,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.drag_handle,
-                                      size: 16,
-                                      color: AppColors.secondary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-
-                      // Drawing Points
-                      if (drawingState.isDrawing &&
-                          drawingState.activeTool == 'polygon')
-                        MarkerLayer(
-                          markers: drawingState.currentPoints.map((point) {
-                            return Marker(
-                              point: point,
-                              width: 24,
-                              height: 24,
-                              child: GestureDetector(
-                                onPanUpdate: (details) {
-                                  final i = drawingState.currentPoints.indexOf(
-                                    point,
-                                  );
-                                  if (i != -1) {
-                                    final p = _mapController.camera
-                                        .screenOffsetToLatLng(
-                                          details.globalPosition,
-                                        );
-                                    drawingController.moveVertex(i, p);
-                                  }
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: AppColors.secondary,
-                                      width: 2,
-                                    ),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 4,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.drag_indicator,
-                                      size: 14,
-                                      color: AppColors.secondary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                    ],
+              // Saved Areas
+              PolygonLayer(
+                polygons: drawingState.savedAreas.map((area) {
+                  final isSelected = area.id == drawingState.selectedAreaId;
+                  return Polygon(
+                    points: area.points,
+                    color: isSelected
+                        ? AppColors.primary.withOpacity(0.5)
+                        : AppColors.primary.withOpacity(0.3),
+                    borderColor: isSelected ? Colors.white : AppColors.primary,
+                    borderStrokeWidth: isSelected ? 3 : 2,
                   );
-                },
+                }).toList(),
               ),
+              // Drawing Preview
+              if (drawingState.isDrawing &&
+                  drawingState.currentPoints.isNotEmpty)
+                PolygonLayer(
+                  polygons: [
+                    Polygon(
+                      points: drawingState.currentPoints,
+                      color: AppColors.secondary.withOpacity(0.2),
+                      borderColor: AppColors.secondary,
+                      borderStrokeWidth: 2,
+                    ),
+                  ],
+                ),
+              // Circle Preview
+              if (drawingState.isDrawing &&
+                  drawingState.activeTool == 'circle' &&
+                  drawingState.circleCenter != null)
+                CircleLayer(
+                  circles: [
+                    CircleMarker(
+                      point: drawingState.circleCenter!,
+                      radius: drawingState.circleRadius,
+                      useRadiusInMeter: true,
+                      color: AppColors.secondary.withOpacity(0.2),
+                      borderColor: AppColors.secondary,
+                      borderStrokeWidth: 2,
+                    ),
+                  ],
+                ),
+
+              // Drawing Markers (Vertices)
+              if (drawingState.isDrawing &&
+                  drawingState.activeTool == 'polygon')
+                MarkerLayer(
+                  markers: drawingState.currentPoints
+                      .map(
+                        (p) => Marker(
+                          point: p,
+                          width: 14,
+                          height: 14,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.secondary),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
             ],
           ),
 
-          // Top Right Controls
+          // TOP BAR: [←] Mapa [⚙️]
           Positioned(
+            top: 40,
+            left: 16,
             right: 16,
-            top: 16,
-            child: Consumer(
-              builder: (context, ref, _) {
-                // MapControls logic might need state if it highlights buttons?
-                // Currently it doesn't seem to depend on drawingState for UI, only for callbacks.
-                // But wait, "Import" button callbacks?
-                // We kept MapControls as stateless widget receiving callbacks from MapScreen.
-                // So we need to access state inside the callbacks passed to MapControls.
-                // The callbacks are defined below.
-                return MapControls(
-                  mapController: _mapController,
-                  onLocationPressed: () {
-                    _mapController.move(
-                      const LatLng(-15.793889, -47.882778),
-                      15,
-                    );
-                  },
-                  onLayersPressed: () {},
-                  onImportPressed: () async {
-                    final areas = await _kmlService.pickAndParseKml();
-                    if (areas.isNotEmpty) {
-                      for (final area in areas) {
-                        drawingController.importArea(area);
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${areas.length} áreas importadas'),
-                        ),
-                      );
-
-                      if (areas.first.points.isNotEmpty) {
-                        _mapController.move(areas.first.points.first, 14);
-                      }
-                    }
-                  },
-                  onExportPressed: () async {
-                    // Here we need current state. ref.read is safer.
-                    final state = ref.read(drawingControllerProvider);
-                    if (state.savedAreas.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Nenhuma área para exportar'),
-                        ),
-                      );
-                      return;
-                    }
-                    await _kmlService.exportToKml(state.savedAreas);
-                  },
-                  onListPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (ctx) => SavedAreasListSheet(
-                        onAreaSelected: (area) {
-                          Navigator.pop(ctx);
-                          drawingController.selectArea(area.id);
-                          if (area.points.isNotEmpty) {
-                            _mapController.move(
-                              area.center ?? area.points.first,
-                              15,
-                            );
-                          } else if (area.center != null) {
-                            _mapController.move(area.center!, 15);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'back',
+                  onPressed: () => Navigator.pop(context),
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.arrow_back, color: Colors.black),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(blurRadius: 4, color: Colors.black12),
+                    ],
+                  ),
+                  child: Text(
+                    drawingState.isDrawing ? 'Desenhando...' : 'Mapa',
+                    style: AppTypography.h4,
+                  ),
+                ),
+                FloatingActionButton.small(
+                  heroTag: 'settings',
+                  onPressed: () {}, // Settings action
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.settings, color: Colors.black),
+                ),
+              ],
             ),
           ),
 
-          // Bottom Toolbar
-          const DrawingToolbar(),
+          if (!drawingState.isDrawing) ...[
+            // CONTROLS: [📍] [+] [-] [📐] [🖊️]
+            Positioned(
+              right: 16,
+              bottom: 180, // Above layers box
+              child: Column(
+                children: [
+                  _buildMapBtn(
+                    Icons.my_location,
+                    () =>
+                        _mapController.move(const LatLng(-14.235, -51.925), 10),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildMapBtn(
+                    Icons.add,
+                    () => _mapController.move(
+                      _mapController.camera.center,
+                      _mapController.camera.zoom + 1,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildMapBtn(
+                    Icons.remove,
+                    () => _mapController.move(
+                      _mapController.camera.center,
+                      _mapController.camera.zoom - 1,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildMapBtn(Icons.straighten, () {}), // Measure
+                  const SizedBox(height: 8),
+                  _buildMapBtn(
+                    Icons.edit,
+                    () => drawingController.startDrawing(),
+                  ),
+                ],
+              ),
+            ),
+
+            // LAYERS BOX
+            // ┌───────────────────────────┐
+            // │ Camadas:                  │
+            // ...
+            Positioned(
+              left: 16,
+              bottom: 24,
+              child: Container(
+                width: 200,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black12, blurRadius: 4),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Camadas:',
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Divider(height: 8),
+                    _buildLayerItem('Minhas Áreas', true),
+                    _buildLayerItem('Ocorrências', true),
+                    _buildLayerItem('NDVI', false),
+                    _buildLayerItem('Radar Clima', false),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            // DRAWING TOOLBAR (Bottom)
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: DrawingToolbar(),
+            ),
+
+            // Top Right Save Button while drawing (if enough points)
+            Positioned(
+              top: 40,
+              right: 70, // To left of settings
+              child: drawingState.currentPoints.length >= 3
+                  ? ElevatedButton.icon(
+                      onPressed: () =>
+                          _showSaveDialog(context, drawingController),
+                      icon: const Icon(Icons.check, size: 16),
+                      label: const Text('Salvar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildMapBtn(IconData icon, VoidCallback onTap) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.black87),
+        onPressed: onTap,
+      ),
+    );
+  }
+
+  Widget _buildLayerItem(String label, bool isChecked) {
+    return Row(
+      children: [
+        Icon(
+          isChecked ? Icons.check_box : Icons.check_box_outline_blank,
+          size: 18,
+          color: isChecked ? AppColors.primary : Colors.grey,
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
+  void _handleMapTap(
+    LatLng point,
+    DrawingController controller,
+    DrawingState state,
+  ) {
+    if (state.isDrawing) {
+      if (state.activeTool == 'circle' && state.circleCenter == null) {
+        controller.addPoint(point); // Center
+        // Mock radius update
+        const distance = Distance();
+        controller.updateCircleRadius(distance.offset(point, 100, 90));
+      } else if (state.activeTool == 'polygon') {
+        if (state.currentPoints.isNotEmpty &&
+            state.currentPoints.length >= 3 &&
+            GeometryUtils.isClosingPoint(state.currentPoints.first, point)) {
+          _showSaveDialog(context, controller);
+        } else {
+          controller.addPoint(point);
+        }
+      }
+    } else {
+      // Check tap on existing area
+      GeoArea? tapped;
+      for (final area in state.savedAreas.reversed) {
+        if (GeometryUtils.isPointInPolygon(point, area.points)) {
+          tapped = area;
+          break;
+        }
+      }
+      if (tapped != null) {
+        controller.selectArea(tapped.id);
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => AreaDetailsSheet(
+            area: tapped!,
+            onDelete: () {
+              Navigator.pop(ctx);
+              controller.deleteArea(tapped!.id);
+            },
+            onEdit: () {
+              Navigator.pop(ctx);
+              controller.startEditingArea(tapped!);
+            },
+            onAnalyze: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => NDVIDetailScreen(area: tapped!),
+                ),
+              );
+            },
+          ),
+        );
+      }
+    }
+  }
+
+  void _showSaveDialog(BuildContext context, DrawingController controller) {
+    PremiumDialog.show(
+      context: context,
+      builder: (context) =>
+          SaveAreaDialog(onSave: (name) => controller.saveArea(name)),
     );
   }
 }

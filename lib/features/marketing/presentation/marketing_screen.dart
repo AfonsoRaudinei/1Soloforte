@@ -54,14 +54,22 @@ class _MarketingScreenState extends State<MarketingScreen>
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Meus Conteúdos'),
+          leading: IconButton(
+            icon: const Icon(Icons.menu), // [☰]
+            onPressed: () {},
+          ),
+          title: const Text('Marketing UI Test'),
           actions: [
             Padding(
               padding: EdgeInsets.only(right: AppSpacing.sm),
-              child: FilledButton.icon(
+              child: TextButton.icon(
                 onPressed: () => _navigateToCreate(),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Criar'),
+                label: const Text('Publicar'), // [+ Publicar]
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -71,7 +79,7 @@ class _MarketingScreenState extends State<MarketingScreen>
             unselectedLabelColor: Colors.grey,
             indicatorColor: AppColors.primary,
             tabs: [
-              Tab(text: 'Publicados (${_myPosts.length})'),
+              const Tab(text: 'Meus Posts'),
               Tab(text: 'Rascunhos (${_drafts.length})'),
             ],
           ),
@@ -108,7 +116,13 @@ class _MarketingScreenState extends State<MarketingScreen>
       itemCount: _myPosts.length,
       itemBuilder: (context, index) {
         final post = _myPosts[index];
-        return FeedPostCard(post: post);
+        // Using FeedPostCard but could customize strictly to ASCII here if needed
+        // The FeedPostCard will be updated to match the card layout
+        return FeedPostCard(
+          post: post,
+          isMine: true,
+          onEdit: () => _navigateToCreate(draft: post),
+        );
       },
     );
   }
@@ -133,6 +147,7 @@ class _MarketingScreenState extends State<MarketingScreen>
                     child: Image.network(
                       draft.imageUrls.first,
                       errorBuilder: (c, e, s) => const Icon(Icons.image),
+                      fit: BoxFit.cover,
                     ),
                   )
                 : Container(
@@ -159,4 +174,4 @@ class _MarketingScreenState extends State<MarketingScreen>
       },
     );
   }
-}
+} // End Class

@@ -3,16 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
-
-import 'package:soloforte_app/features/agenda/presentation/widgets/daily_timeline.dart';
-import 'package:soloforte_app/features/agenda/presentation/widgets/event_card.dart';
-import 'package:soloforte_app/features/agenda/presentation/extensions/event_type_extension.dart';
 
 class AgendaScreen extends ConsumerStatefulWidget {
   const AgendaScreen({super.key});
@@ -23,347 +18,214 @@ class AgendaScreen extends ConsumerStatefulWidget {
 
 class _AgendaScreenState extends ConsumerState<AgendaScreen> {
   DateTime _selectedDay = DateTime.now();
+  DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  bool _isTimelineView = false;
-  // Note: Local _events state is replaced by Riverpod Provider
-
-  Widget _buildViewToggleButton({
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: isSelected ? AppColors.primary : Colors.grey,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final eventsState = ref.watch(agendaControllerProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
         title: const Text('Agenda'),
+        centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.today),
-            onPressed: () {
-              setState(() {
-                _selectedDay = DateTime.now();
-              });
-            },
+          TextButton.icon(
+            onPressed: () =>
+                context.push('/dashboard/calendar/new', extra: _selectedDay),
+            icon: const Icon(Icons.add, size: 20),
+            label: const Text('Nova'),
+            style: TextButton.styleFrom(foregroundColor: AppColors.primary),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push('/dashboard/calendar/new', extra: _selectedDay);
-          // Provider automatically updates UI when event is added
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: eventsState.when(
         data: (allEvents) {
           final dailyEvents = allEvents
               .where((e) => isSameDay(e.startTime, _selectedDay))
               .toList();
-          // Sort by start time
           dailyEvents.sort((a, b) => a.startTime.compareTo(b.startTime));
 
           return Column(
             children: [
-              // Month Calendar
-              TableCalendar<Event>(
-                firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                lastDay: DateTime.now().add(const Duration(days: 365)),
-                focusedDay: _selectedDay,
-                currentDay: DateTime.now(),
-                calendarFormat: _calendarFormat,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                  });
-                },
-                onFormatChanged: (format) {
-                  if (_calendarFormat != format) {
-                    setState(() {
-                      _calendarFormat = format;
-                    });
-                  }
-                },
-                eventLoader: (day) {
-                  return allEvents
-                      .where((e) => isSameDay(e.startTime, day))
-                      .toList();
-                },
+              // Custom Month Navigation
+              _buildMonthNavigator(),
 
-                // Styles & Builders
-                headerStyle: HeaderStyle(
-                  formatButtonVisible: true,
-                  titleCentered: true,
-                  formatButtonShowsNext: false,
-                  formatButtonDecoration: BoxDecoration(
-                    border: Border.all(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(12),
+              // Calendar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  formatButtonTextStyle: AppTypography.caption.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  titleTextStyle: AppTypography.h3,
-                ),
-                calendarStyle: CalendarStyle(
-                  selectedDecoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  todayDecoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  markersMaxCount: 4,
-                ),
+                  child: TableCalendar<Event>(
+                    firstDay: DateTime.now().subtract(
+                      const Duration(days: 365),
+                    ),
+                    lastDay: DateTime.now().add(const Duration(days: 365)),
+                    focusedDay: _focusedDay,
+                    currentDay: DateTime.now(),
+                    calendarFormat: _calendarFormat,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    headerVisible: false, // Using custom navigator
+                    daysOfWeekHeight: 40,
+                    rowHeight: 40,
+                    calendarStyle: CalendarStyle(
+                      selectedDecoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape
+                            .rectangle, // ASCII suggests boxy look? Or standard. Let's stick to circle/shape matching app theme but maybe cleaner.
+                        borderRadius: BorderRadius.all(Radius.circular(4)),
+                      ),
+                      todayDecoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.3),
+                        shape: BoxShape.rectangle,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(4),
+                        ),
+                      ),
+                      defaultTextStyle: AppTypography.bodyMedium,
+                      weekendTextStyle: AppTypography.bodyMedium.copyWith(
+                        color: Colors.red,
+                      ),
+                    ),
+                    calendarBuilders: CalendarBuilders(
+                      markerBuilder: (context, day, events) {
+                        // Custom markers based on legend
+                        // • = Visita (technicalVisit)
+                        // ○ = Lembrete (reminder)
+                        // ◆ = Aplicação (application)
+                        if (events.isEmpty) return null;
 
-                // Custom Marker Builder for Colored Dots
-                calendarBuilders: CalendarBuilders(
-                  markerBuilder: (context, day, events) {
-                    if (events.isEmpty) return null;
-
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: events.take(4).map((event) {
-                        return Container(
-                          width: 6,
-                          height: 6,
-                          margin: const EdgeInsets.symmetric(horizontal: 1.0),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: event.type.color,
-                          ),
+                        // We show only the highest priority marker or a mix?
+                        // The ASCII shows specific symbols. TableCalendar usually puts dots.
+                        // Let's simplified: show up to 3 markers.
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: events.take(3).map((e) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 1.0,
+                              ),
+                              child: _buildMarkerIcon(e.type),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
-                    );
-                  },
+                      },
+                    ),
+                    eventLoader: (day) => allEvents
+                        .where((e) => isSameDay(e.startTime, day))
+                        .toList(),
+                  ),
                 ),
               ),
 
-              const Divider(height: 1),
+              const SizedBox(height: 8),
 
-              // Events List Header & View Toggle
+              // Legend
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            DateFormat(
-                              "d 'de' MMMM",
-                              'pt_BR',
-                            ).format(_selectedDay),
-                            style: AppTypography.h3,
-                          ),
-                          Text(
-                            DateFormat("EEEE", 'pt_BR')
-                                .format(_selectedDay)
-                                .replaceFirst(
-                                  DateFormat(
-                                    "EEEE",
-                                    'pt_BR',
-                                  ).format(_selectedDay)[0],
-                                  DateFormat(
-                                    "EEEE",
-                                    'pt_BR',
-                                  ).format(_selectedDay)[0].toUpperCase(),
-                                ),
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildViewToggleButton(
-                            icon: Icons.list,
-                            isSelected: !_isTimelineView,
-                            onTap: () =>
-                                setState(() => _isTimelineView = false),
-                          ),
-                          _buildViewToggleButton(
-                            icon: Icons.schedule,
-                            isSelected: _isTimelineView,
-                            onTap: () => setState(() => _isTimelineView = true),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildLegendItem('•', 'Visita agendada'),
+                    _buildLegendItem('○', 'Lembrete'), // Hollow circle usually
+                    _buildLegendItem('◆', 'Aplicação'),
                   ],
                 ),
               ),
 
-              // Events Content
+              const SizedBox(height: 16),
+
+              // Daily List
               Expanded(
-                child: dailyEvents.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.event_note,
-                              size: 64,
-                              color: Colors.grey[300],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Nenhum evento agendado',
-                              style: AppTypography.bodyLarge.copyWith(
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Toque no + para adicionar',
-                              style: AppTypography.caption,
-                            ),
-                          ],
-                        ),
-                      )
-                    : _isTimelineView
-                    ? DailyTimeline(
-                        events: dailyEvents,
-                        date: _selectedDay,
-                        onEventTap: (event) {
-                          context.go(
-                            '/dashboard/calendar/detail',
-                            extra: event,
-                          );
-                        },
-                        onEventRescheduled: (event, newStartTime) {
-                          final duration = event.endTime.difference(
-                            event.startTime,
-                          );
-                          final newEndTime = newStartTime.add(duration);
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    _buildDayHeader(_selectedDay),
+                    const SizedBox(height: 8),
+                    if (dailyEvents.isEmpty) _buildEmptyState(),
+                    ...dailyEvents
+                        .map((event) => _buildEventCard(context, event))
+                        .toList(),
 
-                          final updatedEvent = event.copyWith(
-                            startTime: newStartTime,
-                            endTime: newEndTime,
-                            status: EventStatus.rescheduled,
-                          );
-
-                          ref
-                              .read(agendaControllerProvider.notifier)
-                              .updateEvent(updatedEvent);
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Evento reagendado com sucesso!'),
-                            ),
-                          );
-                        },
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        itemCount: dailyEvents.length,
-                        itemBuilder: (context, index) {
-                          final event = dailyEvents[index];
-                          return Slidable(
-                            key: ValueKey(event.id),
-                            startActionPane: ActionPane(
-                              motion: const ScrollMotion(),
-                              children: [
-                                SlidableAction(
-                                  onPressed: (context) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Adiar/Reagendar: ${event.title}',
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  backgroundColor: Colors.orange,
-                                  foregroundColor: Colors.white,
-                                  icon: Icons.access_time,
-                                  label: 'Adiar',
-                                  borderRadius: const BorderRadius.horizontal(
-                                    left: Radius.circular(12),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            endActionPane: ActionPane(
-                              motion: const ScrollMotion(),
-                              children: [
-                                SlidableAction(
-                                  onPressed: (context) {
-                                    ref
-                                        .read(agendaControllerProvider.notifier)
-                                        .deleteEvent(event.id);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Cancelado: ${event.title}',
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  icon: Icons.cancel,
-                                  label: 'Cancelar',
-                                  borderRadius: const BorderRadius.horizontal(
-                                    right: Radius.circular(12),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            child: EventCard(
-                              event: event,
-                              onTap: () => context.go(
-                                '/dashboard/calendar/detail',
-                                extra: event,
-                              ),
-                            ),
-                          );
-                        },
+                    const SizedBox(height: 24),
+                    // Tomorrow preview if wanted, or just buttons
+                    if (isSameDay(DateTime.now(), _selectedDay)) ...[
+                      _buildDayHeader(
+                        DateTime.now().add(const Duration(days: 1)),
+                        labelPrefix: 'Amanhã',
                       ),
+                      const SizedBox(height: 8),
+                      // Future improvements: Show tomorrow's events here too
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedDay = DateTime.now().add(
+                                const Duration(days: 1),
+                              );
+                              _focusedDay = _selectedDay;
+                            });
+                          },
+                          child: const Text('Ver eventos de amanhã'),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Bottom Buttons
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          setState(() {
+                            _calendarFormat =
+                                _calendarFormat == CalendarFormat.week
+                                ? CalendarFormat.month
+                                : CalendarFormat.week;
+                          });
+                        },
+                        child: Text(
+                          _calendarFormat == CalendarFormat.week
+                              ? 'Ver Mês'
+                              : 'Ver Semana',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {},
+                        child: const Text('Ver Lista Complete'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           );
@@ -371,6 +233,222 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Erro: $error')),
       ),
+    );
+  }
+
+  Widget _buildMonthNavigator() {
+    final title = DateFormat('MMMM yyyy', 'pt_BR').format(_focusedDay);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
+              });
+            },
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Text(
+            title.toUpperCase(),
+            style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold),
+          ),
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
+              });
+            },
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMarkerIcon(EventType type) {
+    // • = Visita agendada, ○ = Lembrete, ◆ = Aplicação
+    // Mapping EventType to symbols roughly
+    // Assuming EventType values.
+    // technicalVisit -> •, application -> ◆, reminder -> ○
+    if (type == EventType.technicalVisit)
+      return const Text(
+        '•',
+        style: TextStyle(color: Colors.blue, fontSize: 10),
+      );
+    if (type == EventType.application)
+      return const Text('◆', style: TextStyle(color: Colors.red, fontSize: 8));
+    if (type == EventType.reminder)
+      return const Text('○', style: TextStyle(color: Colors.grey, fontSize: 8));
+    return const Text(
+      '•',
+      style: TextStyle(color: Colors.black, fontSize: 10),
+    ); // Default
+  }
+
+  Widget _buildLegendItem(String symbol, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(symbol, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildDayHeader(DateTime date, {String? labelPrefix}) {
+    String label = DateFormat("dd/MMM/yyyy", 'pt_BR').format(date);
+    String prefix =
+        labelPrefix ??
+        (isSameDay(date, DateTime.now())
+            ? 'Hoje'
+            : DateFormat('EEEE', 'pt_BR').format(date));
+    // E.g. "Hoje - 28/Out/2025"
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$prefix - $label',
+          style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const Divider(thickness: 2),
+      ],
+    );
+  }
+
+  Widget _buildEventCard(BuildContext context, Event event) {
+    //  │  ┌───────────────────────────┐  │
+    //  │  │ 09:00 • Visita Técnica    │  │
+    //  │  │ ─────────────────────     │  │
+    //  │  │ 📍 João Silva             │  │
+    //  │  │    Talhão Norte           │  │
+    //  │  │ 🕐 09:00 - 11:00          │  │
+    //  │  │                           │  │
+    //  │  │ [Iniciar] [Ver Detalhes]  │  │
+    //  │  └───────────────────────────┘  │
+
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Time + Title
+          Row(
+            children: [
+              Text(
+                DateFormat('HH:mm').format(event.startTime),
+                style: AppTypography.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 8),
+              _buildMarkerIcon(event.type),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  event.title,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.h4,
+                ),
+              ),
+            ],
+          ),
+          const Divider(),
+          // Content
+          if (event.location.isNotEmpty)
+            _buildIconText(
+              Icons.location_on,
+              event.location,
+            ), // Producer name could be part of location or desc in this model
+          const SizedBox(height: 4),
+          _buildIconText(
+            Icons.access_time,
+            '${DateFormat('HH:mm').format(event.startTime)} - ${DateFormat('HH:mm').format(event.endTime)}',
+          ),
+
+          // Should add specific fields if we had them (Weather, etc per ASCII)
+          const SizedBox(height: 12),
+          // Actions
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (event.type ==
+                  EventType.technicalVisit) // Only show Iniciar for visits
+                TextButton(
+                  onPressed: () {
+                    // Action
+                  },
+                  child: const Text('Iniciar'),
+                ),
+              TextButton(
+                onPressed: () {
+                  context.push('/dashboard/calendar/detail', extra: event);
+                },
+                child: const Text('Ver Detalhes'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconText(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.grey),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            text,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodySmall.copyWith(color: Colors.grey[800]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: Text(
+          'Nenhum evento para este dia.',
+          style: AppTypography.bodyMedium.copyWith(color: Colors.grey),
+        ),
+      ),
+    );
+  }
+}
+
+// Helper Widget for specific Card style
+class CustomCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? margin;
+  const CustomCard({super.key, required this.child, this.margin});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: margin,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }

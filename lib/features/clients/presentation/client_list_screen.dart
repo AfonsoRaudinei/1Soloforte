@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-
+import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/clients/domain/client_model.dart';
-import 'package:soloforte_app/shared/widgets/app_card.dart';
-import 'package:soloforte_app/shared/widgets/custom_text_input.dart';
-import 'package:soloforte_app/shared/widgets/primary_button.dart';
+
+class MockClientDisplay {
+  final Client client;
+  final int areas;
+  final double ha;
+  MockClientDisplay(this.client, this.areas, this.ha);
+}
 
 class ClientListScreen extends StatefulWidget {
   const ClientListScreen({super.key});
@@ -16,212 +20,261 @@ class ClientListScreen extends StatefulWidget {
 
 class _ClientListScreenState extends State<ClientListScreen> {
   final TextEditingController _searchController = TextEditingController();
+  String _selectedFilter = 'Todos'; // Todos, Ativos, Inativos
 
   // Mock Data
-  final List<Client> _clients = [
-    Client(
-      id: '1',
-      name: 'Fazenda Santa Rita',
-      email: 'contato@santarita.com.br',
-      phone: '(16) 99999-8888',
-      cpfCnpj: '12.345.678/0001-90',
-      address: 'Rod. SP-330, km 300, Ribeirão Preto - SP',
-      city: 'Ribeirão Preto',
-      state: 'SP',
-      type: 'producer',
-      status: 'active',
-      lastActivity: DateTime.now().subtract(const Duration(days: 2)),
-      farmIds: ['1', '2'],
-      avatarUrl:
-          'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?q=80&w=200&auto=format&fit=crop',
-      notes: 'Grande produtor de soja e milho',
+  final List<MockClientDisplay> _clients = [
+    MockClientDisplay(
+      Client(
+        id: '1',
+        name: 'João Silva',
+        email: 'joao.silva@email.com',
+        phone: '(11) 98765-4321',
+        cpfCnpj: '123.456.789-00',
+        address: 'Fazenda Boa Vista',
+        city: 'Piracicaba',
+        state: 'SP',
+        type: 'producer',
+        status: 'active',
+        lastActivity: DateTime.now().subtract(const Duration(days: 1)),
+        notes: '3 Fazendas | 180 ha',
+      ),
+      12,
+      180,
     ),
-    Client(
-      id: '2',
-      name: 'Agropecuária Boa Vista',
-      email: 'financeiro@boavista.agr.br',
-      phone: '(62) 98888-7777',
-      cpfCnpj: '98.765.432/0001-10',
-      address: 'Zona Rural, Rio Verde - GO',
-      city: 'Rio Verde',
-      state: 'GO',
-      type: 'producer',
-      status: 'active',
-      lastActivity: DateTime.now().subtract(const Duration(hours: 5)),
-      farmIds: ['3'],
-      avatarUrl:
-          'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop',
+    MockClientDisplay(
+      Client(
+        id: '2',
+        name: 'Maria Santos',
+        email: 'maria@email.com',
+        phone: '(19) 99876-5432',
+        cpfCnpj: '987.654.321-00',
+        address: 'Ribeirão Preto, SP',
+        city: 'Ribeirão Preto',
+        state: 'SP',
+        type: 'producer',
+        status: 'active',
+        lastActivity: DateTime.now().subtract(const Duration(days: 3)),
+        notes: '1 Fazenda | 240 ha',
+      ),
+      8,
+      240,
     ),
-    Client(
-      id: '3',
-      name: 'Consultoria Solo Fértil',
-      email: 'admin@solofertil.com',
-      phone: '(34) 3333-2222',
-      cpfCnpj: '123.456.789-00',
-      address: 'Uberaba - MG',
-      city: 'Uberaba',
-      state: 'MG',
-      type: 'consultant',
-      status: 'inactive',
-      lastActivity: DateTime.now().subtract(const Duration(days: 45)),
-      farmIds: [],
+    MockClientDisplay(
+      Client(
+        id: '3',
+        name: 'Pedro Oliveira',
+        email: 'pedro@email.com',
+        phone: '(16) 98888-9999',
+        cpfCnpj: '456.789.123-00',
+        address: 'Franca, SP',
+        city: 'Franca',
+        state: 'SP',
+        type: 'producer',
+        status: 'inactive',
+        lastActivity: DateTime.now().subtract(const Duration(days: 7)),
+        notes: '2 Fazendas | 95 ha',
+      ),
+      5,
+      95,
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Clientes / Produtores'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            // Open Drawer if exists
+            Scaffold.of(context).openDrawer();
+          },
+        ),
+        title: const Text('Produtores'),
+        centerTitle: false,
         actions: [
-          PrimaryButton(
-            text: 'Novo Cliente',
+          TextButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Novo Cliente (Mock)')),
-              );
+              context.push('/dashboard/clients/new');
             },
-            isFullWidth: false,
-            icon: Icons.add,
-            // Using default primary color
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            CustomTextInput(
-              controller: _searchController,
-              label: '',
-              hint: 'Buscar por nome, fazenda ou cidade...',
-              prefixIcon: Icons.search,
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _clients.length,
-                itemBuilder: (context, index) {
-                  return _ClientCard(client: _clients[index]);
-                },
+            icon: const Icon(Icons.add, color: AppColors.primary),
+            label: Text(
+              'Novo',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ClientCard extends StatelessWidget {
-  final Client client;
-
-  const _ClientCard({required this.client});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      margin: const EdgeInsets.only(bottom: 12),
-      onTap: () {
-        // Detail navigation (Mock)
-        // context.go('/dashboard/clients/${client.id}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Detalhes do Cliente (Mock)')),
-        );
-      },
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundImage: client.avatarUrl != null
-                ? NetworkImage(client.avatarUrl!)
-                : null,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-            child: client.avatarUrl == null
-                ? Text(
-                    client.initials,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  )
-                : null,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Buscar produtor...',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Filters
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      client.name,
-                      style: AppTypography.h4.copyWith(fontSize: 16),
-                    ),
-                    _StatusBadge(status: client.status),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(client.address, style: AppTypography.bodySmall),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.map_outlined, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${client.totalAreas} áreas',
-                      style: AppTypography.caption,
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(
-                      Icons.grass_outlined,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${client.totalHectares} ha',
-                      style: AppTypography.caption,
-                    ),
-                  ],
-                ),
+                _buildFilterChip('Todos'),
+                const SizedBox(width: 8),
+                _buildFilterChip('Ativos'),
+                const SizedBox(width: 8),
+                _buildFilterChip('Inativos'),
               ],
             ),
           ),
+
+          // List
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _clients.length + 1, // +1 for "Load more"
+              separatorBuilder: (c, i) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                if (index == _clients.length) {
+                  return Center(
+                    child: TextButton(
+                      onPressed: () {},
+                      child: const Text('Carregar mais...'),
+                    ),
+                  );
+                }
+                return _buildProducerCard(_clients[index]);
+              },
+            ),
+          ),
         ],
       ),
     );
   }
-}
 
-class _StatusBadge extends StatelessWidget {
-  final String status;
-
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final isActive = status == 'active';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.success.withValues(alpha: 0.1)
-            : Colors.grey[200],
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        isActive ? 'Ativo' : 'Inativo',
-        style: AppTypography.caption.copyWith(
-          color: isActive ? AppColors.success : Colors.grey[600],
-          fontWeight: FontWeight.bold,
+  Widget _buildFilterChip(String label) {
+    bool isSelected = _selectedFilter == label;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilter = label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.grey[200],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildProducerCard(MockClientDisplay item) {
+    final client = item.client;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.person, color: Colors.grey),
+              const SizedBox(width: 8),
+              Text(client.name, style: AppTypography.h4),
+            ],
+          ),
+          const Divider(),
+          _buildInfoLine(Icons.phone_android, client.phone),
+          const SizedBox(height: 4),
+          _buildInfoLine(Icons.location_on, '${client.city}, ${client.state}'),
+          const SizedBox(height: 12),
+
+          Text(
+            client.notes ?? 'Sem dados',
+            style: AppTypography.bodySmall.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            '📊 ${item.areas} Áreas monitoradas',
+            style: AppTypography.bodySmall,
+          ),
+
+          const SizedBox(height: 12),
+          Text(
+            _getLastVisitText(client.lastActivity),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                context.push('/dashboard/clients/${client.id}');
+              },
+              child: const Text('Ver Detalhes'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getLastVisitText(DateTime? date) {
+    if (date == null) return 'Última visita: -';
+    final diff = DateTime.now().difference(date).inDays;
+    if (diff == 0) return 'Última visita: Hoje';
+    if (diff == 1) return 'Última visita: Ontem';
+    if (diff < 7) return 'Última visita: $diff dias';
+    return 'Última visita: Semana'; // Simplified
+  }
+
+  Widget _buildInfoLine(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        Text(text, style: AppTypography.bodyMedium),
+      ],
     );
   }
 }

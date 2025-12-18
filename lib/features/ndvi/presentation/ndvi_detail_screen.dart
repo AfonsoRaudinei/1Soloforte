@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:intl/intl.dart';
 
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
 import 'package:soloforte_app/features/map/application/geometry_utils.dart';
 import 'package:soloforte_app/features/ndvi/application/ndvi_controller.dart';
 import 'package:soloforte_app/features/reports/application/report_service.dart';
-import 'package:soloforte_app/features/ndvi/presentation/widgets/ndvi_statistics_card.dart';
-import 'package:intl/intl.dart';
+import 'package:soloforte_app/core/theme/app_typography.dart';
+
+import 'ndvi_history_screen.dart';
+import 'ndvi_comparison_screen.dart';
 
 class NDVIDetailScreen extends ConsumerStatefulWidget {
   final GeoArea area;
@@ -26,32 +30,15 @@ class _NDVIDetailScreenState extends ConsumerState<NDVIDetailScreen> {
   void initState() {
     super.initState();
     _mapController = MapController();
-    // Initialize controller data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(ndviControllerProvider.notifier).initializeForArea(widget.area);
     });
-  }
-
-  void _playTimelapse() async {
-    final dates = ref.read(ndviControllerProvider).availableDates;
-    if (dates.isEmpty) return;
-
-    // Sort dates ascending for timelapse
-    final sortedDates = List<DateTime>.from(dates)
-      ..sort((a, b) => a.compareTo(b));
-
-    for (final date in sortedDates) {
-      if (!mounted) return;
-      ref.read(ndviControllerProvider.notifier).loadNdviImage(date);
-      await Future.delayed(const Duration(seconds: 2));
-    }
   }
 
   void _exportReport() async {
     final state = ref.read(ndviControllerProvider);
     if (state.selectedDate == null) return;
 
-    // Show loading? or just do it async (pdf generation is fast)
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Gerando relatório...')));
@@ -69,233 +56,383 @@ class _NDVIDetailScreenState extends ConsumerState<NDVIDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erro ao gerar relatório: $e')));
+        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
     }
-  }
-
-  void _showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _FilterSheet(
-        currentDays: ref.read(ndviControllerProvider).dateRangeDays,
-        currentCloudCover: ref.read(ndviControllerProvider).maxCloudCover,
-        onApply: (days, cloudCover) {
-          ref
-              .read(ndviControllerProvider.notifier)
-              .updateFilters(days: days, cloudCover: cloudCover);
-        },
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final ndviState = ref.watch(ndviControllerProvider);
+    final selectedDateFormatted = ndviState.selectedDate != null
+        ? DateFormat(
+            'dd/MMM/yyyy',
+            'pt_BR',
+          ).format(ndviState.selectedDate!).toUpperCase()
+        : '...';
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
-          widget.area.name,
-          style: const TextStyle(
-            color: Colors.white,
-            shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-          ),
+        title: Text('NDVI - ${widget.area.name}'),
+        centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(icon: const Icon(Icons.tune), onPressed: _showFilterSheet),
-          IconButton(icon: const Icon(Icons.share), onPressed: _exportReport),
-        ],
       ),
-      body: Stack(
-        children: [
-          // MAP VIEWER
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter:
-                  widget.area.center ??
-                  (widget.area.points.isNotEmpty
-                      ? widget.area.points.first
-                      : const LatLng(0, 0)),
-              initialZoom: 15.0,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.all,
-              ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Area Selector
+            const Text(
+              'Selecionar Área',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
-            children: [
-              TileLayer(
-                urlTemplate:
-                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // In pro app, use Satellite provider here!
-                userAgentPackageName: 'com.soloforte.app',
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade400),
+                borderRadius: BorderRadius.circular(4),
               ),
-
-              // NDVI Overlay
-              if (ndviState.currentImageBytes != null)
-                OverlayImageLayer(
-                  overlayImages: [
-                    OverlayImage(
-                      bounds: _getBounds(widget.area.points),
-                      imageProvider: MemoryImage(ndviState.currentImageBytes!),
-                      opacity: 0.8,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${widget.area.name} - ${widget.area.areaHectares.toStringAsFixed(1)} ha',
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
-
-              // Polygon Outline
-              PolygonLayer(
-                polygons: [
-                  Polygon(
-                    points: widget.area.points,
-                    color: Colors.transparent,
-                    borderColor: Colors.white,
-                    borderStrokeWidth: 2,
-                    // isFilled: false,
                   ),
+                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
                 ],
               ),
-            ],
-          ),
-
-          if (ndviState.isImageLoading)
-            const Positioned(
-              top: 100,
-              right: 20,
-              child: Card(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              ),
             ),
+            const SizedBox(height: 24),
 
-          // ERROR MESSAGE
-          if (ndviState.errorMessage != null)
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  ndviState.errorMessage!,
-                  style: const TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-
-          // BOTTOM CONTROLS
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: const EdgeInsets.only(
-                bottom: 30,
-                left: 16,
-                right: 16,
-                top: 16,
-              ),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Colors.black87, Colors.transparent],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Stats Card
-                  if (ndviState.currentStats != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: NDVIStatisticsCard(stats: ndviState.currentStats),
-                    ),
-
-                  // Stats / Controls
-                  Row(
-                    children: [
-                      FloatingActionButton.small(
-                        onPressed: _playTimelapse,
-                        child: const Icon(Icons.play_arrow),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: SizedBox(
-                          height: 60,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: ndviState.availableDates.length,
-                            itemBuilder: (context, index) {
-                              final date = ndviState.availableDates[index];
-                              final isSelected = ndviState.selectedDate == date;
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: ChoiceChip(
-                                  label: Text(DateFormat('dd/MM').format(date)),
-                                  selected: isSelected,
-                                  onSelected: (selected) {
-                                    if (selected) {
-                                      ref
-                                          .read(ndviControllerProvider.notifier)
-                                          .loadNdviImage(date);
-                                    }
-                                  },
-                                  selectedColor: Colors.greenAccent,
-                                  backgroundColor: Colors.white24,
-                                  labelStyle: TextStyle(
-                                    color: isSelected
-                                        ? Colors.black
-                                        : Colors.white,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+            // Image Box
+            // ╔═════════════════════════════╗
+            // ║ IMAGEM SATÉLITE NDVI        ║
+            // ...
+            _buildAsciiBox(
+              title: 'IMAGEM SATÉLITE NDVI',
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: Stack(
+                  children: [
+                    // Using FlutterMap as the "Image" viewer for now to keep overlay logic
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: _getCenter(widget.area),
+                          initialZoom: 15.0, // Or auto-fit bounds
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Legend
-                  const Card(
-                    color: Colors.white,
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _LegendItem(color: Colors.red, label: '< 0.2'),
-                          _LegendItem(color: Colors.yellow, label: '0.2-0.4'),
-                          _LegendItem(
-                            color: Colors.lightGreen,
-                            label: '0.4-0.6',
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.soloforte.app',
                           ),
-                          _LegendItem(color: Color(0xFF2E7D32), label: '> 0.6'),
+                          if (ndviState.currentImageBytes != null)
+                            OverlayImageLayer(
+                              overlayImages: [
+                                OverlayImage(
+                                  bounds: _getBounds(widget.area.points),
+                                  imageProvider: MemoryImage(
+                                    ndviState.currentImageBytes!,
+                                  ),
+                                  opacity: 0.8,
+                                ),
+                              ],
+                            ),
+                          PolygonLayer(
+                            polygons: [
+                              Polygon(
+                                points: widget.area.points,
+                                color: Colors.transparent,
+                                borderColor: Colors.white,
+                                borderStrokeWidth: 2,
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                ],
+
+                    // Legend / Info Overlay inside box
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLegendRow(Colors.green, 'Saudável'),
+                            _buildLegendRow(Colors.yellow, 'Médio'),
+                            _buildLegendRow(Colors.red, 'Estresse'),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    if (ndviState.isImageLoading)
+                      Container(
+                        color: Colors.black12,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                  ],
+                ),
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // Scale
+            // Escala NDVI:
+            // [████████████]
+            Text(
+              'Escala NDVI:',
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 20,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.red, Colors.yellow, Colors.green],
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '-1.0',
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+                Text('0.0', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                Text('0.3', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                Text('0.6', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                Text('1.0', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Date Controls
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Data:', style: TextStyle(color: Colors.grey)),
+                    Text(selectedDateFormatted, style: AppTypography.h4),
+                  ],
+                ),
+                Row(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        /* Prev */
+                      },
+                      icon: const Icon(Icons.arrow_back, size: 14),
+                      label: const Text('Anterior'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () {
+                        /* Next */
+                      },
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: const Row(
+                        children: [
+                          Text('Próxima'),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_forward, size: 14),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Statistics Box
+            // ┌─────────────────────────┐
+            // │ 📊 Estatísticas         │
+            // ...
+            _buildStatisticsBox(ndviState),
+
+            const SizedBox(height: 32),
+
+            // Actions
+            _buildActionButton(Icons.calendar_today, 'Ver Histórico', () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NDVIHistoryScreen()),
+              );
+            }),
+            const SizedBox(height: 12),
+            _buildActionButton(Icons.compare_arrows, 'Comparar Áreas', () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => NDVIComparisonScreen(areas: [widget.area]),
+                ),
+              ); // Passing single area for now, user selects more there
+            }),
+            const SizedBox(height: 12),
+            _buildActionButton(
+              Icons.download,
+              'Baixar Relatório',
+              _exportReport,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAsciiBox({required String title, required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.grey.shade400,
+          width: 2,
+        ), // Double border effect simulated with thickness
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            color: Colors.grey.shade100,
+            child: Center(
+              child: Text(
+                title,
+                style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatisticsBox(dynamic state) {
+    // Typing dynamic for brevity accessing fields
+    final mean = state.currentStats?.meanNdvi.toStringAsFixed(2) ?? '-';
+    // Mock percentages for now if not in stats
+    const health = '78%';
+    const stress = '12%';
+    const soil = '10%';
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade400),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.bar_chart, color: Colors.blue),
+                const SizedBox(width: 8),
+                Text('Estatísticas', style: AppTypography.h4),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildStatLine('NDVI Médio:', mean),
+                _buildStatLine('Área Saudável:', health),
+                _buildStatLine('Área Estresse:', stress),
+                _buildStatLine('Área Solo:', soil),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatLine(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          Text(
+            value,
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(IconData icon, String label, VoidCallback onTap) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 20),
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          alignment: Alignment.centerLeft,
+          side: const BorderSide(color: Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegendRow(Color color, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 12, height: 12, color: color),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -303,126 +440,16 @@ class _NDVIDetailScreenState extends ConsumerState<NDVIDetailScreen> {
   }
 
   LatLngBounds _getBounds(List<LatLng> points) {
-    if (points.isEmpty) {
+    if (points.isEmpty)
       return LatLngBounds(const LatLng(0, 0), const LatLng(0, 0));
-    }
     final bbox = GeometryUtils.calculateBBox(points);
-    // bbox: [minLng, minLat, maxLng, maxLat]
-    return LatLngBounds(
-      LatLng(bbox[1], bbox[0]), // SouthWest
-      LatLng(bbox[3], bbox[2]), // NorthEast
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendItem({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(width: 20, height: 20, color: color),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 10)),
-      ],
-    );
-  }
-}
-
-class _FilterSheet extends StatefulWidget {
-  final int currentDays;
-  final double currentCloudCover;
-  final Function(int, double) onApply;
-
-  const _FilterSheet({
-    required this.currentDays,
-    required this.currentCloudCover,
-    required this.onApply,
-  });
-
-  @override
-  State<_FilterSheet> createState() => _FilterSheetState();
-}
-
-class _FilterSheetState extends State<_FilterSheet> {
-  late int _selectedDays;
-  late double _selectedCloudCover;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedDays = widget.currentDays;
-    _selectedCloudCover = widget.currentCloudCover;
+    return LatLngBounds(LatLng(bbox[1], bbox[0]), LatLng(bbox[3], bbox[2]));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Filtros de Busca',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-
-          Text(
-            'Período de Análise',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [30, 60, 90].map((days) {
-              final isSelected = _selectedDays == days;
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: ChoiceChip(
-                  label: Text('Últimos $days dias'),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) setState(() => _selectedDays = days);
-                  },
-                ),
-              );
-            }).toList(),
-          ),
-
-          const SizedBox(height: 24),
-          Text(
-            'Máx. Cobertura de Nuvens: ${_selectedCloudCover.round()}%',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          Slider(
-            value: _selectedCloudCover,
-            min: 10,
-            max: 100,
-            divisions: 9,
-            label: '${_selectedCloudCover.round()}%',
-            onChanged: (value) => setState(() => _selectedCloudCover = value),
-          ),
-
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: () {
-              widget.onApply(_selectedDays, _selectedCloudCover);
-              Navigator.pop(context);
-            },
-            child: const Text('Aplicar Filtros'),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
+  LatLng _getCenter(GeoArea area) {
+    if (area.center != null) return area.center!;
+    if (area.points.isNotEmpty)
+      return GeometryUtils.calculateCentroid(area.points);
+    return const LatLng(0, 0);
   }
 }

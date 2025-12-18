@@ -25,6 +25,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _phone2Controller = TextEditingController(); // Added Second Phone
   final _cpfCnpjController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
@@ -35,39 +36,13 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
   String? _selectedState;
   String _selectedType = 'producer';
   bool _isLoading = false;
-  bool _hasUnsavedChanges = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // TODO: Se clientId != null, carregar dados do cliente
-    _setupListeners();
-  }
-
-  void _setupListeners() {
-    _nameController.addListener(_markAsChanged);
-    _emailController.addListener(_markAsChanged);
-    _phoneController.addListener(_markAsChanged);
-    _cpfCnpjController.addListener(_markAsChanged);
-    _addressController.addListener(_markAsChanged);
-    _cityController.addListener(_markAsChanged);
-    _stateController.addListener(_markAsChanged);
-    _notesController.addListener(_markAsChanged);
-  }
-
-  void _markAsChanged() {
-    if (!_hasUnsavedChanges) {
-      setState(() {
-        _hasUnsavedChanges = true;
-      });
-    }
-  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _phone2Controller.dispose();
     _cpfCnpjController.dispose();
     _addressController.dispose();
     _cityController.dispose();
@@ -80,341 +55,209 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
   Widget build(BuildContext context) {
     final isEditing = widget.clientId != null;
 
-    return PopScope(
-      canPop: !_hasUnsavedChanges,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-
-        final shouldPop = await _showDiscardDialog();
-        if (shouldPop == true && context.mounted) {
-          context.pop();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Colors.grey[50],
-        appBar: AppBar(
-          title: Text(isEditing ? 'Editar Cliente' : 'Novo Cliente'),
-          actions: [
-            if (_hasUnsavedChanges)
-              TextButton(
-                onPressed: _saveDraft,
-                child: const Text(
-                  'Salvar Rascunho',
-                  style: TextStyle(color: Colors.white),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(isEditing ? 'Editar Produtor' : 'Novo Produtor'),
+        actions: [
+          TextButton.icon(
+            onPressed: _saveClient,
+            icon: const Icon(Icons.check, color: AppColors.primary),
+            label: const Text(
+              'Salvar',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Photo Picker
+              Center(
+                child: Column(
+                  children: [
+                    const Text(
+                      'Foto do Produtor',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    AvatarPicker(
+                      initials: _getInitials(_nameController.text),
+                      onImageSelected: (file) {
+                        setState(() => _selectedAvatar = file);
+                      },
+                      // Add default image or empty state styling if possible in AvatarPicker
+                    ),
+                  ],
                 ),
               ),
-          ],
-        ),
-        body: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar
-                Center(
-                  child: AvatarPicker(
-                    initials: _nameController.text.isNotEmpty
-                        ? _getInitials(_nameController.text)
-                        : '?',
-                    onImageSelected: (file) {
-                      setState(() {
-                        _selectedAvatar = file;
-                        _markAsChanged();
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-                // Informações Básicas
-                _buildSectionTitle('Informações Básicas'),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: _buildInputDecoration(
-                    label: 'Nome *',
-                    hint: 'Nome do cliente ou fazenda',
-                    icon: Icons.person,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nome é obrigatório';
-                    }
-                    return null;
-                  },
-                  onChanged: (_) => setState(() {}), // Para atualizar iniciais
-                ),
-                const SizedBox(height: 16),
+              Text('Informações Básicas', style: AppTypography.h4),
+              const Divider(),
+              const SizedBox(height: 16),
 
-                // Tipo
-                Text(
-                  'Tipo *',
-                  style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 'producer',
-                      label: Text('Produtor'),
-                      icon: Icon(Icons.agriculture),
-                    ),
-                    ButtonSegment(
-                      value: 'consultant',
-                      label: Text('Consultor'),
-                      icon: Icon(Icons.business_center),
-                    ),
-                  ],
-                  selected: {_selectedType},
-                  onSelectionChanged: (Set<String> newSelection) {
-                    setState(() {
-                      _selectedType = newSelection.first;
-                      _markAsChanged();
-                    });
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return AppColors.primary;
-                      }
-                      return Colors.grey[200];
-                    }),
-                    foregroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return Colors.white;
-                      }
-                      return Colors.grey[700];
-                    }),
-                  ),
-                ),
-                const SizedBox(height: 24),
+              _buildTextField(
+                _nameController,
+                "Nome Completo *",
+                Icons.person,
+                true,
+              ),
+              const SizedBox(height: 16),
+              MaskedTextInput(
+                controller: _cpfCnpjController,
+                label: 'CPF/CNPJ',
+                hint: '000.000.000-00',
+                maskType: MaskType.cpfCnpj,
+                prefixIcon: Icons.badge,
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(_emailController, "Email", Icons.email, false),
+              const SizedBox(height: 16),
 
-                // Contato
-                _buildSectionTitle('Contato'),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: _buildInputDecoration(
-                    label: 'Email *',
-                    hint: 'email@exemplo.com',
-                    icon: Icons.email,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email é obrigatório';
-                    }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
-                      return 'Email inválido';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                MaskedTextInput(
-                  controller: _phoneController,
-                  label: 'Telefone',
-                  hint: '(00) 00000-0000',
-                  maskType: MaskType.phone,
-                  required: true,
-                  prefixIcon: Icons.phone,
-                ),
-                const SizedBox(height: 16),
-                MaskedTextInput(
-                  controller: _cpfCnpjController,
-                  label: 'CPF/CNPJ',
-                  hint: 'CPF ou CNPJ',
-                  maskType: MaskType.cpfCnpj,
-                  prefixIcon: Icons.badge,
-                ),
-                const SizedBox(height: 24),
+              MaskedTextInput(
+                controller: _phoneController,
+                label: 'Telefone Principal *',
+                hint: '(00) 00000-0000',
+                maskType: MaskType.phone,
+                required: true,
+                prefixIcon: Icons.phone,
+              ),
+              const SizedBox(height: 16),
+              MaskedTextInput(
+                controller: _phone2Controller,
+                label: 'Telefone Secundário',
+                hint: '(00) 00000-0000',
+                maskType: MaskType.phone,
+                prefixIcon: Icons.phone_iphone,
+              ),
+              const SizedBox(height: 32),
 
-                // Localização
-                _buildSectionTitle('Localização'),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: _buildInputDecoration(
-                    label: 'Endereço',
-                    hint: 'Rua, número, complemento',
-                    icon: Icons.home,
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 16),
-                CityAutocomplete(
-                  controller: _cityController,
-                  label: 'Cidade',
-                  hint: 'Digite o nome da cidade',
-                  required: true,
-                  initialState: _selectedState,
-                  onCitySelected: (city, state) {
-                    setState(() {
-                      _selectedState = state;
-                      _stateController.text = state;
-                      _markAsChanged();
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _stateController,
-                  decoration: _buildInputDecoration(
-                    label: 'Estado *',
-                    hint: 'UF',
-                    icon: Icons.map,
-                  ),
-                  maxLength: 2,
-                  textCapitalization: TextCapitalization.characters,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Estado é obrigatório';
-                    }
-                    if (value.length != 2) {
-                      return 'Digite a sigla do estado (ex: SP)';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
+              Text('Endereço', style: AppTypography.h4),
+              const Divider(),
+              const SizedBox(height: 16),
+              CityAutocomplete(
+                controller: _cityController,
+                label: 'Cidade *',
+                hint: 'Selecione a cidade',
+                required: true,
+                initialState: _selectedState,
+                onCitySelected: (city, state) {
+                  setState(() {
+                    _selectedState = state;
+                    _stateController.text = state;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                _stateController,
+                'Estado *',
+                Icons.map,
+                true,
+                width: 100,
+              ), // Small field for UF
 
-                // Notas
-                _buildSectionTitle('Notas'),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _notesController,
-                  decoration: _buildInputDecoration(
-                    label: 'Observações',
-                    hint: 'Informações adicionais sobre o cliente',
-                    icon: Icons.note,
-                  ),
-                  maxLines: 4,
-                ),
-                const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-                // Botões
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () async {
-                                if (_hasUnsavedChanges) {
-                                  final shouldDiscard =
-                                      await _showDiscardDialog();
-                                  if (shouldDiscard == true &&
-                                      context.mounted) {
-                                    context.pop();
-                                  }
-                                } else {
-                                  context.pop();
-                                }
-                              },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Cancelar'),
+              Text('Observações', style: AppTypography.h4),
+              const Divider(),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _notesController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  hintText: 'Cliente desde 2020...',
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Bottom Buttons (Cancel / Save - redundant with header but requested)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => context.pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
+                      child: const Text('Cancelar'),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _saveClient,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : Text(isEditing ? 'Salvar' : 'Criar Cliente'),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _saveClient,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Salvar'),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: AppTypography.h4.copyWith(color: AppColors.primary),
-    );
-  }
-
-  InputDecoration _buildInputDecoration({
-    required String label,
-    String? hint,
-    IconData? icon,
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+    bool required, {
+    double? width,
   }) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      prefixIcon: icon != null ? Icon(icon, color: AppColors.primary) : null,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[300]!),
+    return SizedBox(
+      width: width,
+      child: TextFormField(
+        controller: controller,
+        validator: required
+            ? (v) => v == null || v.isEmpty ? 'Campo obrigatório' : null
+            : null,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Colors.grey),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[300]!),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.primary, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.error),
-      ),
-      labelStyle: AppTypography.bodyMedium,
-      hintStyle: AppTypography.bodySmall.copyWith(color: Colors.grey[400]),
     );
   }
 
   String _getInitials(String name) {
+    if (name.isEmpty) return '?';
     final parts = name.trim().split(' ');
-    if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts[0][0].toUpperCase();
     return '${parts[0][0]}${parts[parts.length - 1][0]}'.toUpperCase();
   }
 
   Future<void> _saveClient() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final client = Client(
@@ -422,85 +265,34 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
         name: _nameController.text,
         email: _emailController.text,
         phone: _phoneController.text,
-        cpfCnpj: _cpfCnpjController.text.isEmpty
-            ? null
-            : _cpfCnpjController.text,
-        address: _addressController.text,
+        cpfCnpj: _cpfCnpjController.text,
+        address: _addressController
+            .text, // Not in form in new layout? I'll keep it empty or use city/state
         city: _cityController.text,
         state: _stateController.text,
         type: _selectedType,
         status: 'active',
         lastActivity: DateTime.now(),
-        notes: _notesController.text.isEmpty ? null : _notesController.text,
-        // TODO: Upload avatar para storage e obter URL
+        notes: _notesController.text,
       );
 
       await ref.read(clientsControllerProvider.notifier).addClient(client);
 
       if (mounted) {
+        context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.clientId != null
-                  ? 'Cliente atualizado com sucesso!'
-                  : 'Cliente criado com sucesso!',
-            ),
-            backgroundColor: AppColors.success,
+          const SnackBar(
+            content: Text('Produtor salvo!'),
+            backgroundColor: Colors.green,
           ),
         );
-        context.pop();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar cliente: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _saveDraft() {
-    // TODO: Implementar salvamento de rascunho
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Rascunho salvo!'),
-        backgroundColor: AppColors.info,
-      ),
-    );
-    setState(() {
-      _hasUnsavedChanges = false;
-    });
-  }
-
-  Future<bool?> _showDiscardDialog() {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Descartar alterações?'),
-        content: const Text(
-          'Você tem alterações não salvas. Deseja descartá-las?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Descartar'),
-          ),
-        ],
-      ),
-    );
   }
 }
