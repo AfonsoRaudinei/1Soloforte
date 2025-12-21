@@ -124,9 +124,9 @@ class NdviHeatmapPainter extends CustomPainter {
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [
-            color.withOpacity(0.8),
-            color.withOpacity(0.3),
-            color.withOpacity(0.0),
+            color.withValues(alpha: 0.8),
+            color.withValues(alpha: 0.3),
+            color.withValues(alpha: 0.0),
           ],
           stops: const [0.0, 0.5, 1.0],
         ).createShader(Rect.fromCircle(center: Offset(x, y), radius: 30));
@@ -137,7 +137,7 @@ class NdviHeatmapPainter extends CustomPainter {
 
   void _drawGrid(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.2)
+      ..color = Colors.white.withValues(alpha: 0.2)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
 
@@ -163,7 +163,7 @@ class NdviHeatmapPainter extends CustomPainter {
 
       // Desenha ícone de alerta
       final paint = Paint()
-        ..color = Colors.red.withOpacity(0.7)
+        ..color = Colors.red.withValues(alpha: 0.7)
         ..style = PaintingStyle.fill;
 
       // Círculo de fundo

@@ -238,7 +238,7 @@ class _ReportHistoryScreenState extends ConsumerState<ReportHistoryScreen>
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: report.template.color.withOpacity(0.1),
+                  color: report.template.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -337,8 +337,8 @@ class _ReportHistoryScreenState extends ConsumerState<ReportHistoryScreen>
             height: 60,
             decoration: BoxDecoration(
               color: schedule.isActive
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.1),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(

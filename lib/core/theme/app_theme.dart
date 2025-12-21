@@ -71,6 +71,17 @@ class AppTheme {
           side: const BorderSide(color: AppColors.border),
         ),
       ),
+      // iOS Style Enhancements
+      splashFactory:
+          NoSplash.splashFactory, // Cleaner interaction without heavy ripples
+      highlightColor: Colors.black.withValues(alpha: 0.05), // Subtle highlight
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 }

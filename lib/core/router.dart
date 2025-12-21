@@ -38,7 +38,7 @@ import '../features/support/presentation/support_home_screen.dart';
 import '../features/support/presentation/chat_screen.dart';
 import '../features/support/presentation/create_ticket_screen.dart';
 import '../features/support/domain/ticket_model.dart';
-import '../features/marketing/presentation/feed_screen.dart';
+
 import '../features/scanner/presentation/scanner_screen.dart';
 import '../features/occurrences/presentation/occurrence_list_screen.dart';
 import '../features/occurrences/presentation/occurrence_detail_screen.dart';
@@ -136,35 +136,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/dashboard/occurrences',
             builder: (context, state) => const OccurrenceListScreen(),
           ),
-          GoRoute(
-            path: '/occurrences/detail/:id',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) => OccurrenceDetailScreen(
-              occurrenceId: state.pathParameters['id']!,
-            ),
-          ),
-          GoRoute(
-            path: '/occurrences/new',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) {
-              final extras = state.extra as Map<String, dynamic>?;
-              return NewOccurrenceScreen(
-                initialTitle: extras?['title'],
-                initialDescription: extras?['description'],
-                initialType: extras?['type'],
-                initialImagePath: extras?['imagePath'],
-                initialSeverity: extras?['severity'],
-              );
-            },
-          ),
-          GoRoute(
-            path: '/occurrences/edit',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) {
-              final occurrence = state.extra as Occurrence?;
-              return NewOccurrenceScreen(initialOccurrence: occurrence);
-            },
-          ),
+
           GoRoute(
             path: '/dashboard/reports',
             builder: (context, state) => const ReportsScreen(),
@@ -172,49 +144,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/dashboard/clients',
             builder: (context, state) => const ClientListScreen(),
-            routes: [
-              GoRoute(
-                path: 'new',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const ClientFormScreen(),
-              ),
-              GoRoute(
-                path: ':id',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) =>
-                    ClientDetailScreen(clientId: state.pathParameters['id']!),
-                routes: [
-                  GoRoute(
-                    path: 'edit',
-                    parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        ClientFormScreen(clientId: state.pathParameters['id']),
-                  ),
-                ],
-              ),
-            ],
           ),
           GoRoute(
             path: '/dashboard/calendar',
             builder: (context, state) => const AgendaScreen(),
-            routes: [
-              GoRoute(
-                path: 'detail',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) {
-                  final event = state.extra as Event;
-                  return EventDetailScreen(event: event);
-                },
-              ),
-              GoRoute(
-                path: 'new',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) {
-                  final initialDate = state.extra as DateTime?;
-                  return EventFormScreen(initialDate: initialDate);
-                },
-              ),
-            ],
           ),
           GoRoute(
             path: '/dashboard/ndvi',
@@ -236,15 +169,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/dashboard/support',
             builder: (context, state) => const SupportHomeScreen(),
           ),
-          GoRoute(
-            path: '/dashboard/feed',
-            builder: (context, state) => const FeedScreen(),
-          ),
-          GoRoute(
-            path: '/dashboard/report/new',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) => const VisitReportScreen(),
-          ),
+
           GoRoute(
             path: '/dashboard/settings',
             builder: (context, state) => const SettingsScreen(),
@@ -260,68 +185,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/dashboard/team',
             builder: (context, state) => const TeamListScreen(),
-            routes: [
-              GoRoute(
-                path: 'map',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const TeamMapScreen(),
-              ),
-              GoRoute(
-                path: ':id',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => TeamMemberDetailScreen(
-                  memberId: state.pathParameters['id']!,
-                ),
-              ),
-              GoRoute(
-                path: 'ranking',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const TeamRankingScreen(),
-              ),
-              GoRoute(
-                path: ':id/history',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) {
-                  final extras = state.extra as Map<String, dynamic>;
-                  return RouteHistoryScreen(
-                    memberId: state.pathParameters['id']!,
-                    memberName: extras['name'],
-                  );
-                },
-              ),
-              GoRoute(
-                path: 'chat',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const TeamChatListScreen(),
-              ),
-              GoRoute(
-                path: 'chat/:chatId',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) {
-                  final extras =
-                      state.extra as Map<String, dynamic>? ?? {'title': 'Chat'};
-                  return TeamChatDetailScreen(
-                    conversationId: state.pathParameters['chatId']!,
-                    title: extras['title'],
-                  );
-                },
-              ),
-              GoRoute(
-                path: 'time-clock',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const TimeClockScreen(),
-              ),
-              GoRoute(
-                path: 'approvals',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const ApprovalsScreen(),
-              ),
-              GoRoute(
-                path: 'sos',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const SOSScreen(),
-              ),
-            ],
           ),
         ],
       ),
@@ -392,6 +255,140 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const NewReportScreen(),
       ),
+
+      // Moved Routes (formerly nested in ShellRoute)
+      GoRoute(
+        path: '/occurrences/detail/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            OccurrenceDetailScreen(occurrenceId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/occurrences/new',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final extras = state.extra as Map<String, dynamic>?;
+          return NewOccurrenceScreen(
+            initialTitle: extras?['title'],
+            initialDescription: extras?['description'],
+            initialType: extras?['type'],
+            initialImagePath: extras?['imagePath'],
+            initialSeverity: extras?['severity'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/occurrences/edit',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final occurrence = state.extra as Occurrence?;
+          return NewOccurrenceScreen(initialOccurrence: occurrence);
+        },
+      ),
+      // Clients
+      GoRoute(
+        path: '/dashboard/clients/new',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ClientFormScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/clients/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            ClientDetailScreen(clientId: state.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'edit',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) =>
+                ClientFormScreen(clientId: state.pathParameters['id']),
+          ),
+        ],
+      ),
+      // Calendar
+      GoRoute(
+        path: '/dashboard/calendar/detail',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final event = state.extra as Event;
+          return EventDetailScreen(event: event);
+        },
+      ),
+      GoRoute(
+        path: '/dashboard/calendar/new',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final initialDate = state.extra as DateTime?;
+          return EventFormScreen(initialDate: initialDate);
+        },
+      ),
+      // Reports
+      GoRoute(
+        path: '/dashboard/report/new',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const VisitReportScreen(),
+      ),
+      // Team
+      GoRoute(
+        path: '/dashboard/team/map',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const TeamMapScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/team/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            TeamMemberDetailScreen(memberId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/dashboard/team/ranking',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const TeamRankingScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/team/:id/history',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final extras = state.extra as Map<String, dynamic>;
+          return RouteHistoryScreen(
+            memberId: state.pathParameters['id']!,
+            memberName: extras['name'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/dashboard/team/chat',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const TeamChatListScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/team/chat/:chatId',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final extras =
+              state.extra as Map<String, dynamic>? ?? {'title': 'Chat'};
+          return TeamChatDetailScreen(
+            conversationId: state.pathParameters['chatId']!,
+            title: extras['title'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/dashboard/team/time-clock',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const TimeClockScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/team/approvals',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ApprovalsScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard/team/sos',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SOSScreen(),
+      ),
+
       GoRoute(
         path: '/reports/detail/:id',
         parentNavigatorKey: _rootNavigatorKey,

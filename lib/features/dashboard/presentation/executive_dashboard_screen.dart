@@ -5,6 +5,8 @@ import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/dashboard/presentation/executive_dashboard_controller.dart';
 import 'package:soloforte_app/features/dashboard/presentation/widgets/kpi_stats_card.dart';
 import 'package:soloforte_app/features/dashboard/presentation/widgets/dashboard_charts.dart';
+import 'package:soloforte_app/shared/widgets/touch_scale_wrapper.dart';
+import 'package:soloforte_app/shared/widgets/modal_handle_bar.dart';
 
 class ExecutiveDashboardScreen extends ConsumerStatefulWidget {
   const ExecutiveDashboardScreen({super.key});
@@ -227,7 +229,7 @@ class _ExecutiveDashboardScreenState
               _selectedPeriod == p ||
               (_selectedPeriod == 'Safra Atual' && p == 'Safra');
           return Expanded(
-            child: GestureDetector(
+            child: TouchScaleWrapper(
               onTap: () {
                 setState(() {
                   _selectedPeriod = p == 'Safra' ? 'Safra Atual' : p;
@@ -475,17 +477,12 @@ class _ExecutiveDashboardScreenState
               ),
             ),
             const SizedBox(height: 8),
-            ...critical
-                .map(
-                  (a) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4, left: 8),
-                    child: Text(
-                      '• ${a.message}',
-                      style: AppTypography.bodySmall,
-                    ),
-                  ),
-                )
-                ,
+            ...critical.map(
+              (a) => Padding(
+                padding: const EdgeInsets.only(bottom: 4, left: 8),
+                child: Text('• ${a.message}', style: AppTypography.bodySmall),
+              ),
+            ),
             const SizedBox(height: 16),
           ],
           // Warnings
@@ -498,17 +495,15 @@ class _ExecutiveDashboardScreenState
               ),
             ),
             const SizedBox(height: 8),
-            ...warning
-                .map(
-                  (a) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4, left: 8),
-                    child: Text(
-                      '• ${a.title}: ${a.message}',
-                      style: AppTypography.bodySmall,
-                    ),
-                  ),
-                )
-                ,
+            ...warning.map(
+              (a) => Padding(
+                padding: const EdgeInsets.only(bottom: 4, left: 8),
+                child: Text(
+                  '• ${a.title}: ${a.message}',
+                  style: AppTypography.bodySmall,
+                ),
+              ),
+            ),
           ],
           const SizedBox(height: 12),
           Center(
@@ -625,7 +620,7 @@ class _ExecutiveDashboardScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
+              color: AppColors.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -765,6 +760,7 @@ class _ExecutiveDashboardScreenState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const ModalHandleBar(),
               Text('Selecionar Período', style: AppTypography.h3),
               const Divider(),
               const SizedBox(height: 16),
