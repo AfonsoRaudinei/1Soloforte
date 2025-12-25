@@ -187,6 +187,14 @@ class SideMenu extends StatelessWidget {
                           ),
                           onTap: () => context.go('/dashboard/integrations'),
                         ),
+                        _DrawerItem(
+                          icon: Icons.link,
+                          label: 'LinkHub',
+                          isSelected: location.startsWith(
+                            '/dashboard/link-hub',
+                          ),
+                          onTap: () => context.go('/dashboard/link-hub'),
+                        ),
 
                         const Padding(
                           padding: EdgeInsets.symmetric(

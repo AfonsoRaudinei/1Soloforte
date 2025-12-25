@@ -68,6 +68,7 @@ import 'package:soloforte_app/features/reports/presentation/reports_list_screen.
 import 'package:soloforte_app/features/reports/presentation/new_report_screen.dart';
 import 'package:soloforte_app/features/reports/presentation/report_detail_screen.dart';
 import 'package:soloforte_app/features/visits/presentation/active_visit_screen.dart';
+import '../features/link_hub/presentation/link_hub_screen.dart';
 
 // Keys
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -187,6 +188,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/dashboard/team',
             builder: (context, state) => const TeamListScreen(),
+          ),
+          GoRoute(
+            path: '/dashboard/link-hub',
+            builder: (context, state) => const LinkHubScreen(),
           ),
         ],
       ),
