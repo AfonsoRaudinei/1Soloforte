@@ -76,7 +76,7 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
-  sqflite_common_ffi: ^2.4.0+1
+
 
 dev_dependencies:
   flutter_test:
