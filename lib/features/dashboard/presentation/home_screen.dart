@@ -6,9 +6,13 @@ import 'package:go_router/go_router.dart';
 // import 'package:geolocator/geolocator.dart'; // Abstracted
 import 'package:soloforte_app/features/visits/presentation/visit_controller.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/areas/presentation/providers/areas_controller.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
 import 'package:soloforte_app/features/areas/domain/entities/area.dart';
+import 'package:soloforte_app/features/map/application/drawing_controller.dart';
+import 'package:soloforte_app/features/map/presentation/widgets/drawing_toolbar.dart';
+
 import 'package:soloforte_app/features/occurrences/domain/entities/occurrence.dart';
 import 'package:soloforte_app/core/services/location/location_service.dart';
 import 'package:soloforte_app/l10n/generated/app_localizations.dart';
@@ -27,6 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final MapController _mapController = MapController();
   bool _isOnline = true;
   bool _isRadialMenuOpen = false;
+  String _mapLayer = 'standard';
 
   @override
   void dispose() {
@@ -81,12 +86,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _hideMenus() {
-    if (_isRadialMenuOpen) {
-      setState(() => _isRadialMenuOpen = false);
-    }
-  }
-
   void _toggleRadialMenu() {
     setState(() {
       _isRadialMenuOpen = !_isRadialMenuOpen;
@@ -96,6 +95,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     // Providers
+    final drawingState = ref.watch(drawingControllerProvider);
+    final drawingController = ref.read(drawingControllerProvider.notifier);
+
+    // Listen to Areas to Smart Center the Map
+    ref.listen<AsyncValue<List<Area>>>(areasControllerProvider, (prev, next) {
+      if (next.hasValue &&
+          next.value!.isNotEmpty &&
+          (prev?.value == null || prev!.value!.isEmpty)) {
+        // First load of areas: Center on the first one
+        final firstArea = next.value!.first;
+        if (firstArea.coordinates.isNotEmpty) {
+          final firstPoint = firstArea.coordinates.first;
+          _mapController.move(
+            LatLng(firstPoint.latitude, firstPoint.longitude),
+            15.0,
+          );
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Mapa focado em ${firstArea.name}'),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    });
+
+    // Error Listener
+    ref.listen<AsyncValue<List<Area>>>(areasControllerProvider, (prev, next) {
+      if (next.hasError && !next.isLoading) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao carregar áreas: ${next.error}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
+
     final activeVisitAsync = ref.watch(visitControllerProvider);
     final AsyncValue<List<Area>> areasAsync = ref.watch(
       areasControllerProvider,
@@ -117,11 +158,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               initialZoom: 13.0,
               minZoom: 3.0,
               maxZoom: 18.0,
-              onTap: (_, __) => _hideMenus(),
+              onTap: (tapPosition, point) {
+                if (_isRadialMenuOpen) {
+                  _toggleRadialMenu();
+                }
+
+                // Drawing Mode Handling
+                if (drawingState.isDrawing) {
+                  drawingController.addPoint(point);
+                }
+              },
             ),
             children: [
+              // Map Layer State
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: _mapLayer == 'satellite'
+                    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                    : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.soloforte.app',
                 maxZoom: 19,
               ),
@@ -131,7 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   polygons: areasAsync.value!.map((Area area) {
                     return Polygon(
                       points: area.coordinates,
-                      color: _getAreaColor(area.status).withValues(alpha: 0.3),
+                      color: _getAreaColor(area.status).withOpacity(0.3),
                       borderColor: _getAreaColor(area.status),
                       borderStrokeWidth: 2,
                     );
@@ -146,22 +199,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       point: LatLng(occ.latitude, occ.longitude),
                       width: 40,
                       height: 40,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          _getOccurrenceIcon(occ.type),
-                          color: _getSeverityColor(occ.severity),
-                          size: 24,
+                      child: GestureDetector(
+                        onTap: () {
+                          context.push('/occurrences/detail/${occ.id}');
+                        },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _getOccurrenceIcon(occ.type),
+                            color: _getSeverityColor(occ.severity),
+                            size: 24,
+                          ),
                         ),
                       ),
                     );
@@ -169,6 +227,109 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
             ],
           ),
+
+          // Drawing Layers (Active Drawing)
+          if (drawingState.isDrawing) ...[
+            // Polygons being drawn
+            if (drawingState.currentPoints.isNotEmpty)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: [
+                      ...drawingState.currentPoints,
+                      if (drawingState.activeTool == 'polygon' &&
+                          drawingState.currentPoints.length > 2)
+                        drawingState.currentPoints.first, // Close loop visually
+                    ],
+                    color: AppColors.primary,
+                    strokeWidth: 3,
+                  ),
+                ],
+              ),
+
+            // Vertices Markers
+            MarkerLayer(
+              markers: drawingState.currentPoints.map((point) {
+                return Marker(
+                  point: point,
+                  width: 16,
+                  height: 16,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 2),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+
+            // Circle Preview
+            if (drawingState.activeTool == 'circle' &&
+                drawingState.circleCenter != null &&
+                drawingState.circleRadius > 0)
+              CircleLayer(
+                circles: [
+                  CircleMarker(
+                    point: drawingState.circleCenter!,
+                    radius: drawingState.circleRadius,
+                    useRadiusInMeter: true,
+                    color: AppColors.primary.withOpacity(0.2),
+                    borderColor: AppColors.primary,
+                    borderStrokeWidth: 2,
+                  ),
+                ],
+              ),
+          ],
+
+          // Map Loading Indicator
+          if (areasAsync.isLoading)
+            Positioned(
+              top: 100,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Carregando fazendas...',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
           // Online Status Badge (Top Right)
           Positioned(
@@ -227,21 +388,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // Map Side Controls (Right Side)
-          MapSideControls(
-            onLocationTap: _centerOnUserLocation,
-            onSyncTap: _handleSync,
-            onZoomIn: _zoomIn,
-            onZoomOut: _zoomOut,
-            onLayersTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(AppLocalizations.of(context)!.layers)),
-              );
-            },
-            onDrawTap: () {
-              context.push('/analysis/new');
-            },
-          ),
+          // Map Side Controls (Hidden when drawing)
+          if (!drawingState.isDrawing)
+            MapSideControls(
+              onLocationTap: _centerOnUserLocation,
+              onSyncTap: _handleSync,
+              onZoomIn: _zoomIn,
+              onZoomOut: _zoomOut,
+              onLayersTap: () {
+                _showLayersModal();
+              },
+              onDrawTap: () {
+                // Enter Drawing Mode "In-Place"
+                if (_isRadialMenuOpen) _toggleRadialMenu();
+                drawingController.startDrawing();
+              },
+            ),
+
+          // Drawing Toolbar (Visible when drawing)
+          if (drawingState.isDrawing) const DrawingToolbar(),
+
+          // ... rest of stack
 
           // Area List (Bottom, above BottomBar)
           Positioned(
@@ -296,7 +463,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.4),
+                          color: AppColors.primary.withOpacity(0.4),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -376,11 +543,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -432,19 +599,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         width: 280,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: Colors.white.withOpacity(0.9),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 1,
-          ),
+          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
         ),
         child: Row(
           children: [
@@ -452,9 +616,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _getSeverityColor(
-                  occurrence.severity,
-                ).withValues(alpha: 0.1),
+                color: _getSeverityColor(occurrence.severity).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -602,7 +764,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withOpacity(0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -629,9 +791,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Icon(
                           Icons.grass,
                           size: 60,
-                          color: _getAreaColor(
-                            area.status,
-                          ).withValues(alpha: 0.5),
+                          color: _getAreaColor(area.status).withOpacity(0.5),
                         ),
                       ),
                       Positioned(
@@ -643,7 +803,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -757,5 +917,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (diff.inHours > 0) return l10n.hoursAgo(diff.inHours);
     if (diff.inMinutes > 0) return l10n.minutesAgo(diff.inMinutes);
     return l10n.now;
+  }
+
+  void _showLayersModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tipo de Mapa', style: AppTypography.h4),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _buildLayerOption('Padrão', Icons.map_outlined, 'standard'),
+                const SizedBox(width: 16),
+                _buildLayerOption(
+                  'Satélite',
+                  Icons.satellite_outlined,
+                  'satellite',
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text('Camadas de Dados', style: AppTypography.h4),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.grass, color: AppColors.primary),
+              title: const Text('NDVI (Saúde da Lavoura)'),
+              trailing: Switch(
+                value: false,
+                onChanged: (val) {},
+              ), // Mock for now
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLayerOption(String label, IconData icon, String value) {
+    final isSelected = _mapLayer == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() => _mapLayer = value);
+          Navigator.pop(context);
+        },
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withOpacity(0.1)
+                : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppColors.primary : Colors.grey[600],
+                size: 32,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? AppColors.primary : Colors.grey[800],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -27,13 +27,28 @@ class _AnalysisWizardScreenState extends ConsumerState<AnalysisWizardScreen> {
   AnalysisType _selectedType = AnalysisType.chemical;
   bool _isSaving = false;
 
+  // Mock Role - In real app, get from AuthProvider
+  final bool _isConsultant = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_isConsultant) {
+      // Auto-select current user client profile
+      // _selectedClient = currentUser.clientProfile;
+    }
+  }
+
   void _nextStep() {
-    if (_currentStep == 0 && _selectedClient == null) {
+    // Role Check: If producer, step 0 is skipped or auto-filled
+    if (_currentStep == 0 && _selectedClient == null && _isConsultant) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Selecione um cliente para continuar')),
       );
       return;
     }
+
+    // ... existing validation ...
     if (_currentStep == 1 && _selectedArea == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Selecione uma área para continuar')),
@@ -128,24 +143,31 @@ class _AnalysisWizardScreenState extends ConsumerState<AnalysisWizardScreen> {
           );
         },
         steps: [
-          Step(
-            title: const Text('Cliente'),
-            isActive: _currentStep >= 0,
-            state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-            content: _ClientSelectionStep(
-              selectedClient: _selectedClient,
-              onSelect: (client) => setState(() => _selectedClient = client),
+          // Step 0: Client (Only visible/active for Consultants)
+          if (_isConsultant)
+            Step(
+              title: const Text('Cliente'),
+              isActive: _currentStep >= 0,
+              state: _currentStep > 0 ? StepState.complete : StepState.indexed,
+              content: _ClientSelectionStep(
+                selectedClient: _selectedClient,
+                onSelect: (client) => setState(() => _selectedClient = client),
+              ),
             ),
-          ),
+
           Step(
             title: const Text('Área'),
-            isActive: _currentStep >= 1,
-            state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+            isActive: _currentStep >= (_isConsultant ? 1 : 0),
+            state: _currentStep > (_isConsultant ? 1 : 0)
+                ? StepState.complete
+                : StepState.indexed,
             content: _AreaSelectionStep(
               selectedArea: _selectedArea,
               onSelect: (area) => setState(() => _selectedArea = area),
             ),
           ),
+
+          // ... remaining steps
           Step(
             title: const Text('Detalhes'),
             isActive: _currentStep >= 2,

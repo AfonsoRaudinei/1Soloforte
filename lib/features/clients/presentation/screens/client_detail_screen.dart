@@ -5,6 +5,8 @@ import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/clients/presentation/client_detail_controller.dart';
 // Note: Keeping existing imports if they are useful, but likely will replace widget usages.
+import 'package:soloforte_app/features/clients/presentation/widgets/client_history_timeline.dart';
+import 'package:soloforte_app/features/clients/domain/client_history_model.dart';
 
 class ClientDetailScreen extends ConsumerStatefulWidget {
   final String clientId;
@@ -16,6 +18,78 @@ class ClientDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
+  String _selectedFilter = 'all';
+
+  // Mock Data (Moved to property for filtering)
+  final List<ClientHistory> _allHistory = [
+    ClientHistory(
+      id: '1',
+      clientId: 'c1',
+      actionType: 'visit',
+      description: 'Visita Técnica: Monitoramento de Pragas (Broca)',
+      timestamp: DateTime.now().subtract(const Duration(hours: 4)),
+      metadata: {'Técnico': 'João', 'Talhão': 'T-10', 'Fazenda': 'Boa Vista'},
+    ),
+    ClientHistory(
+      id: '2',
+      clientId: 'c1',
+      actionType: 'occurrence',
+      description: 'Nova Ocorrência: Ferrugem Asiática Detectada',
+      timestamp: DateTime.now().subtract(const Duration(days: 1)),
+      metadata: {'Severidade': 'Alta', 'Talhão': 'T-03'},
+    ),
+    ClientHistory(
+      id: '3',
+      clientId: 'c1',
+      actionType: 'whatsapp',
+      description: 'Chat Iniciado: Dúvida sobre aplicação',
+      timestamp: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+    ClientHistory(
+      id: '4',
+      clientId: 'c1',
+      actionType: 'report',
+      description: 'Relatório Mensal de Produtividade (PDF)',
+      timestamp: DateTime.now().subtract(const Duration(days: 5)),
+    ),
+    ClientHistory(
+      id: '5',
+      clientId: 'c1',
+      actionType: 'image',
+      description: 'Foto enviada pelo produtor (Folha da Soja)',
+      timestamp: DateTime.now().subtract(const Duration(days: 6)),
+    ),
+  ];
+
+  List<ClientHistory> get _filteredHistory {
+    if (_selectedFilter == 'all') return _allHistory;
+    return _allHistory.where((h) => h.actionType == _selectedFilter).toList();
+  }
+
+  void _handleHistoryTap(ClientHistory item) {
+    if (item.actionType == 'occurrence') {
+      // Mock navigation - would use ID in real app
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Navegando para Detalhe da Ocorrência...'),
+        ),
+      );
+      // context.push('/occurrences/detail/${item.id}');
+    } else if (item.actionType == 'visit') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Abrindo Relatório da Visita...')),
+      );
+    } else if (item.actionType == 'report') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Abrindo Visualizador de PDF...')),
+      );
+    } else if (item.actionType == 'whatsapp') {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Abrindo Chat...')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // For now, we mock the data loading since providers layout might differ,
@@ -144,29 +218,36 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Recent History
+                // History Section
                 _buildSectionBox(
-                  title: 'Histórico Recente (5)',
+                  title: 'Histórico Completo',
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHistoryItem(
-                        '28/Out',
-                        'Visita técnica',
-                        'Talhão Norte',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildHistoryItem(
-                        '25/Out',
-                        'Ocorrência',
-                        'Lagarta na soja',
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          onPressed: () {},
-                          child: const Text('Ver Histórico Completo'),
+                      // Filters
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilterChip('Todos', 'all'),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Visitas', 'visit'),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Ocorrências', 'occurrence'),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Relatórios', 'report'),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Chat', 'whatsapp'),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Timeline
+                      ClientHistoryTimeline(
+                        history: _filteredHistory,
+                        maxItems: 20, // Show more in detail view
+                        onItemTap: _handleHistoryTap,
                       ),
                     ],
                   ),
@@ -298,26 +379,6 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
     );
   }
 
-  Widget _buildHistoryItem(String date, String title, String subtitle) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Icon(Icons.circle, size: 10, color: Colors.grey),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$date - $title',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(subtitle, style: const TextStyle(color: Colors.grey)),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildActionBtn(IconData icon, String label) {
     return OutlinedButton.icon(
       onPressed: () {},
@@ -327,6 +388,32 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _selectedFilter == value;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (bool selected) {
+        setState(() {
+          _selectedFilter = value;
+        });
+      },
+      backgroundColor: Colors.white,
+      selectedColor: AppColors.primary.withOpacity(0.2),
+      labelStyle: TextStyle(
+        color: isSelected ? AppColors.primary : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected ? AppColors.primary : Colors.grey[300]!,
+        ),
+      ),
+      showCheckmark: false,
     );
   }
 }

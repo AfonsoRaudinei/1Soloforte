@@ -49,9 +49,11 @@ class _ExecutiveDashboardScreenState
 
     // Loading overlay handled inside RefreshIndicator if needed,
     // or we can block interaction. For now, let's keep it simple. If it's initial loading:
-    /* if (dashboardState.isLoading && dashboardState.summaryData.isEmpty) {
-       return const Center(child: CircularProgressIndicator());
-    } */
+    if (dashboardState.isLoading && dashboardState.summaryData.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -601,6 +603,9 @@ class _ExecutiveDashboardScreenState
   }
 
   Widget _buildTeamSection(List<Map<String, dynamic>> team) {
+    if (team.isEmpty) {
+      return const SizedBox.shrink();
+    }
     final topPerformer = team.firstWhere(
       (t) => t['isTop'] == true,
       orElse: () => team.first,
@@ -639,7 +644,7 @@ class _ExecutiveDashboardScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
+              color: AppColors.primary.withOpacity(0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -689,7 +694,11 @@ class _ExecutiveDashboardScreenState
             ],
           ),
           const Divider(),
-          if (goals.isEmpty) const Text('Carregando metas...'),
+          if (goals.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text('Nenhuma meta definida.'),
+            ),
           ...goals.map((g) {
             final val = g['value'] as double;
             final color = Color(g['color'] as int);

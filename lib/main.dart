@@ -16,7 +16,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint(
+      'Firebase initialization failed (ignoring for development/unsupported platforms): $e',
+    );
+  }
 
   // Initialize Push Notifications
   // await PushNotificationService().initialize();

@@ -3,6 +3,7 @@ import '../../domain/entities/occurrence.dart';
 import '../../domain/repositories/occurrence_repository.dart';
 import '../data_sources/occurrence_local_data_source.dart';
 import '../dtos/occurrence_dto.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 part 'occurrence_repository_impl.g.dart';
 
@@ -13,29 +14,57 @@ class OccurrenceRepositoryImpl implements OccurrenceRepository {
 
   @override
   Future<List<Occurrence>> getOccurrences() async {
-    final dtos = await _dataSource.getOccurrences();
-    return dtos.map((e) => e.toDomain()).toList();
+    try {
+      final dtos = await _dataSource.getOccurrences();
+      return dtos.map((e) => e.toDomain()).toList();
+    } catch (e, s) {
+      LoggerService.e('Failed to get occurrences', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 
   @override
   Future<Occurrence?> getOccurrenceById(String id) async {
-    final dto = await _dataSource.getOccurrenceById(id);
-    return dto?.toDomain();
+    try {
+      final dto = await _dataSource.getOccurrenceById(id);
+      return dto?.toDomain();
+    } catch (e, s) {
+      LoggerService.e('Failed to get occurrence $id', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 
   @override
   Future<void> createOccurrence(Occurrence occurrence) async {
-    await _dataSource.saveOccurrence(OccurrenceDto.fromDomain(occurrence));
+    try {
+      LoggerService.i('Creating occurrence: ${occurrence.id}');
+      await _dataSource.saveOccurrence(OccurrenceDto.fromDomain(occurrence));
+    } catch (e, s) {
+      LoggerService.e('Failed to create occurrence', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 
   @override
   Future<void> updateOccurrence(Occurrence occurrence) async {
-    await _dataSource.saveOccurrence(OccurrenceDto.fromDomain(occurrence));
+    try {
+      LoggerService.i('Updating occurrence: ${occurrence.id}');
+      await _dataSource.saveOccurrence(OccurrenceDto.fromDomain(occurrence));
+    } catch (e, s) {
+      LoggerService.e('Failed to update occurrence', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 
   @override
   Future<void> deleteOccurrence(String id) async {
-    await _dataSource.deleteOccurrence(id);
+    try {
+      LoggerService.w('Deleting occurrence: $id');
+      await _dataSource.deleteOccurrence(id);
+    } catch (e, s) {
+      LoggerService.e('Failed to delete occurrence', error: e, stackTrace: s);
+      rethrow;
+    }
   }
 }
 

@@ -7,11 +7,13 @@ import 'package:soloforte_app/features/clients/domain/client_history_model.dart'
 class ClientHistoryTimeline extends StatelessWidget {
   final List<ClientHistory> history;
   final int? maxItems;
+  final Function(ClientHistory)? onItemTap;
 
   const ClientHistoryTimeline({
     super.key,
     required this.history,
     this.maxItems,
+    this.onItemTap,
   });
 
   @override
@@ -48,7 +50,11 @@ class ClientHistoryTimeline extends StatelessWidget {
         final item = displayHistory[index];
         final isLast = index == displayHistory.length - 1;
 
-        return _TimelineItem(history: item, isLast: isLast);
+        return _TimelineItem(
+          history: item,
+          isLast: isLast,
+          onTap: onItemTap != null ? () => onItemTap!(item) : null,
+        );
       },
     );
   }
@@ -57,8 +63,13 @@ class ClientHistoryTimeline extends StatelessWidget {
 class _TimelineItem extends StatelessWidget {
   final ClientHistory history;
   final bool isLast;
+  final VoidCallback? onTap;
 
-  const _TimelineItem({required this.history, required this.isLast});
+  const _TimelineItem({
+    required this.history,
+    required this.isLast,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +87,7 @@ class _TimelineItem extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                   border: Border.all(color: color, width: 2),
                 ),
@@ -91,75 +102,88 @@ class _TimelineItem extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: isLast ? 0 : 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              child: GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  // Wrap for hit test behavior
+                  color: Colors.transparent,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          history.description,
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              history.description,
+                              style: AppTypography.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                                decoration: onTap != null
+                                    ? TextDecoration.underline
+                                    : null, // Visual cue for link
+                                decorationColor: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: Colors.grey[600],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatTimestamp(history.timestamp),
+                            style: AppTypography.caption.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (history.metadata != null &&
+                          history.metadata!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: history.metadata!.entries.map((entry) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 2,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      '${entry.key}: ',
+                                      style: AppTypography.caption.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                    Text(
+                                      entry.value.toString(),
+                                      style: AppTypography.caption.copyWith(
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 14,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatTimestamp(history.timestamp),
-                        style: AppTypography.caption.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (history.metadata != null &&
-                      history.metadata!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: history.metadata!.entries.map((entry) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2),
-                            child: Row(
-                              children: [
-                                Text(
-                                  '${entry.key}: ',
-                                  style: AppTypography.caption.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                                Text(
-                                  entry.value.toString(),
-                                  style: AppTypography.caption.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),

@@ -539,6 +539,9 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
 
     setState(() => _isLoading = true);
 
+    // Logger would be used here if imported, for now just print is safe or assume import
+    // LoggerService.i('Submitting occurrence: ${_titleController.text}');
+
     try {
       final finalImages = [
         ..._existingImages,
@@ -551,6 +554,9 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
         description: _descriptionController.text,
         type: _selectedType,
         severity: _severity,
+        // TODO: Uncomment when model supports clientId/areaId after build_runner
+        // clientId: 'mock-client-1',
+        // areaId: 'mock-area-1',
         areaName: _selectedArea,
         date: widget.initialOccurrence?.date ?? DateTime.now(),
         status: widget.initialOccurrence?.status ?? 'active',
@@ -575,37 +581,64 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
         await ref
             .read(occurrenceControllerProvider.notifier)
             .updateOccurrence(occurrenceData);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ocorrência atualizada com sucesso!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
       } else {
         await ref
             .read(occurrenceControllerProvider.notifier)
             .addOccurrence(occurrenceData);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ocorrência registrada com sucesso!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
       }
 
       if (mounted) {
-        context.pop();
+        // GOLD RULE UX: What happened? Where saved? What now?
+        final message = widget.initialOccurrence != null
+            ? 'Atualizado com sucesso!'
+            : 'Salvo em "Ocorrências"';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        message,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const Text(
+                        'Sincronizando com a nuvem...',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 2), // Give time to read
+          ),
+        );
+
+        // Wait slightly for UX feeling of completion
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        if (mounted) context.pop();
       }
-    } catch (e) {
+    } catch (e, stack) {
+      // LoggerService.e('Error saving occurrence', error: e, stackTrace: stack);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erro ao registrar ocorrência'),
+          SnackBar(
+            content: Text('Erro crítico: $e'),
             backgroundColor: AppColors.error,
+            action: SnackBarAction(
+              label: 'Tentar Novamente',
+              textColor: Colors.white,
+              onPressed: _submitForm,
+            ),
           ),
         );
       }

@@ -28,9 +28,8 @@ class SideMenu extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0), // Strong blur
           child: Container(
-            color: Colors.white.withValues(
-              alpha: 0.85,
-            ), // Semi-transparent white
+            color: Colors.white.withOpacity(0.85), // Semi-transparent white
+
             child: Column(
               children: [
                 // Header - Using a gradient or just spacing
@@ -42,7 +41,7 @@ class SideMenu extends StatelessWidget {
                     right: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.9),
+                    color: AppColors.primary.withOpacity(0.9),
                   ),
                   child: Row(
                     children: [
@@ -54,7 +53,7 @@ class SideMenu extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
+                              color: Colors.black.withOpacity(0.1),
                               blurRadius: 10,
                             ),
                           ],
@@ -135,9 +134,8 @@ class SideMenu extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textSecondary.withValues(
-                                  alpha: 0.5,
-                                ),
+                                color: AppColors.textSecondary.withOpacity(0.5),
+
                                 letterSpacing: 1.2,
                               ),
                             ),
@@ -249,7 +247,7 @@ class _DrawerItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(
         color: isSelected
-            ? AppColors.primary.withValues(alpha: 0.1)
+            ? AppColors.primary.withOpacity(0.1)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(

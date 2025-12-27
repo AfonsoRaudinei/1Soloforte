@@ -241,8 +241,7 @@ class DrawingController extends Notifier<DrawingState> {
             center: center,
             type: state.activeTool == 'rectangle'
                 ? 'polygon'
-                : state
-                      .activeTool, // If edited, it might lose rectangle property unless we strict check. Safest to call it polygon if vertices moved.
+                : state.activeTool,
             radius: state.activeTool == 'circle' ? state.circleRadius : 0.0,
           );
         }

@@ -127,7 +127,7 @@ class _OccurrenceListScreenState extends ConsumerState<OccurrenceListScreen> {
                     filteredList = filteredList.where((o) {
                       return o.title.toLowerCase().contains(query) ||
                           o.description.toLowerCase().contains(query) ||
-                          o.areaName.toLowerCase().contains(query);
+                          (o.areaName?.toLowerCase().contains(query) ?? false);
                     }).toList();
                   }
 
@@ -138,16 +138,42 @@ class _OccurrenceListScreenState extends ConsumerState<OccurrenceListScreen> {
                         children: [
                           Icon(
                             Icons.search_off,
-                            size: 64,
+                            size: 80,
                             color: Colors.grey[300],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 24),
                           Text(
                             'Nenhuma ocorrência encontrada',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: Colors.grey,
+                            style: AppTypography.h3.copyWith(
+                              color: Colors.grey[700],
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tente ajustar seus filtros ou crie uma nova ocorrência.',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: Colors.grey[500],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
+                          if (query.isEmpty && _selectedFilter == 'Todos')
+                            ElevatedButton.icon(
+                              onPressed: () => context.push('/occurrences/new'),
+                              icon: const Icon(Icons.add),
+                              label: const Text('REGISTRAR OCORRÊNCIA'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     );
@@ -155,7 +181,9 @@ class _OccurrenceListScreenState extends ConsumerState<OccurrenceListScreen> {
 
                   return RefreshIndicator(
                     onRefresh: () async {
-                      await ref.read(occurrenceControllerProvider.notifier).refresh();
+                      await ref
+                          .read(occurrenceControllerProvider.notifier)
+                          .refresh();
                     },
                     child: ListView.builder(
                       itemCount: filteredList.length,
@@ -182,8 +210,9 @@ class _OccurrenceListScreenState extends ConsumerState<OccurrenceListScreen> {
                         style: AppTypography.bodyLarge,
                       ),
                       TextButton(
-                        onPressed: () =>
-                            ref.read(occurrenceControllerProvider.notifier).refresh(),
+                        onPressed: () => ref
+                            .read(occurrenceControllerProvider.notifier)
+                            .refresh(),
                         child: const Text('Tentar Novamente'),
                       ),
                     ],
@@ -295,7 +324,7 @@ class _OccurrenceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -330,9 +359,7 @@ class _OccurrenceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(
-                    occurrence.status,
-                  ).withValues(alpha: 0.1),
+                  color: _getStatusColor(occurrence.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _getStatusColor(occurrence.status)),
                 ),
