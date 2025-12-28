@@ -1,5 +1,9 @@
+modules = ["nodejs-20", "web", "bash"]
 [build]
 command = ["bash", "-c", "echo 'Flutter project - use Workflows tab to run'"]
 
 [run]
 command = ["bash", "-c", "flutter run -d web-server --web-hostname=0.0.0.0 --web-port=5000"]
+
+[nix]
+channel = "stable-25_05"
