@@ -72,7 +72,7 @@ class KPIStatsCard extends StatelessWidget {
                 ),
               ],
             ),
-            const Spacer(),
+            const SizedBox(height: 12), // replaced Spacer to fix layout crash
             Text(
               value,
               style: AppTypography.h2.copyWith(fontWeight: FontWeight.bold),

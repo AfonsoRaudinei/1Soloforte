@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart'; // Add this for kIsWeb
 import 'package:sqflite/sqflite.dart';
 import 'package:soloforte_app/core/database/database_helper.dart';
 import '../dtos/occurrence_dto.dart';
@@ -15,6 +16,7 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
 
   @override
   Future<void> saveOccurrence(OccurrenceDto occurrence) async {
+    if (kIsWeb) return; // Do nothing on web
     final db = await _dbHelper.database;
     await db.insert('occurrences', {
       'id': occurrence.id,
@@ -28,6 +30,8 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
 
   @override
   Future<List<OccurrenceDto>> getOccurrences() async {
+    if (kIsWeb) return _getMocks(); // Return mocks on web
+
     final db = await _dbHelper.database;
     final maps = await db.query('occurrences', orderBy: 'date DESC');
 
@@ -48,6 +52,12 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
 
   @override
   Future<OccurrenceDto?> getOccurrenceById(String id) async {
+    if (kIsWeb) {
+      return _getMocks().firstWhere(
+        (e) => e.id == id,
+        orElse: () => _getMocks().first,
+      );
+    }
     final db = await _dbHelper.database;
     final maps = await db.query(
       'occurrences',
@@ -63,6 +73,7 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
 
   @override
   Future<void> deleteOccurrence(String id) async {
+    if (kIsWeb) return; // Do nothing on web
     final db = await _dbHelper.database;
     await db.delete('occurrences', where: 'id = ?', whereArgs: [id]);
   }
