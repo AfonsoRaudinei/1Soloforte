@@ -7,18 +7,6 @@ import '../features/dashboard/presentation/dashboard_layout.dart';
 import '../features/dashboard/presentation/home_screen.dart';
 // import '../features/map/presentation/map_screen.dart';
 import '../features/landing/presentation/landing_screen.dart';
-import '../features/dashboard/presentation/executive_dashboard_screen.dart';
-
-import '../features/team/presentation/team_list_screen.dart';
-import '../features/team/presentation/team_member_detail_screen.dart';
-import '../features/team/presentation/team_map_screen.dart';
-import '../features/team/presentation/team_ranking_screen.dart';
-import '../features/team/presentation/route_history_screen.dart';
-import '../features/team/presentation/team_chat_list_screen.dart';
-import '../features/team/presentation/team_chat_detail_screen.dart';
-import '../features/team/presentation/time_clock_screen.dart';
-import '../features/team/presentation/approvals_screen.dart';
-import '../features/team/presentation/sos_screen.dart';
 
 import '../features/analysis/presentation/analysis_wizard_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
@@ -125,7 +113,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/dashboard',
-            builder: (context, state) => const ExecutiveDashboardScreen(),
+            builder: (context, state) => const HomeScreen(),
           ),
           GoRoute(
             path: '/dashboard/map',
@@ -181,14 +169,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/dashboard/feedback',
             builder: (context, state) => const FeedbackScreen(),
           ),
-          GoRoute(
-            path: '/dashboard/executive',
-            builder: (context, state) => const ExecutiveDashboardScreen(),
-          ),
-          GoRoute(
-            path: '/dashboard/team',
-            builder: (context, state) => const TeamListScreen(),
-          ),
+
           GoRoute(
             path: '/dashboard/link-hub',
             builder: (context, state) => const LinkHubScreen(),
@@ -335,67 +316,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const VisitReportScreen(),
       ),
-      // Team
-      GoRoute(
-        path: '/dashboard/team/map',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const TeamMapScreen(),
-      ),
-      GoRoute(
-        path: '/dashboard/team/:id',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) =>
-            TeamMemberDetailScreen(memberId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/dashboard/team/ranking',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const TeamRankingScreen(),
-      ),
-      GoRoute(
-        path: '/dashboard/team/:id/history',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) {
-          final extras = state.extra as Map<String, dynamic>;
-          return RouteHistoryScreen(
-            memberId: state.pathParameters['id']!,
-            memberName: extras['name'],
-          );
-        },
-      ),
-      GoRoute(
-        path: '/dashboard/team/chat',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const TeamChatListScreen(),
-      ),
-      GoRoute(
-        path: '/dashboard/team/chat/:chatId',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) {
-          final extras =
-              state.extra as Map<String, dynamic>? ?? {'title': 'Chat'};
-          return TeamChatDetailScreen(
-            conversationId: state.pathParameters['chatId']!,
-            title: extras['title'],
-          );
-        },
-      ),
-      GoRoute(
-        path: '/dashboard/team/time-clock',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const TimeClockScreen(),
-      ),
-      GoRoute(
-        path: '/dashboard/team/approvals',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const ApprovalsScreen(),
-      ),
-      GoRoute(
-        path: '/dashboard/team/sos',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const SOSScreen(),
-      ),
 
+      // Team
       GoRoute(
         path: '/reports/detail/:id',
         parentNavigatorKey: _rootNavigatorKey,

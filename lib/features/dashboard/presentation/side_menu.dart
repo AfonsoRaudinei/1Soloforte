@@ -81,12 +81,7 @@ class SideMenu extends StatelessWidget {
                     child: Column(
                       children: [
                         const SizedBox(height: 8),
-                        _DrawerItem(
-                          icon: Icons.dashboard_outlined,
-                          label: 'Dashboard',
-                          isSelected: location == '/dashboard',
-                          onTap: () => context.go('/dashboard'),
-                        ),
+
                         _DrawerItem(
                           icon: Icons.map_outlined,
                           label: 'Mapa',
