@@ -1,116 +1,115 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:soloforte_app/features/auth/presentation/auth_provider.dart';
-import 'package:soloforte_app/features/dashboard/presentation/side_menu.dart';
+import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'side_menu.dart';
 
-class DashboardLayout extends ConsumerWidget {
+class DashboardLayout extends StatelessWidget {
   final Widget child;
-
   const DashboardLayout({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    // Check if current route is map (exactly /map) to hide AppBar/BottomNav
+    final String location = GoRouterState.of(context).uri.path;
+    final bool isMap = location == '/map';
+
+    // Also check for sub-routes if we want them to be full screen?
+    // Instruction says "Remover AppBar para rotas /map (fullscreen)... Manter apenas para outras rotas fora do /map"
+    // Since everything is under /map prefix now, we should interpret "rotas /map" as the MAIN map screen.
+    // If I am at /map/reports, I likely want the standard layout (or maybe the new design uses full screen for everything?)
+    // Phase 2 says "FAB abre menu radial... 7 opções principais" -> implies the Radial Menu is the new navigation.
+    // "Remover BottomNavigationBar para rotas /map... Manter apenas para outras rotas fora do /map"
+    // Since ALL main routes are now /map/..., maybe formatting implies the OLD routes?
+    // Let's assume for now that if we are on the main map screen '/map', we hide everything.
+    // If we are on '/map/reports', we show the standard scaffolding?
+    // Actually, Phase 2 implies a "Interface Fullscreen" for the home screen.
+    // Let's implement logic: isMap = location == '/map'.
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('SoloForte'),
-        actions: [
-          IconButton(
-            icon: const Badge(
-              label: Text('3'),
-              child: Icon(Icons.notifications_outlined),
+      extendBodyBehindAppBar: isMap,
+      appBar: isMap
+          ? null
+          : AppBar(
+              title: const Text('SoloForte'),
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
+              elevation: 0,
             ),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: PopupMenuButton<String>(
-              icon: const CircleAvatar(
-                backgroundColor: Colors.grey,
-                child: Icon(Icons.person, color: Colors.white),
-              ),
-              onSelected: (value) {
-                if (value == 'logout') {
-                  ref.read(authControllerProvider).logout();
-                }
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                const PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Text('Meu Perfil'),
+      drawer: const SideMenu(),
+      body: child,
+      // Only show bottom nav if NOT map and NOT a sub-feature that has its own nav?
+      // User said "Manter apenas para outras rotas fora do /map".
+      // Since /map is the new prefix for mostly everything... this is tricky.
+      // But presumably "outras rotas fora do /map" means things that are NOT the map dashboard.
+      // Wait, logically, if /map/reports is a screen, does it need a bottom bar?
+      // The new design relies on the Radial Menu on the Map Screen.
+      // Navigating to /map/reports likely takes you AWAY from the map.
+      // So on Reports screen, you might want a way back or a menu.
+      // For now, I will hide BottomNavBar for location == '/map'.
+      bottomNavigationBar: isMap
+          ? null
+          : BottomNavigationBar(
+              currentIndex: _calculateSelectedIndex(context),
+              onTap: (index) => _onItemTapped(index, context),
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textSecondary,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.map_outlined),
+                  label: 'Mapa',
                 ),
-                const PopupMenuItem<String>(
-                  value: 'logout',
-                  child: Text('Sair'),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.bug_report_outlined),
+                  label: 'Ocorrências',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.bar_chart_outlined),
+                  label: 'Relatórios',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.people_outline),
+                  label: 'Clientes',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.calendar_today_outlined),
+                  label: 'Agenda',
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-      drawer: const SideMenu(),
-      body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _calculateSelectedIndex(context),
-        onTap: (int idx) => _onItemTapped(idx, context),
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map_outlined),
-            activeIcon: Icon(Icons.map),
-            label: 'Mapas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            activeIcon: Icon(Icons.bar_chart),
-            label: 'Relatórios',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            activeIcon: Icon(Icons.people),
-            label: 'Clientes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: 'Config',
-          ),
-        ],
-      ),
-      // FAB removed to allow child screens to handle their own FABs
     );
   }
 
-  static int _calculateSelectedIndex(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.path;
-    if (location.startsWith('/dashboard/map')) return 1;
-    if (location.startsWith('/dashboard/reports')) return 2;
-    if (location.startsWith('/dashboard/clients')) return 3;
-    if (location.startsWith('/dashboard/settings')) return 4;
-    return 0; // default to Dashboard/Home
+  int _calculateSelectedIndex(BuildContext context) {
+    try {
+      final String location = GoRouterState.of(context).uri.path;
+      if (location == '/map') return 0;
+      if (location.startsWith('/map/occurrences')) return 1;
+      if (location.startsWith('/map/reports')) return 2;
+      if (location.startsWith('/map/clients')) return 3;
+      if (location.startsWith('/map/calendar')) return 4;
+      return 0;
+    } catch (e) {
+      return 0;
+    }
   }
 
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
       case 0:
-        context.go('/dashboard');
+        context.go('/map');
         break;
       case 1:
-        context.go('/dashboard/map');
+        context.go('/map/occurrences');
         break;
       case 2:
-        context.go('/dashboard/reports');
+        context.go('/map/reports');
         break;
       case 3:
-        context.go('/dashboard/clients');
+        context.go('/map/clients');
         break;
       case 4:
-        context.go('/dashboard/settings');
+        context.go('/map/calendar');
         break;
     }
   }

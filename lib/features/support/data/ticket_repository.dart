@@ -1,26 +1,32 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soloforte_app/core/database/database_helper.dart'; // Import DatabaseHelper
 import 'package:soloforte_app/features/support/domain/ticket_model.dart';
 import 'package:uuid/uuid.dart';
 
 class TicketRepository {
-  static const String _storageKey = 'soloforte_tickets';
+  // static const String _storageKey = 'soloforte_tickets'; // Removido
   final _uuid = const Uuid();
 
   Future<List<Ticket>> loadTickets() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(_storageKey);
+    final db = await DatabaseHelper.instance.database;
+    final result = await db.query(
+      DatabaseHelper.tableTickets,
+      orderBy: 'created_at DESC',
+    );
 
-    if (jsonString == null) {
-      return _generateMockTickets();
+    if (result.isEmpty) {
+      final mocks = _generateMockTickets();
+      // Salvar mocks no banco para persistência inicial
+      for (var t in mocks) {
+        await _insertTicket(t);
+      }
+      return mocks;
     }
 
-    try {
-      final List<dynamic> jsonList = jsonDecode(jsonString);
-      return jsonList.map((e) => Ticket.fromJson(e)).toList();
-    } catch (e) {
-      return _generateMockTickets();
-    }
+    return result.map((row) {
+      final jsonString = row['json_data'] as String;
+      return Ticket.fromJson(jsonDecode(jsonString));
+    }).toList();
   }
 
   Future<Ticket> createTicket({
@@ -29,8 +35,6 @@ class TicketRepository {
     required TicketCategory category,
     required TicketPriority priority,
   }) async {
-    final tickets = await loadTickets();
-
     final newTicket = Ticket(
       id: _uuid.v4(),
       subject: subject,
@@ -42,29 +46,49 @@ class TicketRepository {
       lastUpdate: DateTime.now(),
     );
 
-    tickets.insert(0, newTicket);
-    await _saveTickets(tickets);
-
+    await _insertTicket(newTicket);
     return newTicket;
   }
 
   Future<void> updateTicketStatus(String id, TicketStatus status) async {
-    final tickets = await loadTickets();
-    final index = tickets.indexWhere((t) => t.id == id);
+    final db = await DatabaseHelper.instance.database;
 
-    if (index != -1) {
-      tickets[index] = tickets[index].copyWith(
+    // Buscar ticket atual
+    final maps = await db.query(
+      DatabaseHelper.tableTickets,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      final currentJson = maps.first['json_data'] as String;
+      final currentTicket = Ticket.fromJson(jsonDecode(currentJson));
+
+      final updatedTicket = currentTicket.copyWith(
         status: status,
         lastUpdate: DateTime.now(),
       );
-      await _saveTickets(tickets);
+
+      await db.update(
+        DatabaseHelper.tableTickets,
+        {
+          'status': status.name,
+          'json_data': jsonEncode(updatedTicket.toJson()),
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     }
   }
 
-  Future<void> _saveTickets(List<Ticket> tickets) async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = jsonEncode(tickets.map((t) => t.toJson()).toList());
-    await prefs.setString(_storageKey, jsonString);
+  Future<void> _insertTicket(Ticket ticket) async {
+    final db = await DatabaseHelper.instance.database;
+    await db.insert(DatabaseHelper.tableTickets, {
+      'id': ticket.id,
+      'status': ticket.status.name,
+      'created_at': ticket.createdAt.millisecondsSinceEpoch,
+      'json_data': jsonEncode(ticket.toJson()),
+    });
   }
 
   List<Ticket> _generateMockTickets() {

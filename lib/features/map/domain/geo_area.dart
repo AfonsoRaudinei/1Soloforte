@@ -13,6 +13,7 @@ abstract class GeoArea with _$GeoArea {
     @JsonKey(includeFromJson: false, includeToJson: false)
     @Default([])
     List<LatLng> points,
+    @Default([]) List<List<LatLng>> holes,
     @Default(0.0) double areaHectares,
     @Default(0.0) double perimeterKm,
     @Default(0.0) double radius,

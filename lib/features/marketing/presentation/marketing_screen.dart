@@ -1,41 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:soloforte_app/core/theme/app_spacing.dart';
 import 'package:soloforte_app/features/marketing/data/marketing_repository.dart';
 import 'package:soloforte_app/features/marketing/domain/post_model.dart';
 import 'package:soloforte_app/features/marketing/presentation/screens/create_post_screen.dart';
+import 'package:soloforte_app/features/marketing/presentation/widgets/cases_dashboard.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/feed/feed_post_card.dart';
 
-class MarketingScreen extends StatefulWidget {
+class MarketingScreen extends ConsumerStatefulWidget {
   const MarketingScreen({super.key});
 
   @override
-  State<MarketingScreen> createState() => _MarketingScreenState();
+  ConsumerState<MarketingScreen> createState() => _MarketingScreenState();
 }
 
-class _MarketingScreenState extends State<MarketingScreen>
+class _MarketingScreenState extends ConsumerState<MarketingScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final MarketingRepository _repository = MarketingRepository();
   List<Post> _myPosts = [];
-  List<Post> _drafts = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _loadData();
   }
 
   Future<void> _loadData() async {
     final published = await _repository.getPosts(status: PostStatus.published);
-    final drafts = await _repository.getPosts(status: PostStatus.draft);
 
     // Filter by current user (mock ID: 'user_123')
     setState(() {
       _myPosts = published.where((p) => p.authorId == 'user_123').toList();
-      _drafts = drafts;
       _isLoading = false;
     });
   }
@@ -50,51 +49,57 @@ class _MarketingScreenState extends State<MarketingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.menu), // [☰]
-            onPressed: () {},
-          ),
-          title: const Text('Marketing UI Test'),
-          actions: [
-            Padding(
-              padding: EdgeInsets.only(right: AppSpacing.sm),
-              child: TextButton.icon(
-                onPressed: () => _navigateToCreate(),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Publicar'), // [+ Publicar]
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-          bottom: TabBar(
-            controller: _tabController,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: AppColors.primary,
-            tabs: [
-              const Tab(text: 'Meus Posts'),
-              Tab(text: 'Rascunhos (${_drafts.length})'),
-            ],
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB), // gray-50
+      appBar: AppBar(
+        title: const Text(
+          'SoloForte Marketing',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1E3A2F),
           ),
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
-                controller: _tabController,
-                children: [_buildMyPostsList(), _buildDraftsList()],
-              ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: Color(0xFF1E3A2F)),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: const Color(0xFF4ADE80),
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: const Color(0xFF4ADE80),
+          indicatorWeight: 3,
+          isScrollable: true,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          tabs: const [
+            Tab(text: 'Dashboard'),
+            Tab(text: 'Meus Cases'),
+            Tab(text: 'Analytics'),
+            Tab(text: 'Configurações'),
+          ],
+        ),
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                const CasesDashboard(), // The main dashboard we built
+                _buildMyCasesList(), // Legacy logic adapted
+                const _PlaceholderPage(
+                  title: 'Analytics',
+                  icon: Icons.analytics_outlined,
+                ),
+                const _PlaceholderPage(
+                  title: 'Configurações',
+                  icon: Icons.settings_outlined,
+                ),
+              ],
+            ),
     );
   }
 
-  Widget _buildMyPostsList() {
+  Widget _buildMyCasesList() {
     if (_myPosts.isEmpty) {
       return Center(
         child: Column(
@@ -102,10 +107,10 @@ class _MarketingScreenState extends State<MarketingScreen>
           children: [
             const Icon(Icons.article_outlined, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text('Você ainda não publicou nada.'),
+            const Text('Nenhum case publicado.'),
             TextButton(
               onPressed: () => _navigateToCreate(),
-              child: const Text('Criar primeiro post'),
+              child: const Text('Criar publicação padrão'),
             ),
           ],
         ),
@@ -116,8 +121,6 @@ class _MarketingScreenState extends State<MarketingScreen>
       itemCount: _myPosts.length,
       itemBuilder: (context, index) {
         final post = _myPosts[index];
-        // Using FeedPostCard but could customize strictly to ASCII here if needed
-        // The FeedPostCard will be updated to match the card layout
         return FeedPostCard(
           post: post,
           isMine: true,
@@ -126,52 +129,37 @@ class _MarketingScreenState extends State<MarketingScreen>
       },
     );
   }
+}
 
-  Widget _buildDraftsList() {
-    if (_drafts.isEmpty) {
-      return const Center(child: Text('Nenhum rascunho salvo.'));
-    }
+class _PlaceholderPage extends StatelessWidget {
+  final String title;
+  final IconData icon;
 
-    return ListView.separated(
-      padding: EdgeInsets.all(AppSpacing.md),
-      itemCount: _drafts.length,
-      separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        final draft = _drafts[index];
-        return Card(
-          child: ListTile(
-            leading: draft.imageUrls.isNotEmpty
-                ? SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: Image.network(
-                      draft.imageUrls.first,
-                      errorBuilder: (c, e, s) => const Icon(Icons.image),
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Container(
-                    width: 50,
-                    height: 50,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.edit_note, color: Colors.grey),
-                  ),
-            title: Text(
-              draft.title.isEmpty ? 'Sem título' : draft.title,
-              maxLines: 1,
-            ),
-            subtitle: Text(
-              draft.content.isEmpty ? 'Sem conteúdo...' : draft.content,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.edit, color: AppColors.primary),
-              onPressed: () => _navigateToCreate(draft: draft),
+  const _PlaceholderPage({required this.title, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 48, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
             ),
           ),
-        );
-      },
+          const SizedBox(height: 8),
+          const Text(
+            'Em desenvolvimento',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
-} // End Class
+}

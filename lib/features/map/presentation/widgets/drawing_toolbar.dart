@@ -45,8 +45,18 @@ class DrawingToolbar extends ConsumerWidget {
     }
     if (isRectangle) canSave = state.currentPoints.length >= 4;
 
+    // Check if we have holes pending save or main area
+    if (state.activeHoles.isNotEmpty && state.currentPoints.isEmpty) {
+      canSave = true; // Can save if we just added holes
+    }
+    if (state.isSubtracting && state.currentPoints.length >= 3) {
+      canSave = true; // Can save (commit) the hole
+    }
+
     String instructionText = 'Toque no mapa para adicionar vértices';
-    if (isCircle) {
+    if (state.isSubtracting) {
+      instructionText = 'Desenhe a área para remover (Furo)';
+    } else if (isCircle) {
       instructionText = 'Toque no centro e arraste para definir o raio';
     } else if (isRectangle) {
       instructionText = 'Toque em dois cantos opostos para criar o retângulo';
@@ -62,59 +72,129 @@ class DrawingToolbar extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Modo Desenho',
-              style: AppTypography.h3.copyWith(fontSize: 16),
+              state.isSubtracting ? 'Modo Remover Área' : 'Modo Desenho',
+              style: AppTypography.h3.copyWith(
+                fontSize: 16,
+                color: state.isSubtracting
+                    ? AppColors.error
+                    : AppColors.textPrimary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            // Tool Switcher
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100]?.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _ToolSegment(
-                      label: 'Polígono',
-                      icon: Icons.polyline,
-                      isSelected: isPolygon,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        controller.setTool('polygon');
-                      },
-                    ),
+            // Tool Switcher (Disabled if subtracting)
+            Opacity(
+              opacity: state.isSubtracting ? 0.5 : 1.0,
+              child: IgnorePointer(
+                ignoring: state.isSubtracting,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100]?.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  Expanded(
-                    child: _ToolSegment(
-                      label: 'Círculo',
-                      icon: Icons.radio_button_unchecked,
-                      isSelected: isCircle,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        controller.setTool('circle');
-                      },
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _ToolSegment(
+                          label: 'Polígono',
+                          icon: Icons.polyline,
+                          isSelected: isPolygon,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            controller.setTool('polygon');
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: _ToolSegment(
+                          label: 'Círculo',
+                          icon: Icons.radio_button_unchecked,
+                          isSelected: isCircle,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            controller.setTool('circle');
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: _ToolSegment(
+                          label: 'Retângulo',
+                          icon: Icons.crop_square,
+                          isSelected: state.activeTool == 'rectangle',
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            controller.setTool('rectangle');
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: _ToolSegment(
-                      label: 'Retângulo',
-                      icon: Icons.crop_square,
-                      isSelected: state.activeTool == 'rectangle',
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        controller.setTool('rectangle');
-                      },
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 12),
+
+            // Subtraction / Removal Mode Toggle
+            if (isPolygon) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: state.isSubtracting
+                      ? AppColors.error.withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: state.isSubtracting
+                      ? Border.all(color: AppColors.error.withOpacity(0.3))
+                      : null,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      state.isSubtracting
+                          ? Icons.delete_outline
+                          : Icons.add_circle_outline,
+                      size: 16,
+                      color: state.isSubtracting
+                          ? AppColors.error
+                          : AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Modo Remover (Criar Furo)",
+                      style: AppTypography.caption.copyWith(
+                        color: state.isSubtracting
+                            ? AppColors.error
+                            : AppColors.textSecondary,
+                        fontWeight: state.isSubtracting
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Switch.adaptive(
+                      value: state.isSubtracting,
+                      activeColor: AppColors.error,
+                      onChanged: (val) {
+                        HapticFeedback.selectionClick();
+                        controller.setMode(val);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
+
             Text(
               instructionText,
-              style: AppTypography.bodySmall,
+              style: AppTypography.bodySmall.copyWith(
+                color: state.isSubtracting ? AppColors.error : null,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -143,16 +223,23 @@ class DrawingToolbar extends ConsumerWidget {
                   isEnabled: true,
                 ),
                 _ToolButton(
-                  icon: Icons.check,
-                  label: 'Salvar',
+                  icon: state.isSubtracting
+                      ? Icons.check_circle_outline
+                      : Icons.check,
+                  label: state.isSubtracting ? 'Confirmar Furo' : 'Salvar',
                   onTap: () {
                     HapticFeedback.heavyImpact();
-                    PremiumDialog.show(
-                      context: context,
-                      builder: (context) => SaveAreaDialog(
-                        onSave: (name) => controller.saveArea(name),
-                      ),
-                    );
+                    if (state.isSubtracting) {
+                      // Just save to commit hole/exit mode, but keep drawing
+                      controller.saveArea("temp");
+                    } else {
+                      PremiumDialog.show(
+                        context: context,
+                        builder: (context) => SaveAreaDialog(
+                          onSave: (name) => controller.saveArea(name),
+                        ),
+                      );
+                    }
                   },
                   color: AppColors.secondary,
                   isEnabled: canSave,
@@ -259,5 +346,3 @@ class _ToolButton extends StatelessWidget {
     );
   }
 }
-
-// Internal _SaveAreaDialog class removed.

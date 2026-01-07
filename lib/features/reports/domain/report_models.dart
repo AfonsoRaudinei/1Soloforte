@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:soloforte_app/features/ndvi/domain/ndvi_heatmap_point.dart';
 
 // --- Weekly Report Models ---
 class WeeklyReportData {
@@ -19,17 +20,18 @@ class WeeklyReportData {
   });
 }
 
-// --- NDVI Analysis Models ---
 class NdviAnalysisData {
   final List<NdviDataPoint> temporalEvolution;
   final List<AreaComparison> areaComparisons;
   final Uint8List? attentionZoneImageBytes; // Image bytes
+  final List<NdviHeatmapPoint>? heatmapPoints; // List of parsed points
   final double correlationWithWeather; // -1.0 to 1.0
 
   NdviAnalysisData({
     required this.temporalEvolution,
     required this.areaComparisons,
     this.attentionZoneImageBytes,
+    this.heatmapPoints, // New field for real data
     required this.correlationWithWeather,
   });
 }

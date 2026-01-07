@@ -3,6 +3,7 @@ import 'package:latlong2/latlong.dart';
 import 'dart:math' as math;
 import '../application/geometry_utils.dart';
 import '../domain/geo_area.dart';
+import 'files/kml_service.dart';
 
 // State for the drawing mode
 class DrawingState {
@@ -15,6 +16,10 @@ class DrawingState {
   final LatLng? circleCenter;
   final double circleRadius;
   final String? editingAreaId; // ID of the area being edited
+  final List<List<LatLng>>
+  activeHoles; // Holes for the current area being drawn
+  final bool isSubtracting; // If true, current drawing adds to activeHoles
+  final List<LatLng> basePoints; // The main polygon points when drawing a hole
 
   const DrawingState({
     this.isDrawing = false,
@@ -26,6 +31,9 @@ class DrawingState {
     this.circleCenter,
     this.circleRadius = 0.0,
     this.editingAreaId,
+    this.activeHoles = const [],
+    this.isSubtracting = false,
+    this.basePoints = const [],
   });
 
   DrawingState copyWith({
@@ -38,6 +46,9 @@ class DrawingState {
     LatLng? circleCenter,
     double? circleRadius,
     String? editingAreaId,
+    List<List<LatLng>>? activeHoles,
+    bool? isSubtracting,
+    List<LatLng>? basePoints,
   }) {
     return DrawingState(
       isDrawing: isDrawing ?? this.isDrawing,
@@ -49,6 +60,9 @@ class DrawingState {
       circleCenter: circleCenter ?? this.circleCenter,
       circleRadius: circleRadius ?? this.circleRadius,
       editingAreaId: editingAreaId ?? this.editingAreaId,
+      activeHoles: activeHoles ?? this.activeHoles,
+      isSubtracting: isSubtracting ?? this.isSubtracting,
+      basePoints: basePoints ?? this.basePoints,
     );
   }
 }
@@ -78,34 +92,61 @@ class DrawingController extends Notifier<DrawingState> {
     );
   }
 
+  void setMode(bool subtracting) {
+    if (subtracting) {
+      // Enter Subtraction Mode
+      if (state.currentPoints.isEmpty && state.editingAreaId == null) return;
+
+      // Move current drawing to basePoints so we can draw the hole
+      state = state.copyWith(
+        isSubtracting: true,
+        basePoints: state.currentPoints,
+        currentPoints: [], // Clean slate for hole
+        history: [],
+      );
+    } else {
+      // Exit Subtraction Mode
+      // Restore main polygon.
+      // If we were drawing a hole that wasn't saved, it's lost (or we auto-commit?)
+      // Let's discard unfinished hole for safety or maybe commit if valid?
+
+      state = state.copyWith(
+        isSubtracting: false,
+        currentPoints: state.basePoints, // Restore main
+        basePoints: [],
+        history: [],
+      );
+    }
+  }
+
   void stopDrawing() {
     state = state.copyWith(
       isDrawing: false,
       currentPoints: [],
+      activeHoles: [],
+      basePoints: [],
       circleCenter: null,
       circleRadius: 0.0,
       editingAreaId: null,
+      isSubtracting: false,
     );
   }
 
   void startEditingArea(GeoArea area) {
-    // Determine tool based on area type
-    // If it's a rectangle, we might treat it as polygon for flexible vertex editing
-    // Or try to keep it as rectangle if we strictly support that.
-    // For now, let's treat polygon/rectangle as 'polygon' mode (vertex editing)
-    // and circle as 'circle' mode.
-
     final tool = area.type == 'circle' ? 'circle' : 'polygon';
 
     state = state.copyWith(
       isDrawing: true,
       activeTool: tool,
       currentPoints: area.points,
-      circleCenter: area.center, // Center IS persisted for circle
+      activeHoles: area.holes, // Load existing holes
+      circleCenter: area.center,
       circleRadius: area.radius,
       editingAreaId: area.id,
-      selectedAreaId: null, // Deselect while editing
-      history: [area.points], // Add initial state to history for undo?
+      selectedAreaId: null,
+      history: [area.points],
+      isSubtracting: false,
+      basePoints: [],
     );
   }
 
@@ -131,9 +172,6 @@ class DrawingController extends Notifier<DrawingState> {
       if (state.circleCenter == null) {
         state = state.copyWith(circleCenter: point, circleRadius: 0);
       } else {
-        // Second tap defines radius and finishes? Or just updates?
-        // Let's assume tap defines center, then drag/tap update radius.
-        // If simply adding point, maybe just update radius based on distance.
         final radius = GeometryUtils.calculateDistance(
           state.circleCenter!,
           point,
@@ -145,28 +183,18 @@ class DrawingController extends Notifier<DrawingState> {
 
     if (state.activeTool == 'rectangle') {
       if (state.currentPoints.isEmpty) {
-        // Start point
         state = state.copyWith(currentPoints: [point]);
       } else if (state.currentPoints.length == 1) {
-        // End point - generate rectangle immediately
         final p1 = state.currentPoints.first;
         final rectPoints = GeometryUtils.createRectanglePolygon(p1, point);
         state = state.copyWith(currentPoints: rectPoints);
       } else {
-        // If we already have a rectangle (4 points), maybe reset or modify?
-        // Let's assume user wants to reset if they tap again, or we just ignore.
-        // Or better: clear and start new?
-        // Let's stick to "Tap 2 closes and prepares for save".
-        // But the user might want to adjust.
-        // For simplified V1:
-        // If has 4 points (rectangle formed), do nothing or reset?
-        // Let's say we clear if they want to start over, but they probably use Undo/Clear buttons.
-        // Let's allow replacing the "end point" if they tap again? No, that's complex without drag.
+        state = state.copyWith(currentPoints: [point]);
       }
       return;
     }
 
-    // Polygon logic
+    // Polygon logic (Add point)
     final newPoints = [...state.currentPoints, point];
     final newHistory = [...state.history, state.currentPoints];
 
@@ -192,43 +220,103 @@ class DrawingController extends Notifier<DrawingState> {
     state = state.copyWith(currentPoints: previousPoints, history: newHistory);
   }
 
+  void commitHole() {
+    if (state.currentPoints.length < 3) return;
+
+    state = state.copyWith(
+      activeHoles: [...state.activeHoles, state.currentPoints],
+      currentPoints: [], // Ready for next hole or finish
+      history: [],
+      // Keep mode active
+    );
+  }
+
   void saveArea(String name) {
-    if (state.activeTool == 'polygon' && state.currentPoints.length < 3) return;
-    if (state.activeTool == 'circle' &&
-        (state.circleCenter == null || state.circleRadius == 0)) {
+    // If we are in subtraction mode and have points, those are a hole pending commit.
+    if (state.isSubtracting && state.currentPoints.isNotEmpty) {
+      commitHole(); // Commit pending hole first
+      // Do not return, continue to save logic?
+      // No, if user clicks SAVE while in subtraction mode, they probably mean "Finish Editing".
+      // So we commit hole, then restore mode, then save.
+
+      // Auto-exit subtraction mode to prepare for save
+      setMode(false);
+      // Now state.currentPoints has the basePoints restored.
+    } else if (state.isSubtracting) {
+      setMode(false); // Just exit mode
+    }
+
+    if (state.activeTool == 'polygon' &&
+        state.currentPoints.length < 3 &&
+        state.activeHoles.isEmpty) {
       return;
     }
-    if (state.activeTool == 'rectangle' && state.currentPoints.isEmpty) {
-      return; // Should have points
-    }
+
+    // ... validation ...
 
     double areaHectares = 0;
     double perimeterKm = 0;
     LatLng? center;
     List<LatLng> points = [];
+    List<List<LatLng>> holes = state.activeHoles;
 
     if (state.activeTool == 'circle') {
-      areaHectares = GeometryUtils.calculateCircleAreaHectares(
-        state.circleRadius,
-      );
-      // Perimeter = 2 * pi * r
-      perimeterKm = (2 * math.pi * state.circleRadius) / 1000.0;
+      if (holes.isNotEmpty) {
+        // Convert circle to polygon to support holes
+        points = GeometryUtils.createCirclePolygon(
+          state.circleCenter!,
+          state.circleRadius,
+        );
+        // Calculate area = Circle Area - Holes Area
+        double holesArea = 0;
+        for (var hole in holes) {
+          holesArea += GeometryUtils.calculateAreaHectares(hole);
+        }
+        areaHectares =
+            GeometryUtils.calculateCircleAreaHectares(state.circleRadius) -
+            holesArea;
+        if (areaHectares < 0) areaHectares = 0;
+
+        perimeterKm = (2 * math.pi * state.circleRadius) / 1000.0;
+        // Add holes perimeter? Usually yes.
+        for (var hole in holes) {
+          perimeterKm += GeometryUtils.calculatePerimeterKm(hole);
+        }
+      } else {
+        // Standard circle
+        areaHectares = GeometryUtils.calculateCircleAreaHectares(
+          state.circleRadius,
+        );
+        perimeterKm = (2 * math.pi * state.circleRadius) / 1000.0;
+        points = GeometryUtils.createCirclePolygon(
+          state.circleCenter!,
+          state.circleRadius,
+        );
+      }
       center = state.circleCenter;
-      // Generate points for polygon representation/compatibility
-      points = GeometryUtils.createCirclePolygon(
-        state.circleCenter!,
-        state.circleRadius,
-      );
     } else {
-      // Rectangle or Polygon
-      // If rectangle, maybe ensure it's closed?
+      // Polygon
       points = state.currentPoints;
-      areaHectares = GeometryUtils.calculateAreaHectares(points);
-      perimeterKm = GeometryUtils.calculatePerimeterKm(points);
+      double grossArea = GeometryUtils.calculateAreaHectares(points);
+      double holesArea = 0;
+      double holesPerim = 0;
+
+      for (var hole in holes) {
+        holesArea += GeometryUtils.calculateAreaHectares(hole);
+        holesPerim += GeometryUtils.calculatePerimeterKm(hole);
+      }
+
+      areaHectares = grossArea - holesArea;
+      if (areaHectares < 0) areaHectares = 0;
+
+      perimeterKm = GeometryUtils.calculatePerimeterKm(points) + holesPerim;
       center = GeometryUtils.calculateCentroid(points);
     }
 
-    // specific logic for updates
+    final newAreaType = (state.activeTool == 'circle' && holes.isEmpty)
+        ? 'circle'
+        : 'polygon';
+
     if (state.editingAreaId != null) {
       // Update existing
       final updatedSavedAreas = state.savedAreas.map((area) {
@@ -236,12 +324,11 @@ class DrawingController extends Notifier<DrawingState> {
           return area.copyWith(
             name: name,
             points: points,
+            holes: holes,
             areaHectares: areaHectares,
             perimeterKm: perimeterKm,
             center: center,
-            type: state.activeTool == 'rectangle'
-                ? 'polygon'
-                : state.activeTool,
+            type: newAreaType,
             radius: state.activeTool == 'circle' ? state.circleRadius : 0.0,
           );
         }
@@ -252,10 +339,13 @@ class DrawingController extends Notifier<DrawingState> {
         savedAreas: updatedSavedAreas,
         isDrawing: false,
         currentPoints: [],
+        activeHoles: [],
         history: [],
         circleCenter: null,
         circleRadius: 0.0,
         editingAreaId: null,
+        isSubtracting: false,
+        basePoints: [],
       );
     } else {
       // Create New
@@ -263,11 +353,12 @@ class DrawingController extends Notifier<DrawingState> {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name,
         points: points,
+        holes: holes,
         createdAt: DateTime.now(),
         areaHectares: areaHectares,
         perimeterKm: perimeterKm,
         center: center,
-        type: state.activeTool,
+        type: newAreaType,
         radius: state.activeTool == 'circle' ? state.circleRadius : 0.0,
       );
 
@@ -275,10 +366,13 @@ class DrawingController extends Notifier<DrawingState> {
         savedAreas: [...state.savedAreas, newArea],
         isDrawing: false,
         currentPoints: [],
+        activeHoles: [],
         history: [],
         circleCenter: null,
         circleRadius: 0.0,
         editingAreaId: null,
+        isSubtracting: false,
+        basePoints: [],
       );
     }
   }
@@ -297,6 +391,35 @@ class DrawingController extends Notifier<DrawingState> {
 
   void importArea(GeoArea area) {
     state = state.copyWith(savedAreas: [...state.savedAreas, area]);
+  }
+
+  Future<void> importFromFile() async {
+    final kmlService = KmlService();
+    // This is async, UI should probably show loading.
+    final areas = await kmlService.pickAndParseFile();
+
+    // Calculate proper metrics for imported areas
+    final processedAreas = areas.map((area) {
+      if (area.type == 'polygon' && area.points.isNotEmpty) {
+        final hectares = GeometryUtils.calculateAreaHectares(area.points);
+        final perimeter = GeometryUtils.calculatePerimeterKm(area.points);
+        // Ensure center is calculated if not present
+        final center =
+            area.center ?? GeometryUtils.calculateCentroid(area.points);
+        return area.copyWith(
+          areaHectares: hectares,
+          perimeterKm: perimeter,
+          center: center,
+        );
+      }
+      return area;
+    }).toList();
+
+    if (processedAreas.isNotEmpty) {
+      state = state.copyWith(
+        savedAreas: [...state.savedAreas, ...processedAreas],
+      );
+    }
   }
 }
 

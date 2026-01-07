@@ -89,7 +89,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (isAuthenticated && isPublicRoute && currentPath != '/') {
         // Logged in, trying to access auth pages
-        return '/dashboard';
+        return '/map';
       }
 
       return null; // No redirect needed
@@ -105,90 +105,84 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
-      // Dashboard Shell Route
+      // Map Shell Route (formerly Dashboard)
       ShellRoute(
         builder: (context, state, child) {
           return DashboardLayout(child: child);
         },
         routes: [
           GoRoute(
-            path: '/dashboard',
+            path: '/map',
             builder: (context, state) => const HomeScreen(),
           ),
+          // Sub-routes for /map
           GoRoute(
-            path: '/dashboard/map',
-            builder: (context, state) => const HomeScreen(),
-          ),
-          GoRoute(
-            path: '/dashboard/occurrences',
+            path: '/map/occurrences',
             builder: (context, state) => const OccurrenceListScreen(),
           ),
-
           GoRoute(
-            path: '/dashboard/reports',
+            path: '/map/reports',
             builder: (context, state) => const ReportsScreen(),
           ),
           GoRoute(
-            path: '/dashboard/clients',
+            path: '/map/clients',
             builder: (context, state) => const ClientListScreen(),
           ),
           GoRoute(
-            path: '/dashboard/calendar',
+            path: '/map/calendar',
             builder: (context, state) => const AgendaScreen(),
           ),
           GoRoute(
-            path: '/dashboard/ndvi',
+            path: '/map/ndvi',
             builder: (context, state) => const NDVIHistoryScreen(),
           ),
           GoRoute(
-            path: '/dashboard/weather',
+            path: '/map/weather',
             builder: (context, state) => const WeatherScreen(),
           ),
           GoRoute(
-            path: '/dashboard/harvest',
+            path: '/map/harvest',
             builder: (context, state) => const HarvestListScreen(),
           ),
           GoRoute(
-            path: '/dashboard/integrations',
+            path: '/map/integrations',
             builder: (context, state) => const IntegrationsScreen(),
           ),
           GoRoute(
-            path: '/dashboard/marketing',
+            path: '/map/marketing',
             builder: (context, state) => const MarketingScreen(),
           ),
           GoRoute(
-            path: '/dashboard/support',
+            path: '/map/support',
             builder: (context, state) => const SupportHomeScreen(),
           ),
-
           GoRoute(
-            path: '/dashboard/settings',
+            path: '/map/settings',
             builder: (context, state) => const SettingsScreen(),
           ),
           GoRoute(
-            path: '/dashboard/feedback',
+            path: '/map/feedback',
             builder: (context, state) => const FeedbackScreen(),
           ),
-
           GoRoute(
-            path: '/dashboard/link-hub',
+            path: '/map/link-hub',
             builder: (context, state) => const LinkHubScreen(),
           ),
         ],
       ),
       // Full screen routes (outside ShellRoute)
       GoRoute(
-        path: '/dashboard/harvest/new',
+        path: '/map/harvest/new',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const HarvestFormScreen(),
       ),
       GoRoute(
-        path: '/dashboard/support/create',
+        path: '/map/support/create',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const CreateTicketScreen(),
       ),
       GoRoute(
-        path: '/dashboard/support/chat',
+        path: '/map/support/chat',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
           final ticket = state.extra as Ticket?;
@@ -196,17 +190,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/dashboard/scanner',
+        path: '/map/scanner',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ScannerHomeScreen(),
       ),
       GoRoute(
-        path: '/dashboard/scanner/camera',
+        path: '/map/scanner/camera',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ScannerScreen(),
       ),
       GoRoute(
-        path: '/dashboard/scanner/results',
+        path: '/map/scanner/results',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
           final args = state.extra as Map<String, dynamic>;
@@ -217,12 +211,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/dashboard/scanner/history',
+        path: '/map/scanner/history',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ScanHistoryScreen(),
       ),
       GoRoute(
-        path: '/dashboard/scanner/library',
+        path: '/map/scanner/library',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const PestLibraryScreen(),
       ),
@@ -275,12 +269,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Clients
       GoRoute(
-        path: '/dashboard/clients/new',
+        path: '/map/clients/new',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ClientFormScreen(),
       ),
       GoRoute(
-        path: '/dashboard/clients/:id',
+        path: '/map/clients/:id',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) =>
             ClientDetailScreen(clientId: state.pathParameters['id']!),
@@ -295,7 +289,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Calendar
       GoRoute(
-        path: '/dashboard/calendar/detail',
+        path: '/map/calendar/detail',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
           final event = state.extra as Event;
@@ -303,7 +297,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/dashboard/calendar/new',
+        path: '/map/calendar/new',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
           final initialDate = state.extra as DateTime?;
@@ -312,7 +306,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Reports
       GoRoute(
-        path: '/dashboard/report/new',
+        path: '/map/report/new',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const VisitReportScreen(),
       ),

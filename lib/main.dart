@@ -1,18 +1,21 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'dart:io';
 import 'package:sqflite/sqflite.dart';
-import 'firebase_options.dart';
-import 'core/theme/app_theme.dart';
-import 'core/router.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'l10n/generated/app_localizations.dart';
+import 'core/router.dart';
+import 'core/theme/app_theme.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (kIsWeb) {
+    // Initialize database factory for Web
+    databaseFactory = databaseFactoryFfiWeb;
+  }
 
   // Initialize Firebase
   try {
@@ -24,11 +27,6 @@ Future<void> main() async {
       'Firebase initialization failed (ignoring for development/unsupported platforms): $e',
     );
   }
-
-  // Initialize Push Notifications
-  // await PushNotificationService().initialize();
-
-
 
   runApp(const ProviderScope(child: SoloForteApp()));
 }
@@ -45,13 +43,6 @@ class SoloForteApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: router,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
     );
   }
 }

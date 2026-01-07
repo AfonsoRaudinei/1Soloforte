@@ -76,6 +76,10 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
+  sqflite_common_ffi_web: ^1.1.0
+  sqflite_common_ffi: ^2.4.0+1
+  archive: ^4.0.7
+  image: ^4.5.4
 
 
 dev_dependencies:
@@ -89,6 +93,7 @@ dev_dependencies:
   json_serializable: ^6.7.1
   freezed: ^2.4.7
   mockito: ^5.4.6
+  webdev: ^3.7.2
   # custom_lint: ^0.8.1
   # riverpod_lint: ^2.3.10
 

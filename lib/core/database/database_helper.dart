@@ -1,13 +1,15 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static const _databaseName = "soloforte.db";
-  static const _databaseVersion = 2; // Incremented version
+  static const _databaseVersion = 3; // Incremented version to 3
 
   static const tableVisits = 'visits';
   static const tableAreas = 'areas';
   static const tableOccurrences = 'occurrences';
+  static const tableTickets = 'tickets';
 
   // Singleton pattern
   DatabaseHelper._privateConstructor();
@@ -21,7 +23,13 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), _databaseName);
+    String path;
+    if (kIsWeb) {
+      path = _databaseName; // On web, the factory handles the path
+    } else {
+      path = join(await getDatabasesPath(), _databaseName);
+    }
+
     return await openDatabase(
       path,
       version: _databaseVersion,
@@ -34,15 +42,24 @@ class DatabaseHelper {
     await _createVisitsTable(db);
     await _createAreasTable(db);
     await _createOccurrencesTable(db);
+    await _createTicketsTable(db);
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Simple strategy for dev: drop and recreate.
-    // for prod, write migration logic.
-    await db.execute('DROP TABLE IF EXISTS $tableVisits');
-    await db.execute('DROP TABLE IF EXISTS $tableAreas');
-    await db.execute('DROP TABLE IF EXISTS $tableOccurrences');
-    await _onCreate(db, newVersion);
+    // Migration logic
+    if (oldVersion < 2) {
+      // Old destructive logic for v1->v2 (assumed)
+      await db.execute('DROP TABLE IF EXISTS $tableVisits');
+      await db.execute('DROP TABLE IF EXISTS $tableAreas');
+      await db.execute('DROP TABLE IF EXISTS $tableOccurrences');
+      await _createVisitsTable(db);
+      await _createAreasTable(db);
+      await _createOccurrencesTable(db);
+    }
+
+    if (oldVersion < 3) {
+      await _createTicketsTable(db);
+    }
   }
 
   Future _createVisitsTable(Database db) async {
@@ -77,6 +94,17 @@ class DatabaseHelper {
         date INTEGER NOT NULL,
         status TEXT NOT NULL,
         is_dirty INTEGER NOT NULL DEFAULT 0,
+        json_data TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future _createTicketsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableTickets (
+        id TEXT PRIMARY KEY,
+        status TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
         json_data TEXT NOT NULL
       )
     ''');

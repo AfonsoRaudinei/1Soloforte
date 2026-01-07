@@ -627,7 +627,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
 
         if (mounted) context.pop();
       }
-    } catch (e, stack) {
+    } catch (e) {
       // LoggerService.e('Error saving occurrence', error: e, stackTrace: stack);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

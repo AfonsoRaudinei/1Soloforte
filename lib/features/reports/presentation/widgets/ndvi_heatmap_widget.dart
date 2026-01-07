@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:soloforte_app/features/ndvi/domain/ndvi_heatmap_point.dart';
 
 /// Widget que gera um mapa de calor NDVI visual sem necessidade de assets
 class NdviHeatmapWidget extends StatelessWidget {
   final double width;
   final double height;
-  final List<NdviDataPoint>? dataPoints;
+  final List<NdviHeatmapPoint>? dataPoints;
   final bool showGrid;
 
   const NdviHeatmapWidget({
@@ -40,9 +41,9 @@ class NdviHeatmapWidget extends StatelessWidget {
   }
 
   /// Gera dados mock para demonstração
-  List<NdviDataPoint> _generateMockData() {
+  List<NdviHeatmapPoint> _generateMockData() {
     final random = math.Random(42); // Seed fixo para consistência
-    final points = <NdviDataPoint>[];
+    final points = <NdviHeatmapPoint>[];
 
     // Gera grid de pontos com valores NDVI variados
     for (var x = 0.0; x <= 1.0; x += 0.1) {
@@ -57,34 +58,29 @@ class NdviHeatmapWidget extends StatelessWidget {
         ndviValue += (random.nextDouble() - 0.5) * 0.2; // Adiciona variação
         ndviValue = ndviValue.clamp(0.0, 1.0);
 
-        points.add(NdviDataPoint(x: x, y: y, ndviValue: ndviValue));
+        points.add(NdviHeatmapPoint(x: x, y: y, ndviValue: ndviValue));
       }
     }
 
     // Adiciona algumas zonas de atenção (baixo NDVI)
-    points.add(NdviDataPoint(x: 0.2, y: 0.3, ndviValue: 0.25));
-    points.add(NdviDataPoint(x: 0.8, y: 0.7, ndviValue: 0.30));
-    points.add(NdviDataPoint(x: 0.6, y: 0.2, ndviValue: 0.35));
+    points.add(NdviHeatmapPoint(x: 0.2, y: 0.3, ndviValue: 0.25));
+    points.add(NdviHeatmapPoint(x: 0.8, y: 0.7, ndviValue: 0.30));
+    points.add(NdviHeatmapPoint(x: 0.6, y: 0.2, ndviValue: 0.35));
 
     return points;
   }
 }
 
-/// Ponto de dados NDVI com posição e valor
-class NdviDataPoint {
-  final double x; // 0.0 a 1.0 (posição horizontal normalizada)
-  final double y; // 0.0 a 1.0 (posição vertical normalizada)
-  final double ndviValue; // 0.0 a 1.0 (valor NDVI)
-
-  NdviDataPoint({required this.x, required this.y, required this.ndviValue});
-}
+// Internal class removed as it is now in domain
+// class NdviDataPoint { ... }
 
 /// Painter customizado para desenhar o mapa de calor NDVI
 class NdviHeatmapPainter extends CustomPainter {
-  final List<NdviDataPoint> dataPoints;
+  final List<NdviHeatmapPoint> dataPoints;
   final bool showGrid;
 
   NdviHeatmapPainter({required this.dataPoints, this.showGrid = true});
+  // ...
 
   @override
   void paint(Canvas canvas, Size size) {

@@ -186,9 +186,11 @@ class NdviAnalysisTab extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -213,23 +215,29 @@ class NdviAnalysisTab extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Usa imagem real se disponível, senão usa widget gerado
-          data.attentionZoneImageBytes != null
-              ? Container(
+          // Usa Heatmap Real (Analítico) se disponível, senão Imagem PNG, senão Mock
+          (data.heatmapPoints != null && data.heatmapPoints!.isNotEmpty)
+              ? NdviHeatmapWidget(
                   height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.memory(
-                      data.attentionZoneImageBytes!,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                  showGrid: true,
+                  dataPoints: data.heatmapPoints,
                 )
-              : const NdviHeatmapWidget(height: 200, showGrid: true),
+              : (data.attentionZoneImageBytes != null
+                    ? Container(
+                        height: 200,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            data.attentionZoneImageBytes!,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : const NdviHeatmapWidget(height: 200, showGrid: true)),
           const SizedBox(height: 12),
           // Legenda do mapa de calor
           Row(

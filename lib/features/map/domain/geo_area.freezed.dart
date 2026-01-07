@@ -26,6 +26,8 @@ mixin _$GeoArea {
       throw _privateConstructorUsedError; // ignore: invalid_annotation_target
   @JsonKey(includeFromJson: false, includeToJson: false)
   List<LatLng> get points => throw _privateConstructorUsedError;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  List<List<LatLng>> get holes => throw _privateConstructorUsedError;
   double get areaHectares => throw _privateConstructorUsedError;
   double get perimeterKm => throw _privateConstructorUsedError;
   double get radius => throw _privateConstructorUsedError;
@@ -52,6 +54,8 @@ abstract class $GeoAreaCopyWith<$Res> {
     String id,
     String name,
     @JsonKey(includeFromJson: false, includeToJson: false) List<LatLng> points,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    List<List<LatLng>> holes,
     double areaHectares,
     double perimeterKm,
     double radius,
@@ -79,6 +83,7 @@ class _$GeoAreaCopyWithImpl<$Res, $Val extends GeoArea>
     Object? id = null,
     Object? name = null,
     Object? points = null,
+    Object? holes = null,
     Object? areaHectares = null,
     Object? perimeterKm = null,
     Object? radius = null,
@@ -100,6 +105,10 @@ class _$GeoAreaCopyWithImpl<$Res, $Val extends GeoArea>
                 ? _value.points
                 : points // ignore: cast_nullable_to_non_nullable
                       as List<LatLng>,
+            holes: null == holes
+                ? _value.holes
+                : holes // ignore: cast_nullable_to_non_nullable
+                      as List<List<LatLng>>,
             areaHectares: null == areaHectares
                 ? _value.areaHectares
                 : areaHectares // ignore: cast_nullable_to_non_nullable
@@ -142,6 +151,8 @@ abstract class _$$GeoAreaImplCopyWith<$Res> implements $GeoAreaCopyWith<$Res> {
     String id,
     String name,
     @JsonKey(includeFromJson: false, includeToJson: false) List<LatLng> points,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    List<List<LatLng>> holes,
     double areaHectares,
     double perimeterKm,
     double radius,
@@ -168,6 +179,7 @@ class __$$GeoAreaImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? points = null,
+    Object? holes = null,
     Object? areaHectares = null,
     Object? perimeterKm = null,
     Object? radius = null,
@@ -189,6 +201,10 @@ class __$$GeoAreaImplCopyWithImpl<$Res>
             ? _value._points
             : points // ignore: cast_nullable_to_non_nullable
                   as List<LatLng>,
+        holes: null == holes
+            ? _value._holes
+            : holes // ignore: cast_nullable_to_non_nullable
+                  as List<List<LatLng>>,
         areaHectares: null == areaHectares
             ? _value.areaHectares
             : areaHectares // ignore: cast_nullable_to_non_nullable
@@ -226,13 +242,16 @@ class _$GeoAreaImpl implements _GeoArea {
     required this.name,
     @JsonKey(includeFromJson: false, includeToJson: false)
     final List<LatLng> points = const [],
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    final List<List<LatLng>> holes = const [],
     this.areaHectares = 0.0,
     this.perimeterKm = 0.0,
     this.radius = 0.0,
     this.center,
     this.type = 'polygon',
     this.createdAt,
-  }) : _points = points;
+  }) : _points = points,
+       _holes = holes;
 
   factory _$GeoAreaImpl.fromJson(Map<String, dynamic> json) =>
       _$$GeoAreaImplFromJson(json);
@@ -250,6 +269,15 @@ class _$GeoAreaImpl implements _GeoArea {
     if (_points is EqualUnmodifiableListView) return _points;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_points);
+  }
+
+  final List<List<LatLng>> _holes;
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  List<List<LatLng>> get holes {
+    if (_holes is EqualUnmodifiableListView) return _holes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_holes);
   }
 
   @override
@@ -272,7 +300,7 @@ class _$GeoAreaImpl implements _GeoArea {
 
   @override
   String toString() {
-    return 'GeoArea(id: $id, name: $name, points: $points, areaHectares: $areaHectares, perimeterKm: $perimeterKm, radius: $radius, center: $center, type: $type, createdAt: $createdAt)';
+    return 'GeoArea(id: $id, name: $name, points: $points, holes: $holes, areaHectares: $areaHectares, perimeterKm: $perimeterKm, radius: $radius, center: $center, type: $type, createdAt: $createdAt)';
   }
 
   @override
@@ -283,6 +311,7 @@ class _$GeoAreaImpl implements _GeoArea {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
             const DeepCollectionEquality().equals(other._points, _points) &&
+            const DeepCollectionEquality().equals(other._holes, _holes) &&
             (identical(other.areaHectares, areaHectares) ||
                 other.areaHectares == areaHectares) &&
             (identical(other.perimeterKm, perimeterKm) ||
@@ -301,6 +330,7 @@ class _$GeoAreaImpl implements _GeoArea {
     id,
     name,
     const DeepCollectionEquality().hash(_points),
+    const DeepCollectionEquality().hash(_holes),
     areaHectares,
     perimeterKm,
     radius,
@@ -329,6 +359,8 @@ abstract class _GeoArea implements GeoArea {
     required final String name,
     @JsonKey(includeFromJson: false, includeToJson: false)
     final List<LatLng> points,
+    @JsonKey(includeFromJson: false, includeToJson: false)
+    final List<List<LatLng>> holes,
     final double areaHectares,
     final double perimeterKm,
     final double radius,
@@ -346,6 +378,9 @@ abstract class _GeoArea implements GeoArea {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   List<LatLng> get points;
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  List<List<LatLng>> get holes;
   @override
   double get areaHectares;
   @override

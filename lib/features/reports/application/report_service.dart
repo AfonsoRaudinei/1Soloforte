@@ -15,6 +15,8 @@ import 'package:soloforte_app/features/visits/data/repositories/visit_repository
 import 'package:soloforte_app/features/visits/domain/repositories/visit_repository.dart';
 
 import 'package:soloforte_app/features/ndvi/data/services/sentinel_service.dart';
+import 'package:soloforte_app/features/ndvi/data/satellite_service.dart';
+import 'package:soloforte_app/features/ndvi/domain/ndvi_heatmap_point.dart';
 import 'package:soloforte_app/features/map/application/geometry_utils.dart';
 
 class ReportService {
@@ -22,16 +24,19 @@ class ReportService {
   final HarvestRepository _harvestRepository;
   final VisitRepository _visitRepository;
   final SentinelService _sentinelService;
+  final SatelliteService _satelliteService;
 
   ReportService({
     required OccurrenceRepository occurrenceRepository,
     required HarvestRepository harvestRepository,
     required VisitRepository visitRepository,
     required SentinelService sentinelService,
+    required SatelliteService satelliteService,
   }) : _occurrenceRepository = occurrenceRepository,
        _harvestRepository = harvestRepository,
        _visitRepository = visitRepository,
-       _sentinelService = sentinelService;
+       _sentinelService = sentinelService,
+       _satelliteService = satelliteService;
 
   // ... (keep generateAndShareNDVIReport same or similar)
 
@@ -1141,9 +1146,61 @@ class ReportService {
     // For simplicity and performance, let's fetch stats for *last valid image* and assume some history or just return 1 point.
 
     List<NdviDataPoint> temporalData = [];
-    Uint8List? imageBytes;
+    Uint8List? imageBytes; // Keep for fallback or PDF
+    List<NdviHeatmapPoint>? heatmapPoints;
 
     try {
+      // 1. Fetch Server-Side Statistics for Time Series (60 days)
+      final endDate = DateTime.now();
+      final startDate = endDate.subtract(const Duration(days: 60));
+
+      final statsMap = await _satelliteService.fetchStatistics(
+        mainArea.points,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      if (statsMap != null && statsMap['C0'] != null) {
+        final results = statsMap['C0'] as List;
+        // FIS returns list of date-based results
+        for (var item in results) {
+          if (item['date'] != null && item['basicStats'] != null) {
+            final dateStr = item['date'] as String;
+            final mean = (item['basicStats']['mean'] as num).toDouble();
+
+            // If mean is 'NaN' (our cloud mask), Sentinel Hub usually returns "NoData" or specific value?
+            // Actually `basicStats.mean` will be calculated based on valid pixels.
+            // If all pixels are cloud masked (NaN), the response might have sampleCount=0 or mean="NaN".
+
+            // Let's check sampleCount to filter empty/cloudy days
+            final sampleCount = (item['basicStats']['sampleCount'] as num)
+                .toInt();
+
+            if (sampleCount > 0 && !mean.isNaN) {
+              temporalData.add(NdviDataPoint(DateTime.parse(dateStr), mean));
+            }
+          }
+        }
+
+        // Sort by date ascending
+        temporalData.sort((a, b) => a.date.compareTo(b.date));
+
+        // Keep only last 5 valid points for the chart to be clean
+        if (temporalData.length > 5) {
+          temporalData = temporalData.sublist(temporalData.length - 5);
+        }
+      }
+
+      // 2. Fetch Real Raw Data for Heatmap (Visual)
+      // Only if we need visual heatmap, which is heavier to download.
+      // We do it here as per user flow.
+      final rawTiff = await _satelliteService.fetchRawSatelliteData(
+        mainArea.points,
+      );
+      if (rawTiff != null) {
+        heatmapPoints = _satelliteService.parseNdviData(rawTiff);
+      }
+
       // 1. Get stats for main area (last 30 days aggregation?)
       // SentinelService.fetchStatistics returns simple object. Let's try to get recent stats.
       final stats = await _sentinelService.fetchStatistics(
@@ -1231,6 +1288,7 @@ class ReportService {
       temporalEvolution: temporalData,
       areaComparisons: comparisons,
       attentionZoneImageBytes: imageBytes,
+      heatmapPoints: heatmapPoints,
       correlationWithWeather: 0.85, // Still mocked as no weather API connected
     );
   }
@@ -1408,5 +1466,6 @@ final reportServiceProvider = Provider<ReportService>((ref) {
     harvestRepository: ref.watch(harvestRepositoryProvider),
     visitRepository: ref.watch(visitRepositoryProvider),
     sentinelService: ref.watch(sentinelServiceProvider),
+    satelliteService: SatelliteService(), // Simple injection for now
   );
 });

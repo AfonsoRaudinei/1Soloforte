@@ -44,13 +44,39 @@ class NotificationsNotifier
   }
 
   Future<void> markAsRead(String notificationId) async {
-    await _repository.markAsRead(notificationId);
-    await loadNotifications();
+    // 1. Optimistic Update: Atualiza a lista localmente
+    state.whenData((notifications) {
+      final updatedList = notifications
+          .map((n) => n.id == notificationId ? n.copyWith(isRead: true) : n)
+          .toList();
+      state = AsyncValue.data(updatedList);
+    });
+
+    // 2. Persiste em background (falhas podem ser tratadas revertendo)
+    try {
+      await _repository.markAsRead(notificationId);
+      // Não recarregamos tudo aqui para evitar flickering,
+      // pois já confiamos na atualização local.
+    } catch (e) {
+      // Em caso de erro, recarregamos para garantir consistência
+      loadNotifications();
+    }
   }
 
   Future<void> markAllAsRead() async {
-    await _repository.markAllAsRead();
-    await loadNotifications();
+    // 1. Optimistic Update
+    state.whenData((notifications) {
+      final updatedList = notifications
+          .map((n) => n.copyWith(isRead: true))
+          .toList();
+      state = AsyncValue.data(updatedList);
+    });
+
+    try {
+      await _repository.markAllAsRead();
+    } catch (e) {
+      loadNotifications();
+    }
   }
 
   Future<void> addNotification(NotificationModel notification) async {
