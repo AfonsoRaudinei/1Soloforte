@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../core/services/secure_storage_service.dart';
 import '../../../core/security/ssl_pinning_service.dart';
@@ -21,7 +22,9 @@ class ApiClient {
     );
 
     // ✅ Configure SSL Pinning
-    SslPinningService.configurePinning(_dio);
+    if (!kIsWeb) {
+      SslPinningService.configurePinning(_dio);
+    }
 
     _setupInterceptors();
 

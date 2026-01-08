@@ -50,7 +50,10 @@ class _LandingScreenState extends State<LandingScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7),
+                  ],
                 ),
               ),
             ),
@@ -101,7 +104,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   // Chevron icon effectively acting as a "Do it" indicator
                   Icon(
                     Icons.arrow_forward_ios_rounded,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     size: 24,
                   ),
                 ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/features/visits/presentation/widgets/active_visit/visit_section.dart';
-import 'package:soloforte_app/l10n/generated/app_localizations.dart';
+import 'package:soloforte_app/l10n/generated/app_localizations.dart' as l10n;
 
 class VisitPhotoSection extends StatelessWidget {
   final List<Map<String, dynamic>> photos;
@@ -20,7 +20,7 @@ class VisitPhotoSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        VisitSectionHeader(title: AppLocalizations.of(context)!.photos),
+        VisitSectionHeader(title: l10n.AppLocalizations.of(context)!.photos),
         VisitSectionCard(
           child: Column(
             children: [
@@ -43,7 +43,7 @@ class VisitPhotoSection extends StatelessWidget {
                       const Icon(Icons.camera_alt, color: AppColors.primary),
                       const SizedBox(width: 8),
                       Text(
-                        AppLocalizations.of(context)!.addPhoto,
+                        l10n.AppLocalizations.of(context)!.addPhoto,
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,

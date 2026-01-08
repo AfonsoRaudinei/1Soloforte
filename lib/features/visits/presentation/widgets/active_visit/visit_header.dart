@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:soloforte_app/features/visits/presentation/widgets/active_visit/visit_section.dart';
-import 'package:soloforte_app/l10n/generated/app_localizations.dart';
+import 'package:soloforte_app/l10n/generated/app_localizations.dart' as l10n;
 
 class VisitHeader extends StatelessWidget {
   final TextEditingController produtorCtrl;
@@ -36,19 +36,19 @@ class VisitHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        VisitSectionHeader(title: AppLocalizations.of(context)!.visitInfo),
+        VisitSectionHeader(title: l10n.AppLocalizations.of(context)!.visitInfo),
         VisitSectionCard(
           child: Column(
             children: [
               _buildRowInput(
                 context,
-                AppLocalizations.of(context)!.producer,
+                l10n.AppLocalizations.of(context)!.producer,
                 produtorCtrl,
               ),
               const Divider(height: 24),
               _buildRowInput(
                 context,
-                AppLocalizations.of(context)!.property,
+                l10n.AppLocalizations.of(context)!.property,
                 propriedadeCtrl,
               ),
               const Divider(height: 24),
@@ -61,7 +61,7 @@ class VisitHeader extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            AppLocalizations.of(context)!.date,
+                            l10n.AppLocalizations.of(context)!.date,
                             style: const TextStyle(fontSize: 16),
                           ),
                           Text(
@@ -80,21 +80,21 @@ class VisitHeader extends StatelessWidget {
               const Divider(height: 24),
               _buildRowInput(
                 context,
-                AppLocalizations.of(context)!.areaHa,
+                l10n.AppLocalizations.of(context)!.areaHa,
                 areaCtrl,
                 keyboardType: TextInputType.number,
               ),
               const Divider(height: 24),
               _buildRowInput(
                 context,
-                AppLocalizations.of(context)!.cultivar,
+                l10n.AppLocalizations.of(context)!.cultivar,
                 cultivarCtrl,
               ),
               const Divider(height: 24),
               Row(
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.planting,
+                    l10n.AppLocalizations.of(context)!.planting,
                     style: const TextStyle(fontSize: 16),
                   ),
                   const Spacer(),
@@ -102,7 +102,7 @@ class VisitHeader extends StatelessWidget {
                     onTap: onPlantDateTap,
                     child: Text(
                       plantDate == null
-                          ? AppLocalizations.of(context)!.select
+                          ? l10n.AppLocalizations.of(context)!.select
                           : DateFormat('dd/MM/yyyy').format(plantDate!),
                       style: TextStyle(
                         fontSize: 16,
@@ -120,11 +120,11 @@ class VisitHeader extends StatelessWidget {
                     horizontal: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    AppLocalizations.of(context)!.dapDays(dap),
+                    l10n.AppLocalizations.of(context)!.dapDays(dap),
                     style: const TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
@@ -135,13 +135,13 @@ class VisitHeader extends StatelessWidget {
               const Divider(height: 24),
               _buildRowInput(
                 context,
-                AppLocalizations.of(context)!.technician,
+                l10n.AppLocalizations.of(context)!.technician,
                 tecnicoCtrl,
               ),
               const Divider(height: 24),
               _buildRowInput(
                 context,
-                AppLocalizations.of(context)!.locationGps,
+                l10n.AppLocalizations.of(context)!.locationGps,
                 locationCtrl,
                 readOnly: true,
               ),
@@ -173,7 +173,7 @@ class VisitHeader extends StatelessWidget {
             textAlign: TextAlign.end,
             decoration: InputDecoration(
               border: InputBorder.none,
-              hintText: AppLocalizations.of(context)!.typeHere,
+              hintText: l10n.AppLocalizations.of(context)!.typeHere,
               hintStyle: const TextStyle(color: Colors.grey),
               isDense: true,
               contentPadding: EdgeInsets.zero,

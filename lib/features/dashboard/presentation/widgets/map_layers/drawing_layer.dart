@@ -3,7 +3,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/features/map/application/drawing_controller.dart';
-import 'dart:math' as math;
 
 class DrawingLayer extends ConsumerWidget {
   const DrawingLayer({super.key});
@@ -109,13 +108,10 @@ class DrawingLayer extends ConsumerWidget {
                       final localPosition = renderBox.globalToLocal(
                         details.globalPosition,
                       );
-                      // We use math.Point<double> to be explicit
-                      final point = math.Point<double>(
-                        localPosition.dx,
-                        localPosition.dy,
+                      // Use screenOffsetToLatLng as per flutter_map v6+ conventions for MapCamera
+                      final newLatLng = mapCamera.screenOffsetToLatLng(
+                        localPosition,
                       );
-                      // Try pointToLatLng
-                      final newLatLng = mapCamera.pointToLatLng(point);
 
                       ref
                           .read(drawingControllerProvider.notifier)
@@ -165,11 +161,9 @@ class DrawingLayer extends ConsumerWidget {
                       final localPosition = renderBox.globalToLocal(
                         details.globalPosition,
                       );
-                      final point = math.Point<double>(
-                        localPosition.dx,
-                        localPosition.dy,
+                      final newLatLng = mapCamera.screenOffsetToLatLng(
+                        localPosition,
                       );
-                      final newLatLng = mapCamera.pointToLatLng(point);
 
                       ref
                           .read(drawingControllerProvider.notifier)
