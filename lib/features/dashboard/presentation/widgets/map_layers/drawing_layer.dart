@@ -14,7 +14,7 @@ class DrawingLayer extends ConsumerWidget {
     if (!drawingState.isDrawing) return const SizedBox.shrink();
 
     // FieldView Style Config
-    const vertexColor = Colors.white;
+    const vertexColor = AppColors.surface;
     const vertexStroke = Colors.black;
 
     // Determine points to render for Main Polygon
@@ -50,7 +50,7 @@ class DrawingLayer extends ConsumerWidget {
               Polygon(
                 points: mainPoints,
                 holePointsList: drawingState.activeHoles,
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
                 borderStrokeWidth: 0,
               ),
             ],
@@ -62,7 +62,7 @@ class DrawingLayer extends ConsumerWidget {
             polygons: [
               Polygon(
                 points: drawingState.currentPoints,
-                color: AppColors.error.withOpacity(0.4),
+                color: AppColors.error.withValues(alpha: 0.4),
                 borderColor: AppColors.error,
                 borderStrokeWidth: 2,
                 // isFilled removed (deprecated/implied by color)
@@ -81,7 +81,7 @@ class DrawingLayer extends ConsumerWidget {
                 point: drawingState.circleCenter!,
                 radius: drawingState.circleRadius,
                 useRadiusInMeter: true,
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 borderColor: AppColors.primary,
                 borderStrokeWidth: 2,
               ),

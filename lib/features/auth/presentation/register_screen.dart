@@ -7,7 +7,7 @@ import 'package:soloforte_app/core/theme/app_spacing.dart';
 import 'package:soloforte_app/shared/widgets/primary_button.dart';
 import 'package:soloforte_app/shared/widgets/custom_text_input.dart';
 import 'package:soloforte_app/core/validators/input_validators.dart';
-import 'auth_provider.dart';
+import 'providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});

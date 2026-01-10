@@ -4,30 +4,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../domain/auth_state.dart' as app;
 import '../../../core/services/secure_storage_service.dart';
+import '../../../core/config/demo_config.dart';
+import '../../../core/interfaces/service_interfaces.dart';
 
 /// Authentication Service with Mock Fallback
-class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class AuthService implements IAuthService {
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
 
   // Stream Controller for unified Auth State (valid for both Firebase and Mock)
   final _authStateController = StreamController<app.AuthState?>.broadcast();
 
-  // Mock users for development/demo
-  final Map<String, Map<String, String>> _mockUsers = {
-    'teste@soloforte.com': {
-      'password': 'senha123456',
-      'name': 'Usuário Teste',
-      'userId': 'mock-user-1',
-    },
-    'demo@soloforte.com': {
-      'password': 'demo123',
-      'name': 'Demo User',
-      'userId': 'mock-user-2',
-    },
-  };
+  // Demo mode is now controlled via DemoConfig
+  // No more hardcoded credentials!
 
-  AuthService() {
+  AuthService({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance {
+    _init();
+  }
+
+  void _init() {
     // Listen to Firebase Auth changes and propagate
     _auth.authStateChanges().listen((User? user) {
       _checkAndEmitFirebaseUser(user);
@@ -57,23 +54,18 @@ class AuthService {
 
   Future<app.AuthState?> _checkMockSession() async {
     final token = await SecureStorageService.getAuthToken();
-    if (token != null && token.startsWith('mock-token-')) {
+    if (token != null &&
+        (token.startsWith('mock-token-') || token.startsWith('demo-token-'))) {
       final userId = await SecureStorageService.getUserId();
       final email = await SecureStorageService.getUserEmail();
 
-      if (userId != null && email != null) {
-        final mockUser = _mockUsers[email];
-        // If the specific mock user details are not found in the map (e.g. removed from code),
-        // we can still return a generic auth state if we trust the token
-        // But safer to check the map.
-        final name = mockUser?['name'] ?? 'Usuário Mock';
-
+      if (userId != null && email != null && DemoConfig.isDemoEnabled) {
         return app.AuthState.authenticated(
           userId: userId,
           email: email,
-          name: name,
+          name: DemoConfig.demoUserName,
           token: token,
-          refreshToken: 'mock-refresh-token',
+          refreshToken: 'demo-refresh-token',
         );
       }
     }
@@ -81,6 +73,7 @@ class AuthService {
   }
 
   // Login with email and password
+  @override
   Future<app.AuthState> login(String email, String password) async {
     try {
       final credential = await _auth.signInWithEmailAndPassword(
@@ -126,6 +119,7 @@ class AuthService {
   }
 
   // Register new user
+  @override
   Future<app.AuthState> register(
     String name,
     String email,
@@ -179,6 +173,7 @@ class AuthService {
   }
 
   // Google Sign In
+  @override
   Future<app.AuthState> signInWithGoogle() async {
     try {
       final googleProvider = GoogleAuthProvider();
@@ -187,12 +182,13 @@ class AuthService {
       );
       return _processUserCredential(credential);
     } catch (e) {
-      // Fallback
-      return _mockLogin('teste@soloforte.com', 'senha123456');
+      // Fallback to demo login if enabled
+      return _demoLogin();
     }
   }
 
   // Apple Sign In
+  @override
   Future<app.AuthState> signInWithApple() async {
     try {
       final appleProvider = AppleAuthProvider();
@@ -201,8 +197,8 @@ class AuthService {
       );
       return _processUserCredential(credential);
     } catch (e) {
-      // Fallback
-      return _mockLogin('demo@soloforte.com', 'demo123');
+      // Fallback to demo login if enabled
+      return _demoLogin();
     }
   }
 
@@ -235,55 +231,19 @@ class AuthService {
     return state;
   }
 
-  Future<app.AuthState> _mockLogin(String email, String password) async {
-    final mockUser = _mockUsers[email];
-
-    if (mockUser == null) {
-      throw Exception(
-        'Usuário não encontrado. Use: teste@soloforte.com / senha123456',
-      );
+  /// Demo login using DemoConfig (no hardcoded credentials)
+  Future<app.AuthState> _demoLogin() async {
+    if (!DemoConfig.isDemoEnabled) {
+      throw Exception('Demo mode is not enabled');
     }
 
-    if (mockUser['password'] != password) {
-      throw Exception('Senha incorreta');
-    }
+    final token = DemoConfig.generateDemoToken();
+    final userId = DemoConfig.demoUserId;
+    final email = DemoConfig.demoEmail;
+    final name = DemoConfig.demoUserName;
 
     // Save to secure storage
-    await SecureStorageService.saveAuthToken(
-      'mock-token-${mockUser['userId']}',
-    );
-    await SecureStorageService.saveUserId(mockUser['userId']!);
-    await SecureStorageService.saveUserEmail(email);
-
-    final state = app.AuthState.authenticated(
-      userId: mockUser['userId']!,
-      email: email,
-      name: mockUser['name']!,
-      token: 'mock-token-${mockUser['userId']}',
-      refreshToken: 'mock-refresh-token',
-    );
-
-    _authStateController.add(state);
-    return state;
-  }
-
-  // Mock register (fallback)
-  Future<app.AuthState> _mockRegister(
-    String name,
-    String email,
-    String password,
-  ) async {
-    // Check if user already exists
-    if (_mockUsers.containsKey(email)) {
-      throw Exception('Email já cadastrado');
-    }
-
-    // Add to mock users
-    final userId = 'mock-user-${DateTime.now().millisecondsSinceEpoch}';
-    _mockUsers[email] = {'password': password, 'name': name, 'userId': userId};
-
-    // Save to secure storage
-    await SecureStorageService.saveAuthToken('mock-token-$userId');
+    await SecureStorageService.saveAuthToken(token);
     await SecureStorageService.saveUserId(userId);
     await SecureStorageService.saveUserEmail(email);
 
@@ -291,8 +251,49 @@ class AuthService {
       userId: userId,
       email: email,
       name: name,
-      token: 'mock-token-$userId',
-      refreshToken: 'mock-refresh-token',
+      token: token,
+      refreshToken: 'demo-refresh-token',
+    );
+
+    _authStateController.add(state);
+    return state;
+  }
+
+  /// Mock login - validates using DemoConfig
+  Future<app.AuthState> _mockLogin(String email, String password) async {
+    // Use DemoConfig for validation instead of hardcoded map
+    if (!DemoConfig.validateDemoCredentials(email, password)) {
+      throw Exception('Credenciais inválidas ou modo demo desabilitado');
+    }
+
+    return _demoLogin();
+  }
+
+  // Mock register (fallback) - for demo mode only
+  Future<app.AuthState> _mockRegister(
+    String name,
+    String email,
+    String password,
+  ) async {
+    if (!DemoConfig.isDemoEnabled) {
+      throw Exception('Demo mode is not enabled');
+    }
+
+    // In demo mode, we just create a demo session
+    final token = DemoConfig.generateDemoToken();
+    final userId = 'demo-user-${DateTime.now().millisecondsSinceEpoch}';
+
+    // Save to secure storage
+    await SecureStorageService.saveAuthToken(token);
+    await SecureStorageService.saveUserId(userId);
+    await SecureStorageService.saveUserEmail(email);
+
+    final state = app.AuthState.authenticated(
+      userId: userId,
+      email: email,
+      name: name,
+      token: token,
+      refreshToken: 'demo-refresh-token',
     );
 
     _authStateController.add(state);
@@ -300,6 +301,7 @@ class AuthService {
   }
 
   // Logout
+  @override
   Future<void> logout() async {
     try {
       await _auth.signOut();
@@ -311,6 +313,7 @@ class AuthService {
   }
 
   // Check current auth status
+  @override
   Future<app.AuthState?> checkAuth() async {
     try {
       final user = _auth.currentUser;
@@ -324,6 +327,7 @@ class AuthService {
   }
 
   // Forgot password
+  @override
   Future<void> forgotPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -337,6 +341,7 @@ class AuthService {
   }
 
   // Reset password (after email link)
+  @override
   Future<void> resetPassword(String code, String newPassword) async {
     try {
       await _auth.confirmPasswordReset(code: code, newPassword: newPassword);
@@ -368,5 +373,6 @@ class AuthService {
   }
 
   // Listen to auth state changes
+  @override
   Stream<app.AuthState?> get authStateChanges => _authStateController.stream;
 }

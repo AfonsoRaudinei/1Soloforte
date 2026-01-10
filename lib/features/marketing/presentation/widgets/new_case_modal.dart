@@ -105,7 +105,7 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 60,
               offset: const Offset(0, 20),
             ),
@@ -136,7 +136,7 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
                       Text(
                         '(#1E3A2F)',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 11,
                           fontFamily: 'monospace',
                         ),
@@ -399,7 +399,7 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: kSfGreen.withOpacity(0.6),
+                        backgroundColor: kSfGreen.withValues(alpha: 0.6),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -420,7 +420,7 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
                         backgroundColor: kSfGreenDark,
                         foregroundColor: Colors.white,
                         elevation: 4,
-                        shadowColor: kSfGreen.withOpacity(0.4),
+                        shadowColor: kSfGreen.withValues(alpha: 0.4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -530,7 +530,7 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 2,
                     ),
                   ]
@@ -563,7 +563,7 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 2,
                     ),
                   ]

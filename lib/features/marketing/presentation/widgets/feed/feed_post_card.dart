@@ -228,7 +228,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppColors.primary.withOpacity(0.2),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.2),
                   child: Text(
                     widget.post.authorName[0],
                     style: const TextStyle(color: AppColors.primary),

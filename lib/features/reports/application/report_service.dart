@@ -18,6 +18,7 @@ import 'package:soloforte_app/features/ndvi/data/services/sentinel_service.dart'
 import 'package:soloforte_app/features/ndvi/data/satellite_service.dart';
 import 'package:soloforte_app/features/ndvi/domain/ndvi_heatmap_point.dart';
 import 'package:soloforte_app/features/map/application/geometry_utils.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class ReportService {
   final OccurrenceRepository _occurrenceRepository;
@@ -1108,7 +1109,11 @@ class ReportService {
         ],
       );
     } catch (e) {
-      print('Error generating weekly report: $e');
+      LoggerService.e(
+        'Error generating weekly report',
+        error: e,
+        tag: 'REPORT',
+      );
       return WeeklyReportData(
         activities: ['Erro ao carregar atividades'],
         occurrences: 0,
@@ -1243,7 +1248,7 @@ class ReportService {
         height: 512,
       );
     } catch (e) {
-      print('Error fetching Sentinel data: $e');
+      LoggerService.e('Error fetching Sentinel data', error: e, tag: 'REPORT');
       // Fallback
       temporalData = [NdviDataPoint(now, 0.0)];
     }
@@ -1367,7 +1372,7 @@ class ReportService {
         lessonsLearned: allLessons.take(5).toList(), // Limit to top 5
       );
     } catch (e) {
-      print('Error generating crop summary: $e');
+      LoggerService.e('Error generating crop summary', error: e, tag: 'REPORT');
       return CropSummaryData(
         plantedArea: 0,
         phenologicalStage: 'Erro',

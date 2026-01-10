@@ -66,7 +66,7 @@ class PestReportTab extends ConsumerWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: color.withOpacity(0.1),
+            backgroundColor: color.withValues(alpha: 0.1),
             radius: 24,
             child: Icon(icon, color: color, size: 28),
           ),

@@ -119,7 +119,7 @@ class _DrawingToolsMenuState extends ConsumerState<DrawingToolsMenu>
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -157,7 +157,7 @@ class _DrawingToolsMenuState extends ConsumerState<DrawingToolsMenu>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(

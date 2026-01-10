@@ -71,7 +71,7 @@ class _ProductivityBarChartState extends State<ProductivityBarChart> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -165,7 +165,7 @@ class _ProductivityBarChartState extends State<ProductivityBarChart> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -299,7 +299,7 @@ class _ProductivityBarChartState extends State<ProductivityBarChart> {
                         BarChartRodData(
                           toY: _chartData[index].value,
                           color: isTouched
-                              ? AppColors.primary.withOpacity(0.8)
+                              ? AppColors.primary.withValues(alpha: 0.8)
                               : AppColors.primary,
                           width: isTouched ? 24 : 20,
                           borderRadius: const BorderRadius.vertical(

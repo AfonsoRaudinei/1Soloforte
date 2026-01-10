@@ -78,7 +78,7 @@ class VisitDetailScreen extends ConsumerWidget {
                     border: Border.all(color: Colors.blue.shade100),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withOpacity(0.05),
+                        color: Colors.blue.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

@@ -120,7 +120,7 @@ class _OccurrenceListViewState extends ConsumerState<OccurrenceListView> {
                 filteredList = filteredList.where((o) {
                   return o.title.toLowerCase().contains(query) ||
                       o.description.toLowerCase().contains(query) ||
-                      (o.areaName.toLowerCase().contains(query) ?? false);
+                      o.areaName.toLowerCase().contains(query);
                 }).toList();
               }
 
@@ -294,7 +294,7 @@ class _OccurrenceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -329,7 +329,7 @@ class _OccurrenceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(occurrence.status).withOpacity(0.1),
+                  color: _getStatusColor(occurrence.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _getStatusColor(occurrence.status)),
                 ),

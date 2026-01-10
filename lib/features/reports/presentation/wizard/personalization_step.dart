@@ -167,7 +167,7 @@ class _PersonalizationStepState extends ConsumerState<PersonalizationStep> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primary.withOpacity(0.1)
+                        ? AppColors.primary.withValues(alpha: 0.1)
                         : Colors.grey[100],
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
@@ -227,7 +227,7 @@ class _PersonalizationStepState extends ConsumerState<PersonalizationStep> {
   }
 
   Widget _buildSectionsSection(template) {
-    final sections = template.availableMetrics;
+    // Note: template.availableMetrics are shown via the info box below
 
     return AppCard(
       child: Column(

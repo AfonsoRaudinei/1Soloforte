@@ -178,7 +178,7 @@ class _RichTextInputState extends State<RichTextInput> {
                           ),
                           margin: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryLight.withOpacity(0.1),
+                            color: AppColors.primaryLight.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Center(

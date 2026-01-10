@@ -37,7 +37,7 @@ class _SideBySideEvalModalState extends State<SideBySideEvalModal> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 60,
               offset: const Offset(0, 20),
             ),
@@ -68,7 +68,7 @@ class _SideBySideEvalModalState extends State<SideBySideEvalModal> {
                       Text(
                         'COMPARATIVO',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 11,
                           fontFamily: 'monospace',
                         ),
@@ -119,10 +119,10 @@ class _SideBySideEvalModalState extends State<SideBySideEvalModal> {
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.red.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: Colors.red.withOpacity(0.3),
+                              color: Colors.red.withValues(alpha: 0.3),
                             ),
                           ),
                           child: const Column(
@@ -142,7 +142,7 @@ class _SideBySideEvalModalState extends State<SideBySideEvalModal> {
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: kSfGreen.withOpacity(0.1),
+                            color: kSfGreen.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: kSfGreen),
                           ),

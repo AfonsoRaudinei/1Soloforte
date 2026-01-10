@@ -55,11 +55,11 @@ class DailyTimeline extends StatelessWidget {
                     height: hourHeight,
                     decoration: BoxDecoration(
                       color: candidateData.isNotEmpty
-                          ? AppColors.primary.withOpacity(0.05)
+                          ? AppColors.primary.withValues(alpha: 0.05)
                           : null,
                       border: candidateData.isNotEmpty
                           ? Border.all(
-                              color: AppColors.primary.withOpacity(0.5),
+                              color: AppColors.primary.withValues(alpha: 0.5),
                             )
                           : null,
                     ),
@@ -155,11 +155,11 @@ class DailyTimeline extends StatelessWidget {
                     height: height > 20 ? height - 4 : 20,
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _getTypeColor(event.type).withOpacity(0.9),
+                      color: _getTypeColor(event.type).withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -196,7 +196,7 @@ class DailyTimeline extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: _getTypeColor(event.type).withOpacity(0.15),
+        color: _getTypeColor(event.type).withValues(alpha: 0.15),
         border: Border(
           left: BorderSide(color: _getTypeColor(event.type), width: 4),
         ),

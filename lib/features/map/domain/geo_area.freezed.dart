@@ -26,7 +26,6 @@ mixin _$GeoArea {
       throw _privateConstructorUsedError; // ignore: invalid_annotation_target
   @JsonKey(includeFromJson: false, includeToJson: false)
   List<LatLng> get points => throw _privateConstructorUsedError;
-  @JsonKey(includeFromJson: false, includeToJson: false)
   List<List<LatLng>> get holes => throw _privateConstructorUsedError;
   double get areaHectares => throw _privateConstructorUsedError;
   double get perimeterKm => throw _privateConstructorUsedError;
@@ -54,7 +53,6 @@ abstract class $GeoAreaCopyWith<$Res> {
     String id,
     String name,
     @JsonKey(includeFromJson: false, includeToJson: false) List<LatLng> points,
-    @JsonKey(includeFromJson: false, includeToJson: false)
     List<List<LatLng>> holes,
     double areaHectares,
     double perimeterKm,
@@ -151,7 +149,6 @@ abstract class _$$GeoAreaImplCopyWith<$Res> implements $GeoAreaCopyWith<$Res> {
     String id,
     String name,
     @JsonKey(includeFromJson: false, includeToJson: false) List<LatLng> points,
-    @JsonKey(includeFromJson: false, includeToJson: false)
     List<List<LatLng>> holes,
     double areaHectares,
     double perimeterKm,
@@ -242,7 +239,6 @@ class _$GeoAreaImpl implements _GeoArea {
     required this.name,
     @JsonKey(includeFromJson: false, includeToJson: false)
     final List<LatLng> points = const [],
-    @JsonKey(includeFromJson: false, includeToJson: false)
     final List<List<LatLng>> holes = const [],
     this.areaHectares = 0.0,
     this.perimeterKm = 0.0,
@@ -273,7 +269,7 @@ class _$GeoAreaImpl implements _GeoArea {
 
   final List<List<LatLng>> _holes;
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey()
   List<List<LatLng>> get holes {
     if (_holes is EqualUnmodifiableListView) return _holes;
     // ignore: implicit_dynamic_type
@@ -359,7 +355,6 @@ abstract class _GeoArea implements GeoArea {
     required final String name,
     @JsonKey(includeFromJson: false, includeToJson: false)
     final List<LatLng> points,
-    @JsonKey(includeFromJson: false, includeToJson: false)
     final List<List<LatLng>> holes,
     final double areaHectares,
     final double perimeterKm,
@@ -379,7 +374,6 @@ abstract class _GeoArea implements GeoArea {
   @JsonKey(includeFromJson: false, includeToJson: false)
   List<LatLng> get points;
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
   List<List<LatLng>> get holes;
   @override
   double get areaHectares;

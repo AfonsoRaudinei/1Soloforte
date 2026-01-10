@@ -232,7 +232,9 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
     final isBot =
         ticket.subject.toLowerCase().contains('bot') ||
         ticket.subject.contains('Suporte'); // Mock logic
-    final isOnline = true; // status check
+    final isOpen =
+        ticket.status == TicketStatus.open ||
+        ticket.status == TicketStatus.inProgress;
 
     return GestureDetector(
       onTap: () => context.push('/dashboard/support/chat', extra: ticket),
@@ -272,11 +274,11 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
                       Icon(
                         Icons.circle,
                         size: 8,
-                        color: isOnline ? Colors.green : Colors.red,
+                        color: isOpen ? Colors.green : Colors.grey,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        isOnline ? 'Online' : 'Offline',
+                        isOpen ? 'Em aberto' : 'Resolvido',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,

@@ -83,8 +83,8 @@ class _TemplateCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: isSelected
-                  ? template.color.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.05),
+                  ? template.color.withValues(alpha: 0.2)
+                  : Colors.black.withValues(alpha: 0.05),
               blurRadius: isSelected ? 12 : 4,
               offset: const Offset(0, 2),
             ),
@@ -97,7 +97,7 @@ class _TemplateCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: template.color.withOpacity(0.1),
+                color: template.color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(template.icon, size: 40, color: template.color),

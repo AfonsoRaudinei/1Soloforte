@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/auth_service.dart';
-import '../domain/auth_state.dart' as app;
+import '../../data/auth_service.dart';
+import 'package:soloforte_app/core/interfaces/service_interfaces.dart';
+import '../../domain/auth_state.dart' as app;
 
 // Auth Service Provider
-final authServiceProvider = Provider<AuthService>((ref) {
+final authServiceProvider = Provider<IAuthService>((ref) {
   return AuthService();
 });
 
@@ -23,7 +24,7 @@ class AuthController {
 
   AuthController(this._ref);
 
-  AuthService get _authService => _ref.read(authServiceProvider);
+  IAuthService get _authService => _ref.read(authServiceProvider);
 
   // Login
   Future<void> login(String email, String password) async {

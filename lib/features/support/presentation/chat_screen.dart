@@ -287,6 +287,28 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
+          // Typing indicator
+          if (_isAgentTyping)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 12,
+                    child: Text('🤖', style: TextStyle(fontSize: 10)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Agente digitando...',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           if (_quickReplies.isNotEmpty)
             Container(
               height: 50,
@@ -479,7 +501,7 @@ class _AttachmentOption extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: color.withOpacity(0.1),
+            backgroundColor: color.withValues(alpha: 0.1),
             child: Icon(icon, color: color),
           ),
           const SizedBox(height: 8),

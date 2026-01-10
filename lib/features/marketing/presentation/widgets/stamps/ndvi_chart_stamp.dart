@@ -12,10 +12,10 @@ class NdviChartStamp extends StatelessWidget {
       height: 100,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4),
         ],
       ),
       child: Column(
@@ -50,7 +50,7 @@ class NdviChartStamp extends StatelessWidget {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                     ),
                   ),
                 ],

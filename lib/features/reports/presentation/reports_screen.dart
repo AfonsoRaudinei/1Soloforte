@@ -47,12 +47,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
     final history = ref.watch(reportHistoryProvider).reports;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.backgroundSecondary,
       appBar: AppBar(
         title: const Text('Relatórios'),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: AppColors.textPrimary,
         actions: [
           IconButton(
             icon: _isExporting
@@ -70,7 +70,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
           controller: _tabController,
           isScrollable: true,
           labelColor: AppColors.primary,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: AppColors.textTertiary,
           indicatorColor: AppColors.primary,
           indicatorWeight: 3,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -103,8 +103,11 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
-                    backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                    child: const Icon(Icons.description, color: Colors.blue),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    child: const Icon(
+                      Icons.description,
+                      color: AppColors.primary,
+                    ),
                   ),
                   title: Text(
                     report.title,

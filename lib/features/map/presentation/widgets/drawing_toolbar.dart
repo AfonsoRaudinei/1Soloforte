@@ -89,7 +89,7 @@ class DrawingToolbar extends ConsumerWidget {
                 ignoring: state.isSubtracting,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100]?.withOpacity(0.5),
+                    color: Colors.grey[100]?.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -144,11 +144,11 @@ class DrawingToolbar extends ConsumerWidget {
                 ),
                 decoration: BoxDecoration(
                   color: state.isSubtracting
-                      ? AppColors.error.withOpacity(0.1)
+                      ? AppColors.error.withValues(alpha: 0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   border: state.isSubtracting
-                      ? Border.all(color: AppColors.error.withOpacity(0.3))
+                      ? Border.all(color: AppColors.error.withValues(alpha: 0.3))
                       : null,
                 ),
                 child: Row(
@@ -278,7 +278,7 @@ class _ToolSegment extends StatelessWidget {
           color: isSelected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           boxShadow: isSelected
-              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)]
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)]
               : null,
         ),
         child: Row(

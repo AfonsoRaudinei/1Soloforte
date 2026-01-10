@@ -199,9 +199,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // Start Analysis
       ref.read(scannerControllerProvider.notifier).analyzeImage(image.path);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Erro ao capturar foto')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Erro ao capturar foto')));
+      }
     }
   }
 
@@ -312,10 +314,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                       child: Row(
@@ -373,7 +375,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
+                        color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Column(
@@ -411,7 +413,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.4),
+                            color: Colors.black.withValues(alpha: 0.4),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(

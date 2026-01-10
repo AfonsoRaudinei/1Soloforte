@@ -353,20 +353,8 @@ class _VisitReportScreenState extends ConsumerState<VisitReportScreen> {
                           Expanded(
                             child: Row(
                               children: [
-                                Radio<String>(
-                                  value: 'sazonal',
-                                  groupValue: _occurrenceType,
-                                  onChanged: (v) =>
-                                      setState(() => _occurrenceType = v!),
-                                ),
-                                const Text('Sazonal'),
-                                Radio<String>(
-                                  value: 'permanente',
-                                  groupValue: _occurrenceType,
-                                  onChanged: (v) =>
-                                      setState(() => _occurrenceType = v!),
-                                ),
-                                const Text('Permanente'),
+                                _buildRadioOption('sazonal', 'Sazonal'),
+                                _buildRadioOption('permanente', 'Permanente'),
                               ],
                             ),
                           ),
@@ -516,6 +504,30 @@ class _VisitReportScreenState extends ConsumerState<VisitReportScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRadioOption(String value, String label) {
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _occurrenceType = value),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          child: Row(
+            children: [
+              Radio<String>(
+                value: value,
+                groupValue: _occurrenceType,
+                onChanged: (v) => setState(() => _occurrenceType = v!),
+                visualDensity: VisualDensity.compact,
+              ),
+              const SizedBox(width: 4),
+              Text(label, style: const TextStyle(fontSize: 14)),
+            ],
+          ),
+        ),
       ),
     );
   }

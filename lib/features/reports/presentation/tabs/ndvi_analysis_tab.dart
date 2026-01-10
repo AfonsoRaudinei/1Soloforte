@@ -41,7 +41,7 @@ class NdviAnalysisTab extends ConsumerWidget {
               if (savedAreas.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(16),
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   child: const Text(
                     'Nenhuma área salva para análise. Crie áreas no mapa.',
                   ),
@@ -73,7 +73,7 @@ class NdviAnalysisTab extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -160,7 +160,7 @@ class NdviAnalysisTab extends ConsumerWidget {
                       dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: AppColors.primary.withOpacity(0.15),
+                        color: AppColors.primary.withValues(alpha: 0.15),
                       ),
                     ),
                   ],
@@ -323,8 +323,8 @@ class NdviAnalysisTab extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isPositive
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.red.withOpacity(0.1),
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Row(

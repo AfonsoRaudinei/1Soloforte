@@ -25,7 +25,7 @@ class HighlightResultTemplate extends StatelessWidget {
               child: Icon(
                 Icons.show_chart,
                 size: 300,
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
               ),
             ),
 
@@ -68,7 +68,7 @@ class HighlightResultTemplate extends StatelessWidget {
               right: 20,
               child: Row(
                 children: [
-                  Icon(Icons.agriculture, color: Colors.white.withOpacity(0.8)),
+                  Icon(Icons.agriculture, color: Colors.white.withValues(alpha: 0.8)),
                   const SizedBox(width: 8),
                   const Text(
                     'SoloForte',

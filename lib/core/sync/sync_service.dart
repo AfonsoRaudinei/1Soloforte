@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:soloforte_app/core/database/database_helper.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class SyncService {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -36,7 +37,7 @@ class SyncService {
         );
       } catch (e) {
         // Handle error (retry later)
-        print('Error syncing visit $id: $e');
+        LoggerService.e('Error syncing visit $id', error: e, tag: 'SYNC');
       }
     }
   }
@@ -61,7 +62,7 @@ class SyncService {
           whereArgs: [id],
         );
       } catch (e) {
-        print('Error syncing area $id: $e');
+        LoggerService.e('Error syncing area $id', error: e, tag: 'SYNC');
       }
     }
   }
@@ -86,7 +87,7 @@ class SyncService {
           whereArgs: [id],
         );
       } catch (e) {
-        print('Error syncing occurrence $id: $e');
+        LoggerService.e('Error syncing occurrence $id', error: e, tag: 'SYNC');
       }
     }
   }

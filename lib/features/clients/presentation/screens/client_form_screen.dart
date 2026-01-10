@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +31,6 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
   final _stateController = TextEditingController();
   final _notesController = TextEditingController();
 
-  File? _selectedAvatar;
   String? _selectedState;
   final String _selectedType = 'producer';
   bool _isLoading = false;
@@ -96,10 +94,9 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
                     const SizedBox(height: 8),
                     AvatarPicker(
                       initials: _getInitials(_nameController.text),
-                      onImageSelected: (file) {
-                        setState(() => _selectedAvatar = file);
+                      onImageSelected: (_) {
+                        // TODO: Implement avatar upload when backend is ready
                       },
-                      // Add default image or empty state styling if possible in AvatarPicker
                     ),
                   ],
                 ),
@@ -288,9 +285,11 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

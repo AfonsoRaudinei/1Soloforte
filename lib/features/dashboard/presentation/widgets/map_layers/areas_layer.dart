@@ -42,7 +42,7 @@ class AreasLayer extends ConsumerWidget {
           return Polygon(
             points: area.coordinates,
             // Area entity doesn't support holes yet
-            color: _getAreaColor(area.status).withOpacity(0.3),
+            color: _getAreaColor(area.status).withValues(alpha: 0.3),
             borderColor: _getAreaColor(area.status),
             borderStrokeWidth: 2,
             label: area.name,
@@ -60,7 +60,7 @@ class AreasLayer extends ConsumerWidget {
           return Polygon(
             points: geoArea.points,
             holePointsList: geoArea.holes,
-            color: _getAreaColor('draft').withOpacity(0.3),
+            color: _getAreaColor('draft').withValues(alpha: 0.3),
             borderColor: _getAreaColor('draft'),
             borderStrokeWidth: 2,
             label: "${geoArea.name} (Novo)",

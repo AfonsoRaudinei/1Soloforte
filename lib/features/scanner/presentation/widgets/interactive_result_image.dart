@@ -168,9 +168,9 @@ class BoundingBoxPainter extends CustomPainter {
       // If selected, pulse opacity or width
       if (isSelected) {
         paint.strokeWidth = 3 + (animationValue.value * 1.5);
-        paint.color = AppColors.primary.withOpacity(
-          0.8 + (animationValue.value * 0.2),
-        );
+        // Animate alpha between 0.8 and 1.0
+        final alpha = 0.8 + (animationValue.value * 0.2);
+        paint.color = AppColors.primary.withValues(alpha: alpha);
       }
 
       // Draw dashed corners or full rect? Let's do rounded rect

@@ -108,7 +108,7 @@ class _HistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.05),
+      shadowColor: Colors.black.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
@@ -185,7 +185,7 @@ class _HistoryCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: _getConfidenceColor(
                         scan.confidence,
-                      ).withOpacity(0.1),
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: _getConfidenceColor(scan.confidence),

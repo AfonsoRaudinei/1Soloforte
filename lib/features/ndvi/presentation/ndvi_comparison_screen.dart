@@ -70,7 +70,7 @@ class _NDVIComparisonScreenState extends ConsumerState<NDVIComparisonScreen> {
                     return Polygon(
                       points: area.points,
                       color: _areaColors[index % _areaColors.length]
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                       borderColor: _areaColors[index % _areaColors.length],
                       borderStrokeWidth: 2,
                       label: area.name,

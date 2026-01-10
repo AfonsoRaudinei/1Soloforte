@@ -122,7 +122,7 @@ class _ScheduleReportModalState extends ConsumerState<ScheduleReportModal> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Row(
@@ -204,7 +204,7 @@ class _ScheduleReportModalState extends ConsumerState<ScheduleReportModal> {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? template.color.withOpacity(0.1)
+                      ? template.color.withValues(alpha: 0.1)
                       : Colors.grey[100],
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
@@ -303,7 +303,7 @@ class _ScheduleReportModalState extends ConsumerState<ScheduleReportModal> {
                 onSelected: (selected) {
                   setState(() => _selectedDayOfWeek = index + 1);
                 },
-                selectedColor: AppColors.primary.withOpacity(0.2),
+                selectedColor: AppColors.primary.withValues(alpha: 0.2),
                 labelStyle: TextStyle(
                   color: isSelected ? AppColors.primary : Colors.grey[700],
                 ),
@@ -450,7 +450,7 @@ class _ScheduleReportModalState extends ConsumerState<ScheduleReportModal> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

@@ -65,7 +65,7 @@ class ProblemDetailsForm extends StatelessWidget {
                         label: Text('${nut['name']} (${nut['symbol']})'),
                         selected: isSelected,
                         onSelected: (_) => onToggleNutrient(nut['id']!),
-                        selectedColor: (cat['color'] as Color).withOpacity(0.2),
+                        selectedColor: (cat['color'] as Color).withValues(alpha: 0.2),
                         labelStyle: TextStyle(
                           color: isSelected
                               ? (cat['color'] as Color).withAlpha(255)

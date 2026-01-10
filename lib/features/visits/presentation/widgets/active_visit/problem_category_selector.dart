@@ -50,7 +50,7 @@ class ProblemCategorySelector extends StatelessWidget {
                           boxShadow: [
                             if (isSelected)
                               BoxShadow(
-                                color: (cat['color'] as Color).withOpacity(0.4),
+                                color: (cat['color'] as Color).withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),

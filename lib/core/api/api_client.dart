@@ -79,8 +79,8 @@ class ApiClient {
         error: true,
         logPrint: (obj) {
           // Only log in debug mode
-          if (const bool.fromEnvironment('dart.vm.product') == false) {
-            print(obj);
+          if (kDebugMode) {
+            debugPrint(obj.toString());
           }
         },
       ),

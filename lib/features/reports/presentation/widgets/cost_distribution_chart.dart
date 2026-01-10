@@ -87,7 +87,7 @@ class _CostDistributionChartState extends State<CostDistributionChart> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: data.color.withOpacity(0.1),
+                    color: data.color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.pie_chart, color: data.color, size: 28),
@@ -195,7 +195,7 @@ class _CostDistributionChartState extends State<CostDistributionChart> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(

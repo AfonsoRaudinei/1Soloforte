@@ -6,12 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
+import 'core/error/global_error_handler.dart';
 import 'core/router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize global error handling
+  GlobalErrorHandler.init();
 
   if (kIsWeb) {
     // Initialize database factory for Web
@@ -29,7 +34,10 @@ Future<void> main() async {
     );
   }
 
-  runApp(const ProviderScope(child: SoloForteApp()));
+  // Run app with error zone protection
+  GlobalErrorHandler.runAppGuarded(
+    () => runApp(const ProviderScope(child: SoloForteApp())),
+  );
 }
 
 class SoloForteApp extends ConsumerWidget {
@@ -38,11 +46,14 @@ class SoloForteApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: 'SoloForte',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,

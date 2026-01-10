@@ -56,8 +56,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   return Polygon(
                     points: area.points,
                     color: isSelected
-                        ? AppColors.primary.withOpacity(0.5)
-                        : AppColors.primary.withOpacity(0.3),
+                        ? AppColors.primary.withValues(alpha: 0.5)
+                        : AppColors.primary.withValues(alpha: 0.3),
                     borderColor: isSelected ? Colors.white : AppColors.primary,
                     borderStrokeWidth: isSelected ? 3 : 2,
                   );
@@ -70,7 +70,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   polygons: [
                     Polygon(
                       points: drawingState.currentPoints,
-                      color: AppColors.secondary.withOpacity(0.2),
+                      color: AppColors.secondary.withValues(alpha: 0.2),
                       borderColor: AppColors.secondary,
                       borderStrokeWidth: 2,
                     ),
@@ -86,7 +86,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       point: drawingState.circleCenter!,
                       radius: drawingState.circleRadius,
                       useRadiusInMeter: true,
-                      color: AppColors.secondary.withOpacity(0.2),
+                      color: AppColors.secondary.withValues(alpha: 0.2),
                       borderColor: AppColors.secondary,
                       borderStrokeWidth: 2,
                     ),
@@ -208,7 +208,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 width: 200,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: const [
                     BoxShadow(color: Colors.black12, blurRadius: 4),

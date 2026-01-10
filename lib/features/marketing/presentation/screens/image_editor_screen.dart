@@ -129,7 +129,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
                           child: Icon(
                             Icons.agriculture,
                             size: 40,
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
 
@@ -139,7 +139,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.white, width: 2),
-                              color: Colors.black54.withOpacity(0.5),
+                              color: Colors.black54.withValues(alpha: 0.5),
                             ),
                             child: Center(
                               child: Container(
@@ -406,7 +406,7 @@ class _ImageEditorScreenState extends State<ImageEditorScreen> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.3),
+                color: color.withValues(alpha: 0.3),
                 border: Border.all(color: color),
                 borderRadius: BorderRadius.circular(8),
               ),

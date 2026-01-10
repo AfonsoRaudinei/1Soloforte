@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 /// Serviço completo de compartilhamento de relatórios
 class ReportSharingService {
@@ -35,7 +36,7 @@ class ReportSharingService {
 
       return result.status == ShareResultStatus.success;
     } catch (e) {
-      print('Error sharing natively: $e');
+      LoggerService.e('Error sharing natively', error: e, tag: 'SHARE');
       return false;
     }
   }
@@ -65,7 +66,7 @@ class ReportSharingService {
 
       return result.status == ShareResultStatus.success;
     } catch (e) {
-      print('Error sharing via WhatsApp: $e');
+      LoggerService.e('Error sharing via WhatsApp', error: e, tag: 'SHARE');
       return false;
     }
   }
@@ -125,7 +126,7 @@ class ReportSharingService {
 
       return null;
     } catch (e) {
-      print('Error creating public link: $e');
+      LoggerService.e('Error creating public link', error: e, tag: 'SHARE');
       return null;
     }
   }
@@ -136,7 +137,7 @@ class ReportSharingService {
       final response = await _dio.delete('$_backendUrl/api/shares/$shareId');
       return response.statusCode == 200;
     } catch (e) {
-      print('Error revoking link: $e');
+      LoggerService.e('Error revoking link', error: e, tag: 'SHARE');
       return false;
     }
   }
@@ -167,7 +168,7 @@ class ReportSharingService {
 
       return result.status == ShareResultStatus.success;
     } catch (e) {
-      print('Error sending via email: $e');
+      LoggerService.e('Error sending via email', error: e, tag: 'SHARE');
       return false;
     }
   }
@@ -183,10 +184,14 @@ class ReportSharingService {
       // Requer google_sign_in e googleapis packages
       // Por enquanto, retorna placeholder
 
-      print('Google Drive upload not yet implemented');
+      LoggerService.w('Google Drive upload not yet implemented', tag: 'SHARE');
       return null;
     } catch (e) {
-      print('Error uploading to Google Drive: $e');
+      LoggerService.e(
+        'Error uploading to Google Drive',
+        error: e,
+        tag: 'SHARE',
+      );
       return null;
     }
   }
@@ -202,10 +207,10 @@ class ReportSharingService {
       // Requer dropbox_client package
       // Por enquanto, retorna placeholder
 
-      print('Dropbox upload not yet implemented');
+      LoggerService.w('Dropbox upload not yet implemented', tag: 'SHARE');
       return null;
     } catch (e) {
-      print('Error uploading to Dropbox: $e');
+      LoggerService.e('Error uploading to Dropbox', error: e, tag: 'SHARE');
       return null;
     }
   }
@@ -220,7 +225,7 @@ class ReportSharingService {
       }
       return null;
     } catch (e) {
-      print('Error getting share statistics: $e');
+      LoggerService.e('Error getting share statistics', error: e, tag: 'SHARE');
       return null;
     }
   }
@@ -246,7 +251,7 @@ class ReportSharingService {
       }
       return null;
     } catch (e) {
-      print('Error uploading to server: $e');
+      LoggerService.e('Error uploading to server', error: e, tag: 'SHARE');
       return null;
     }
   }

@@ -22,6 +22,8 @@ class DatabaseHelper {
     return _database!;
   }
 
+  bool get isOpen => _database?.isOpen ?? false;
+
   Future<Database> _initDatabase() async {
     String path;
     if (kIsWeb) {

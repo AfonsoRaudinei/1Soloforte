@@ -134,7 +134,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundColor: AppColors.primary.withOpacity(0.1),
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                         child: Text(
                           client.initials,
                           style: const TextStyle(
@@ -402,7 +402,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
         });
       },
       backgroundColor: Colors.white,
-      selectedColor: AppColors.primary.withOpacity(0.2),
+      selectedColor: AppColors.primary.withValues(alpha: 0.2),
       labelStyle: TextStyle(
         color: isSelected ? AppColors.primary : Colors.black87,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
