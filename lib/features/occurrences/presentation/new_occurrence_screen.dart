@@ -7,6 +7,7 @@ import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/occurrences/domain/entities/occurrence.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
 import 'package:soloforte_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:soloforte_app/core/services/analytics_service.dart';
 import 'package:soloforte_app/shared/widgets/custom_text_input.dart';
 import 'package:soloforte_app/shared/widgets/primary_button.dart';
 import 'package:uuid/uuid.dart';
@@ -675,7 +676,10 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
         // Wait slightly for UX feeling of completion
         await Future.delayed(const Duration(milliseconds: 500));
 
-        if (mounted) context.pop();
+        if (mounted) {
+          ref.read(analyticsServiceProvider).logEvent('occurrence_saved');
+          context.pop(true);
+        }
       }
     } catch (e) {
       // LoggerService.e('Error saving occurrence', error: e, stackTrace: stack);

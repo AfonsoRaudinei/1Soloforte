@@ -2,6 +2,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:latlong2/latlong.dart';
 import 'dashboard_state.dart';
 
+import 'package:soloforte_app/core/services/analytics_service.dart';
+
 part 'dashboard_controller.g.dart';
 
 @riverpod
@@ -10,6 +12,10 @@ class DashboardController extends _$DashboardController {
   DashboardState build() {
     return const DashboardState();
   }
+
+  AnalyticsService get _analytics => ref.read(analyticsServiceProvider);
+
+  // ... (rest of the file until setMode)
 
   void toggleRadialMenu() {
     state = state.copyWith(isRadialMenuOpen: !state.isRadialMenuOpen);
@@ -43,6 +49,12 @@ class DashboardController extends _$DashboardController {
       // Toggle: se já está ativo, volta para neutro
       _resetToNeutral();
     } else {
+      // Analytics Tracking
+      if (mode == MapMode.occurrence) {
+        _analytics.startFlow('occurrence_flow');
+        _analytics.logEvent('occurrence_mode_activated');
+      }
+
       // Ativa o novo modo, desativando o anterior
       state = state.copyWith(
         activeMode: mode,

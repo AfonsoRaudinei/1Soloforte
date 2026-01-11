@@ -17,6 +17,7 @@ import 'package:soloforte_app/features/occurrences/presentation/providers/occurr
 import 'package:soloforte_app/features/occurrences/presentation/new_occurrence_screen.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/new_case_modal.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/side_by_side_eval_modal.dart';
+import 'package:soloforte_app/core/services/analytics_service.dart';
 import 'widgets/drawing_toolbar.dart';
 import 'widgets/area_details_sheet.dart';
 import 'widgets/map_bottom_bar.dart';
@@ -463,11 +464,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   ) async {
     // 1. Occurrence Mode
     if (dashState.activeMode == MapMode.occurrence) {
+      final analytics = ref.read(analyticsServiceProvider);
+      analytics.logEvent('occurrence_pin_marked');
+
       dashController.setTempPin(point);
       _mapController.move(point, _mapController.camera.zoom);
 
+      analytics.logEvent('occurrence_form_opened');
+
       // Open Form Immediately
-      await showModalBottomSheet(
+      final result = await showModalBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -492,6 +498,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ),
         ),
       );
+
+      // Track Completion
+      if (result == true) {
+        analytics.endFlow('occurrence_flow', result: 'saved');
+      } else {
+        analytics.logEvent('occurrence_cancelled');
+        analytics.endFlow('occurrence_flow', result: 'cancelled');
+      }
 
       dashController.setMode(MapMode.neutral);
       return;

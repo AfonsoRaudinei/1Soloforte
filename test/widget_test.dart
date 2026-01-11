@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soloforte_app/main.dart';
 import 'package:soloforte_app/features/landing/presentation/landing_screen.dart';
-import 'package:soloforte_app/features/auth/presentation/auth_provider.dart';
+import 'package:soloforte_app/features/auth/presentation/providers/auth_provider.dart';
 
 void main() {
   testWidgets('SoloForteApp smoke test', (WidgetTester tester) async {
