@@ -57,6 +57,7 @@ import 'package:soloforte_app/features/reports/presentation/new_report_screen.da
 import 'package:soloforte_app/features/reports/presentation/report_detail_screen.dart';
 import 'package:soloforte_app/features/visits/presentation/active_visit_screen.dart';
 import '../features/link_hub/presentation/link_hub_screen.dart';
+import '../features/privacy/presentation/privacy_policy_screen.dart';
 
 // Keys
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -87,8 +88,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
 
-      if (isAuthenticated && isPublicRoute && currentPath != '/') {
-        // Logged in, trying to access auth pages
+      if (isAuthenticated && isPublicRoute) {
+        // Logged in, redirect to map
         return '/map';
       }
 
@@ -104,6 +105,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
       // Map Shell Route (formerly Dashboard)
       ShellRoute(
@@ -256,6 +261,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             initialType: extras?['type'],
             initialImagePath: extras?['imagePath'],
             initialSeverity: extras?['severity'],
+            initialLatitude: extras?['latitude'],
+            initialLongitude: extras?['longitude'],
           );
         },
       ),

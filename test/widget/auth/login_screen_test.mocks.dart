@@ -128,4 +128,14 @@ class MockIAuthService extends _i1.Mock implements _i3.IAuthService {
             returnValueForMissingStub: _i4.Future<void>.value(),
           )
           as _i4.Future<void>);
+
+  @override
+  _i4.Future<_i2.AuthState> enterDemoMode() =>
+      (super.noSuchMethod(
+            Invocation.method(#enterDemoMode, []),
+            returnValue: _i4.Future<_i2.AuthState>.value(
+              _FakeAuthState_0(this, Invocation.method(#enterDemoMode, [])),
+            ),
+          )
+          as _i4.Future<_i2.AuthState>);
 }

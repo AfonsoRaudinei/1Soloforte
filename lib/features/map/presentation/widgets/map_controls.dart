@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'package:soloforte_app/core/constants/map_zoom_constants.dart';
 import 'package:soloforte_app/features/map/presentation/widgets/premium_glass_container.dart';
 
 class MapControls extends StatelessWidget {
@@ -76,8 +77,11 @@ class MapControls extends StatelessWidget {
           icon: Icons.add,
           onPressed: () {
             HapticFeedback.selectionClick();
-            final zoom = mapController.camera.zoom;
-            mapController.move(mapController.camera.center, zoom + 1);
+            final newZoom = (mapController.camera.zoom + 1).clamp(
+              kAgriculturalMinZoom,
+              kAgriculturalMaxZoom,
+            );
+            mapController.move(mapController.camera.center, newZoom);
           },
         ),
         const SizedBox(height: 8),
@@ -85,8 +89,11 @@ class MapControls extends StatelessWidget {
           icon: Icons.remove,
           onPressed: () {
             HapticFeedback.selectionClick();
-            final zoom = mapController.camera.zoom;
-            mapController.move(mapController.camera.center, zoom - 1);
+            final newZoom = (mapController.camera.zoom - 1).clamp(
+              kAgriculturalMinZoom,
+              kAgriculturalMaxZoom,
+            );
+            mapController.move(mapController.camera.center, newZoom);
           },
         ),
       ],

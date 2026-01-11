@@ -60,4 +60,9 @@ class AuthController {
   Future<void> resetPassword(String code, String newPassword) async {
     await _authService.resetPassword(code, newPassword);
   }
+
+  // Enter Demo Mode
+  Future<void> enterDemoMode() async {
+    await _authService.enterDemoMode();
+  }
 }

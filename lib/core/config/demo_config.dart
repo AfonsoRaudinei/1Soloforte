@@ -12,12 +12,16 @@ class DemoConfig {
   /// Whether demo mode is enabled.
   /// In production, this should be false or controlled via Remote Config.
   static bool get isDemoEnabled {
-    // Only allow demo mode in debug builds
-    if (!kDebugMode) return false;
+    // Check environment variable first (set via --dart-define)
+    const envDemoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
+
+    // Allow demo in debug mode OR if explicitly enabled via environment
+    if (kDebugMode) return true;
+    if (envDemoMode) return true;
 
     // TODO: Replace with Firebase Remote Config check in production
     // return FirebaseRemoteConfig.instance.getBool('demo_mode_enabled');
-    return const bool.fromEnvironment('DEMO_MODE', defaultValue: true);
+    return false;
   }
 
   /// Demo user email (read from environment, not hardcoded)

@@ -6,6 +6,7 @@ import 'package:soloforte_app/core/theme/app_spacing.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/occurrences/domain/entities/occurrence.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
+import 'package:soloforte_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:soloforte_app/shared/widgets/custom_text_input.dart';
 import 'package:soloforte_app/shared/widgets/primary_button.dart';
 import 'package:uuid/uuid.dart';
@@ -21,6 +22,9 @@ class NewOccurrenceScreen extends ConsumerStatefulWidget {
   final String? initialType;
   final String? initialImagePath;
   final double? initialSeverity;
+  // Pre-filled coordinates from map pin selection
+  final double? initialLatitude;
+  final double? initialLongitude;
 
   const NewOccurrenceScreen({
     super.key,
@@ -30,6 +34,8 @@ class NewOccurrenceScreen extends ConsumerStatefulWidget {
     this.initialType,
     this.initialImagePath,
     this.initialSeverity,
+    this.initialLatitude,
+    this.initialLongitude,
   });
 
   @override
@@ -90,7 +96,13 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
         _capturedImages.add(File(widget.initialImagePath!));
       }
 
-      _getCurrentLocation();
+      // Use pre-filled coordinates from map pin selection if available
+      if (widget.initialLatitude != null && widget.initialLongitude != null) {
+        _latitude = widget.initialLatitude;
+        _longitude = widget.initialLongitude;
+      } else {
+        _getCurrentLocation();
+      }
     }
   }
 
@@ -538,6 +550,44 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
+
+    // Check for Demo Mode
+    final authState = ref.read(authStateProvider).value;
+    if (authState?.isDemo == true) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Modo Demonstração',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Dados não são salvos neste modo.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.blueGrey,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        Navigator.pop(context); // Close form
+      }
+      return;
+    }
 
     // Logger would be used here if imported, for now just print is safe or assume import
     // LoggerService.i('Submitting occurrence: ${_titleController.text}');

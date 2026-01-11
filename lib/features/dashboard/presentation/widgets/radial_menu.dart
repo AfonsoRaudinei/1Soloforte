@@ -84,7 +84,7 @@ class _RadialMenuState extends State<RadialMenu>
     HapticFeedback.mediumImpact();
     _controller.reverse().then((_) {
       widget.onClose();
-      context.push(route);
+      context.go(route);
     });
   }
 

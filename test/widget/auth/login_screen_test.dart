@@ -81,4 +81,38 @@ void main() {
     await tester.pump(); // Ensure UI update
     expect(find.text('Login realizado com sucesso!'), findsOneWidget);
   });
+
+  testWidgets('LoginScreen performs demo mode interactions', (tester) async {
+    // Setup Mock for demo mode
+    when(mockAuthService.enterDemoMode()).thenAnswer(
+      (_) async => domain.AuthState.authenticated(
+        userId: 'demo-123',
+        email: 'demo@soloforte.local',
+        name: 'Usuário Demo',
+        token: 'demo-token',
+        refreshToken: 'demo-refresh',
+        isDemo: true,
+      ),
+    );
+
+    await tester.pumpWidget(createSubject());
+    await tester.pumpAndSettle();
+
+    // Find and tap demo button
+    final demoButton = find.text('Experimentar Modo Demo');
+    expect(demoButton, findsOneWidget);
+    await tester.tap(demoButton);
+    await tester.pump(); // Start process
+
+    // Wait for async logic and animations
+    await tester.pump(const Duration(milliseconds: 100)); // async gap
+    await tester.pump(const Duration(seconds: 1)); // allow logic to complete
+
+    // Verify service call
+    verify(mockAuthService.enterDemoMode()).called(1);
+
+    // Verify success message
+    await tester.pump(); // Ensure UI update
+    expect(find.text('Bem-vindo ao Modo Demonstração!'), findsOneWidget);
+  });
 }

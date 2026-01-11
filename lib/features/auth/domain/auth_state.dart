@@ -5,6 +5,7 @@ class AuthState {
   final String name;
   final String token;
   final String refreshToken;
+  final bool isDemo;
 
   const AuthState({
     required this.userId,
@@ -12,6 +13,7 @@ class AuthState {
     required this.name,
     required this.token,
     required this.refreshToken,
+    this.isDemo = false,
   });
 
   AuthState.authenticated({
@@ -20,6 +22,7 @@ class AuthState {
     required this.name,
     required this.token,
     required this.refreshToken,
+    this.isDemo = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -28,6 +31,7 @@ class AuthState {
     'name': name,
     'token': token,
     'refreshToken': refreshToken,
+    'isDemo': isDemo,
   };
 
   factory AuthState.fromJson(Map<String, dynamic> json) => AuthState(
@@ -36,5 +40,6 @@ class AuthState {
     name: json['name'] as String,
     token: json['token'] as String,
     refreshToken: json['refreshToken'] as String,
+    isDemo: json['isDemo'] as bool? ?? false,
   );
 }

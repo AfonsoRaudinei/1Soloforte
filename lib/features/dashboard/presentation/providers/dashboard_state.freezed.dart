@@ -22,6 +22,11 @@ mixin _$DashboardState {
   bool get isWeatherRadarVisible => throw _privateConstructorUsedError;
   LatLng? get tempPin => throw _privateConstructorUsedError;
 
+  /// Modo ativo do mapa - apenas um por vez
+  MapMode get activeMode =>
+      throw _privateConstructorUsedError; // Mantido para retrocompatibilidade - será derivado do activeMode
+  String get pinSelectionMode => throw _privateConstructorUsedError;
+
   /// Create a copy of DashboardState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -41,6 +46,8 @@ abstract class $DashboardStateCopyWith<$Res> {
     String mapLayer,
     bool isWeatherRadarVisible,
     LatLng? tempPin,
+    MapMode activeMode,
+    String pinSelectionMode,
   });
 }
 
@@ -63,6 +70,8 @@ class _$DashboardStateCopyWithImpl<$Res, $Val extends DashboardState>
     Object? mapLayer = null,
     Object? isWeatherRadarVisible = null,
     Object? tempPin = freezed,
+    Object? activeMode = null,
+    Object? pinSelectionMode = null,
   }) {
     return _then(
       _value.copyWith(
@@ -82,6 +91,14 @@ class _$DashboardStateCopyWithImpl<$Res, $Val extends DashboardState>
                 ? _value.tempPin
                 : tempPin // ignore: cast_nullable_to_non_nullable
                       as LatLng?,
+            activeMode: null == activeMode
+                ? _value.activeMode
+                : activeMode // ignore: cast_nullable_to_non_nullable
+                      as MapMode,
+            pinSelectionMode: null == pinSelectionMode
+                ? _value.pinSelectionMode
+                : pinSelectionMode // ignore: cast_nullable_to_non_nullable
+                      as String,
           )
           as $Val,
     );
@@ -102,6 +119,8 @@ abstract class _$$DashboardStateImplCopyWith<$Res>
     String mapLayer,
     bool isWeatherRadarVisible,
     LatLng? tempPin,
+    MapMode activeMode,
+    String pinSelectionMode,
   });
 }
 
@@ -123,6 +142,8 @@ class __$$DashboardStateImplCopyWithImpl<$Res>
     Object? mapLayer = null,
     Object? isWeatherRadarVisible = null,
     Object? tempPin = freezed,
+    Object? activeMode = null,
+    Object? pinSelectionMode = null,
   }) {
     return _then(
       _$DashboardStateImpl(
@@ -142,6 +163,14 @@ class __$$DashboardStateImplCopyWithImpl<$Res>
             ? _value.tempPin
             : tempPin // ignore: cast_nullable_to_non_nullable
                   as LatLng?,
+        activeMode: null == activeMode
+            ? _value.activeMode
+            : activeMode // ignore: cast_nullable_to_non_nullable
+                  as MapMode,
+        pinSelectionMode: null == pinSelectionMode
+            ? _value.pinSelectionMode
+            : pinSelectionMode // ignore: cast_nullable_to_non_nullable
+                  as String,
       ),
     );
   }
@@ -155,6 +184,8 @@ class _$DashboardStateImpl implements _DashboardState {
     this.mapLayer = 'standard',
     this.isWeatherRadarVisible = false,
     this.tempPin,
+    this.activeMode = MapMode.neutral,
+    this.pinSelectionMode = 'none',
   });
 
   @override
@@ -169,9 +200,18 @@ class _$DashboardStateImpl implements _DashboardState {
   @override
   final LatLng? tempPin;
 
+  /// Modo ativo do mapa - apenas um por vez
+  @override
+  @JsonKey()
+  final MapMode activeMode;
+  // Mantido para retrocompatibilidade - será derivado do activeMode
+  @override
+  @JsonKey()
+  final String pinSelectionMode;
+
   @override
   String toString() {
-    return 'DashboardState(isRadialMenuOpen: $isRadialMenuOpen, mapLayer: $mapLayer, isWeatherRadarVisible: $isWeatherRadarVisible, tempPin: $tempPin)';
+    return 'DashboardState(isRadialMenuOpen: $isRadialMenuOpen, mapLayer: $mapLayer, isWeatherRadarVisible: $isWeatherRadarVisible, tempPin: $tempPin, activeMode: $activeMode, pinSelectionMode: $pinSelectionMode)';
   }
 
   @override
@@ -185,7 +225,11 @@ class _$DashboardStateImpl implements _DashboardState {
                 other.mapLayer == mapLayer) &&
             (identical(other.isWeatherRadarVisible, isWeatherRadarVisible) ||
                 other.isWeatherRadarVisible == isWeatherRadarVisible) &&
-            (identical(other.tempPin, tempPin) || other.tempPin == tempPin));
+            (identical(other.tempPin, tempPin) || other.tempPin == tempPin) &&
+            (identical(other.activeMode, activeMode) ||
+                other.activeMode == activeMode) &&
+            (identical(other.pinSelectionMode, pinSelectionMode) ||
+                other.pinSelectionMode == pinSelectionMode));
   }
 
   @override
@@ -195,6 +239,8 @@ class _$DashboardStateImpl implements _DashboardState {
     mapLayer,
     isWeatherRadarVisible,
     tempPin,
+    activeMode,
+    pinSelectionMode,
   );
 
   /// Create a copy of DashboardState
@@ -215,6 +261,8 @@ abstract class _DashboardState implements DashboardState {
     final String mapLayer,
     final bool isWeatherRadarVisible,
     final LatLng? tempPin,
+    final MapMode activeMode,
+    final String pinSelectionMode,
   }) = _$DashboardStateImpl;
 
   @override
@@ -225,6 +273,12 @@ abstract class _DashboardState implements DashboardState {
   bool get isWeatherRadarVisible;
   @override
   LatLng? get tempPin;
+
+  /// Modo ativo do mapa - apenas um por vez
+  @override
+  MapMode get activeMode; // Mantido para retrocompatibilidade - será derivado do activeMode
+  @override
+  String get pinSelectionMode;
 
   /// Create a copy of DashboardState
   /// with the given fields replaced by the non-null parameter values.

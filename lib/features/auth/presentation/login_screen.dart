@@ -10,6 +10,7 @@ import 'package:soloforte_app/shared/widgets/custom_text_input.dart';
 import 'package:soloforte_app/core/services/secure_storage_service.dart';
 import 'package:soloforte_app/core/validators/input_validators.dart';
 import 'providers/auth_provider.dart';
+import 'package:soloforte_app/core/config/demo_config.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -28,6 +29,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    print('🎭 LoginScreen: isDemoEnabled = ${DemoConfig.isDemoEnabled}');
+    print('🎭 LoginScreen: demoEmail = ${DemoConfig.demoEmail}');
     _loadRememberedEmail();
   }
 
@@ -94,9 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref
-          .read(authControllerProvider)
-          .login('teste@soloforte.com', 'senha123456');
+      await ref.read(authControllerProvider).enterDemoMode();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

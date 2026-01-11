@@ -46,6 +46,10 @@ abstract interface class IAuthService {
 
   /// Reset password (after email link).
   Future<void> resetPassword(String code, String newPassword);
+
+  /// Enter demo mode directly without authentication.
+  /// This creates a special demo session that bypasses all credential validation.
+  Future<AuthState> enterDemoMode();
 }
 
 /// Interface for secure storage service.

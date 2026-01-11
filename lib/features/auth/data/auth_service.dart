@@ -75,6 +75,22 @@ class AuthService implements IAuthService {
   // Login with email and password
   @override
   Future<app.AuthState> login(String email, String password) async {
+    print('🔐 AuthService.login: email=$email');
+    print(
+      '🔐 AuthService: DemoConfig.isDemoEnabled = ${DemoConfig.isDemoEnabled}',
+    );
+    print('🔐 AuthService: DemoConfig.demoEmail = ${DemoConfig.demoEmail}');
+
+    // Check if this is a demo login attempt BEFORE trying Firebase
+    final isValidDemo = DemoConfig.validateDemoCredentials(email, password);
+    print('🔐 AuthService: validateDemoCredentials = $isValidDemo');
+
+    if (isValidDemo) {
+      print('🎭 Demo login detected, using _demoLogin()');
+      return _demoLogin();
+    }
+
+    print('🔥 Not demo, trying Firebase...');
     try {
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -256,6 +272,38 @@ class AuthService implements IAuthService {
     );
 
     _authStateController.add(state);
+    return state;
+  }
+
+  /// Enter demo mode directly WITHOUT any credential validation.
+  /// This is for the "Experimentar Modo Demo" button.
+  /// Per product rules: Demo mode must NOT use real login or validate credentials.
+  @override
+  Future<app.AuthState> enterDemoMode() async {
+    print('🎭 enterDemoMode() called - bypassing all authentication');
+
+    // Generate demo session directly
+    final token = DemoConfig.generateDemoToken();
+    final userId = DemoConfig.demoUserId;
+    final email = DemoConfig.demoEmail;
+    final name = DemoConfig.demoUserName;
+
+    // Save to secure storage
+    await SecureStorageService.saveAuthToken(token);
+    await SecureStorageService.saveUserId(userId);
+    await SecureStorageService.saveUserEmail(email);
+
+    final state = app.AuthState.authenticated(
+      userId: userId,
+      email: email,
+      name: name,
+      token: token,
+      refreshToken: 'demo-refresh-token',
+      isDemo: true, // Mark this as a demo session
+    );
+
+    _authStateController.add(state);
+    print('🎭 Demo session created successfully');
     return state;
   }
 

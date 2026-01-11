@@ -92,7 +92,7 @@ class SettingsScreen extends ConsumerWidget {
                 if (context.canPop()) {
                   context.pop();
                 } else {
-                  context.go('/dashboard');
+                  context.go('/map');
                 }
               },
               icon: const Icon(Icons.arrow_back, color: Colors.white),
