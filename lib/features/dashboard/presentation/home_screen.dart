@@ -39,7 +39,9 @@ import 'package:soloforte_app/features/ndvi/application/ndvi_controller.dart';
 import 'package:soloforte_app/features/ndvi/data/services/ndvi_cache_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final LatLng? initialLocation;
+
+  const HomeScreen({super.key, this.initialLocation});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -205,6 +207,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     _ndviTabController = TabController(length: 4, vsync: this);
     _loadMarketingPosts();
+
+    // Focus on initial location if provided (e.g., from "Ver no Mapa")
+    if (widget.initialLocation != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _mapController.move(widget.initialLocation!, kAgriculturalLocationZoom);
+      });
+    }
   }
 
   @override
@@ -784,9 +793,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final photoPath = result['image'] as String?;
     final photos = photoPath == null
         ? <MarketingPhoto>[]
-        : [
-            MarketingPhoto(path: photoPath, isCover: true),
-          ];
+        : [MarketingPhoto(path: photoPath, isCover: true)];
 
     final post = MarketingMapPost(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -861,11 +868,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
+          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3)),
         ],
       ),
       child: ClipOval(
@@ -1470,10 +1473,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Center(
       child: Text(
         '$tabLabel em breve',
-        style: const TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 14,
-        ),
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
       ),
     );
   }
@@ -1550,7 +1550,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 groupValue: ndviState.selectedDate,
                 onChanged: (value) {
                   if (value == null) return;
-                  ref.read(ndviControllerProvider.notifier).loadNdviImage(value);
+                  ref
+                      .read(ndviControllerProvider.notifier)
+                      .loadNdviImage(value);
                 },
                 title: Text(label),
                 dense: true,
@@ -1614,9 +1616,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
 
-    final selectedDateLabel = DateFormat('dd/MM/yyyy').format(
-      ndviState.selectedDate!,
-    );
+    final selectedDateLabel = DateFormat(
+      'dd/MM/yyyy',
+    ).format(ndviState.selectedDate!);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -1960,8 +1962,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   void _activateComparisonDate() {
-    final targetDate =
-        _isShowingComparisonA ? _comparisonDateA : _comparisonDateB;
+    final targetDate = _isShowingComparisonA
+        ? _comparisonDateA
+        : _comparisonDateB;
     if (targetDate == null) return;
     ref.read(ndviControllerProvider.notifier).loadNdviImage(targetDate);
   }
@@ -1971,8 +1974,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       return 'Selecione Data A e Data B para iniciar a comparação.';
     }
 
-    final activeDate =
-        _isShowingComparisonA ? _comparisonDateA : _comparisonDateB;
+    final activeDate = _isShowingComparisonA
+        ? _comparisonDateA
+        : _comparisonDateB;
     final dateLabel = activeDate != null
         ? DateFormat('dd/MM/yyyy').format(activeDate)
         : '-';
@@ -2201,10 +2205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -2332,8 +2333,9 @@ class _MarketingPostDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeLabel =
-        post.type == 'side_by_side' ? 'Avaliação Lado a Lado' : 'Case de Sucesso';
+    final typeLabel = post.type == 'side_by_side'
+        ? 'Avaliação Lado a Lado'
+        : 'Case de Sucesso';
     final cover = post.coverPhoto;
 
     return Container(
@@ -2424,7 +2426,10 @@ class _DetailRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],
@@ -2439,7 +2444,8 @@ class _MarketingGalleryScreen extends StatefulWidget {
   const _MarketingGalleryScreen({required this.post});
 
   @override
-  State<_MarketingGalleryScreen> createState() => _MarketingGalleryScreenState();
+  State<_MarketingGalleryScreen> createState() =>
+      _MarketingGalleryScreenState();
 }
 
 class _MarketingGalleryScreenState extends State<_MarketingGalleryScreen> {
@@ -2491,9 +2497,7 @@ class _MarketingGalleryScreenState extends State<_MarketingGalleryScreen> {
         content: TextField(
           controller: controller,
           maxLines: 2,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(border: OutlineInputBorder()),
         ),
         actions: [
           TextButton(
@@ -2519,10 +2523,8 @@ class _MarketingGalleryScreenState extends State<_MarketingGalleryScreen> {
     final updated = await showDialog<List<MarketingPhoto>>(
       context: context,
       barrierColor: Colors.black,
-      builder: (ctx) => _MarketingPhotoViewer(
-        photos: _photos,
-        initialIndex: index,
-      ),
+      builder: (ctx) =>
+          _MarketingPhotoViewer(photos: _photos, initialIndex: index),
     );
 
     if (updated != null) {
@@ -2545,10 +2547,7 @@ class _MarketingGalleryScreenState extends State<_MarketingGalleryScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _close,
-        ),
+        leading: IconButton(icon: const Icon(Icons.close), onPressed: _close),
         title: const Text('Fotos'),
       ),
       body: _photos.isEmpty
@@ -2726,23 +2725,11 @@ class _MarketingPhotoViewerState extends State<_MarketingPhotoViewer> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _close,
-        ),
+        leading: IconButton(icon: const Icon(Icons.close), onPressed: _close),
         actions: [
-          IconButton(
-            onPressed: _setCover,
-            icon: const Icon(Icons.star_border),
-          ),
-          IconButton(
-            onPressed: _editCaption,
-            icon: const Icon(Icons.edit),
-          ),
-          IconButton(
-            onPressed: _delete,
-            icon: const Icon(Icons.delete),
-          ),
+          IconButton(onPressed: _setCover, icon: const Icon(Icons.star_border)),
+          IconButton(onPressed: _editCaption, icon: const Icon(Icons.edit)),
+          IconButton(onPressed: _delete, icon: const Icon(Icons.delete)),
         ],
       ),
       body: PageView.builder(
@@ -2826,12 +2813,7 @@ class _MarketingEditScreenState extends State<_MarketingEditScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Editar Publicação'),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text('Salvar'),
-          ),
-        ],
+        actions: [TextButton(onPressed: _save, child: const Text('Salvar'))],
       ),
       body: Column(
         children: [

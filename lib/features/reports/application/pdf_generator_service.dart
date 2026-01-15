@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -6,6 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
 import 'package:soloforte_app/features/reports/domain/report_models.dart';
+import 'package:soloforte_app/features/occurrences/domain/entities/occurrence.dart';
 
 /// Service responsible for generating PDF documents.
 ///
@@ -250,6 +252,350 @@ class PdfGeneratorService {
       bytes: await doc.save(),
       filename:
           'relatorio_pragas_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
+    );
+  }
+
+  /// Generate and share Occurrence Technical Report PDF
+  Future<void> generateOccurrenceTechnicalReport(Occurrence occurrence) async {
+    final doc = pw.Document();
+
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) => [
+          // Header
+          pw.Text(
+            'Relatório Técnico de Ocorrência',
+            style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 10),
+          pw.Text(
+            'Gerado em: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+            style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+          ),
+          pw.Divider(),
+          pw.SizedBox(height: 20),
+
+          // Title & Type
+          pw.Text(
+            occurrence.title,
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Row(
+            children: [
+              _buildOccurrenceTag(
+                'Tipo',
+                _getOccurrenceTypeLabel(occurrence.type),
+              ),
+              pw.SizedBox(width: 12),
+              _buildOccurrenceTag(
+                'Status',
+                occurrence.status.toUpperCase(),
+                color: _getStatusPdfColor(occurrence.status),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+
+          // Date & Severity
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text(
+                'Data: ${DateFormat('dd/MM/yyyy HH:mm').format(occurrence.date)}',
+                style: const pw.TextStyle(fontSize: 12),
+              ),
+              pw.Text(
+                'Severidade: ${(occurrence.severity * 100).toInt()}%',
+                style: pw.TextStyle(
+                  fontSize: 12,
+                  fontWeight: pw.FontWeight.bold,
+                  color: _getSeverityPdfColor(occurrence.severity),
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 8),
+
+          // Coordinates
+          pw.Text(
+            'Localização: ${occurrence.latitude.toStringAsFixed(6)}, ${occurrence.longitude.toStringAsFixed(6)}',
+            style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700),
+          ),
+          pw.Text(
+            'Área: ${occurrence.areaName}',
+            style: const pw.TextStyle(fontSize: 11),
+          ),
+          pw.SizedBox(height: 16),
+
+          // Phenological Stage & Temporal Type
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.grey100,
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      'Estádio Fenológico',
+                      style: const pw.TextStyle(
+                        fontSize: 10,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                    pw.Text(
+                      occurrence.phenologicalStage,
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text(
+                      'Tipo Temporal',
+                      style: const pw.TextStyle(
+                        fontSize: 10,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                    pw.Text(
+                      occurrence.temporalType,
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 16),
+
+          // Soil Sample
+          if (occurrence.hasSoilSample)
+            pw.Container(
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.green50,
+                border: pw.Border.all(color: PdfColors.green),
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+              ),
+              child: pw.Text(
+                '✓ Amostra de Solo Coletada',
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.green800,
+                ),
+              ),
+            ),
+          pw.SizedBox(height: 20),
+
+          // Categories & Severities
+          if (occurrence.categorySeverities.isNotEmpty) ...[
+            pw.Text(
+              'Categorias da Ocorrência',
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 10),
+            ...occurrence.categorySeverities.entries.map((entry) {
+              final category = entry.key;
+              final severity = entry.value;
+              final images = occurrence.categoryImages[category] ?? [];
+
+              return pw.Container(
+                margin: const pw.EdgeInsets.only(bottom: 12),
+                padding: const pw.EdgeInsets.all(10),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: PdfColors.grey300),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(6),
+                  ),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          category,
+                          style: pw.TextStyle(
+                            fontSize: 13,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.Text(
+                          '${(severity * 100).toInt()}%',
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
+                            color: _getSeverityPdfColor(severity),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (images.isNotEmpty) ...[
+                      pw.SizedBox(height: 8),
+                      pw.Text(
+                        'Fotos: ${images.length} anexada(s)',
+                        style: const pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey600,
+                        ),
+                      ),
+                      // Note: For actual image embedding, we'd need to load bytes. For now, listing paths.
+                    ],
+                  ],
+                ),
+              );
+            }),
+            pw.SizedBox(height: 16),
+          ],
+
+          // Description / General Observations
+          if (occurrence.description.isNotEmpty) ...[
+            pw.Text(
+              'Observações Gerais',
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 8),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey100,
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+              ),
+              child: pw.Text(
+                occurrence.description,
+                style: const pw.TextStyle(fontSize: 11),
+              ),
+            ),
+            pw.SizedBox(height: 16),
+          ],
+
+          // Technical Recommendation
+          if (occurrence.technicalRecommendation.isNotEmpty) ...[
+            pw.Text(
+              'Recomendações Técnicas',
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 8),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.blue50,
+                border: pw.Border.all(color: PdfColors.blue),
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+              ),
+              child: pw.Text(
+                occurrence.technicalRecommendation,
+                style: const pw.TextStyle(fontSize: 11),
+              ),
+            ),
+            pw.SizedBox(height: 16),
+          ],
+
+          // Technical Responsible
+          if (occurrence.technicalResponsible.isNotEmpty) ...[
+            pw.Row(
+              children: [
+                pw.Text(
+                  'Responsável Técnico: ',
+                  style: const pw.TextStyle(
+                    fontSize: 11,
+                    color: PdfColors.grey700,
+                  ),
+                ),
+                pw.Text(
+                  occurrence.technicalResponsible,
+                  style: pw.TextStyle(
+                    fontSize: 11,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 16),
+          ],
+
+          pw.Spacer(),
+          _buildFooter(),
+        ],
+      ),
+    );
+
+    try {
+      final idSuffix = occurrence.id.length >= 8
+          ? occurrence.id.substring(0, 8)
+          : occurrence.id;
+      await Printing.sharePdf(
+        bytes: await doc.save(),
+        filename:
+            'relatorio_ocorrencia_${idSuffix}_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf',
+      );
+    } catch (e) {
+      // Silently fail if sharing is cancelled or fails - no crash
+      debugPrint('PDF sharing failed or cancelled: $e');
+    }
+  }
+
+  // Helper methods for Occurrence Report
+  String _getOccurrenceTypeLabel(String type) {
+    return switch (type) {
+      'pest' => 'Praga',
+      'disease' => 'Doença',
+      'deficiency' => 'Deficiência',
+      'weed' => 'Erva Daninha',
+      'other' => 'Outro',
+      _ => type,
+    };
+  }
+
+  PdfColor _getStatusPdfColor(String status) {
+    return switch (status.toLowerCase()) {
+      'active' => PdfColors.red,
+      'monitoring' => PdfColors.orange,
+      'resolved' => PdfColors.green,
+      _ => PdfColors.grey,
+    };
+  }
+
+  PdfColor _getSeverityPdfColor(double severity) {
+    if (severity > 0.7) return PdfColors.red;
+    if (severity > 0.4) return PdfColors.orange;
+    return PdfColors.green;
+  }
+
+  pw.Widget _buildOccurrenceTag(String label, String value, {PdfColor? color}) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: pw.BoxDecoration(
+        color: (color ?? PdfColors.grey).shade(50),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+      ),
+      child: pw.Text(
+        '$label: $value',
+        style: pw.TextStyle(
+          fontSize: 10,
+          fontWeight: pw.FontWeight.bold,
+          color: color ?? PdfColors.grey800,
+        ),
+      ),
     );
   }
 

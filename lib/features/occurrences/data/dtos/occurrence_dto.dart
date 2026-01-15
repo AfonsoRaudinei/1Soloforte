@@ -23,6 +23,13 @@ class OccurrenceDto with _$OccurrenceDto {
     @Default([]) List<TimelineEventDto> timeline,
     String? assignedTo,
     @Default([]) List<String> recommendations,
+    @Default('VE - Emergência') String phenologicalStage,
+    @Default({}) Map<String, double> categorySeverities,
+    @Default({}) Map<String, List<String>> categoryImages,
+    @Default('') String technicalRecommendation,
+    @Default('') String technicalResponsible,
+    @Default('Sazonal') String temporalType,
+    @Default(false) bool hasSoilSample,
   }) = _OccurrenceDto;
 
   factory OccurrenceDto.fromJson(Map<String, dynamic> json) =>
@@ -46,6 +53,13 @@ class OccurrenceDto with _$OccurrenceDto {
           .toList(),
       assignedTo: occurrence.assignedTo,
       recommendations: occurrence.recommendations,
+      phenologicalStage: occurrence.phenologicalStage,
+      categorySeverities: occurrence.categorySeverities,
+      categoryImages: occurrence.categoryImages,
+      technicalRecommendation: occurrence.technicalRecommendation,
+      technicalResponsible: occurrence.technicalResponsible,
+      temporalType: occurrence.temporalType,
+      hasSoilSample: occurrence.hasSoilSample,
     );
   }
 
@@ -65,6 +79,13 @@ class OccurrenceDto with _$OccurrenceDto {
       timeline: timeline.map((e) => e.toDomain()).toList(),
       assignedTo: assignedTo,
       recommendations: recommendations,
+      phenologicalStage: phenologicalStage,
+      categorySeverities: categorySeverities,
+      categoryImages: categoryImages,
+      technicalRecommendation: technicalRecommendation,
+      technicalResponsible: technicalResponsible,
+      temporalType: temporalType,
+      hasSoilSample: hasSoilSample,
     );
   }
 }

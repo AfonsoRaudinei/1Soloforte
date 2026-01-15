@@ -35,6 +35,15 @@ mixin _$OccurrenceDto {
   List<TimelineEventDto> get timeline => throw _privateConstructorUsedError;
   String? get assignedTo => throw _privateConstructorUsedError;
   List<String> get recommendations => throw _privateConstructorUsedError;
+  String get phenologicalStage => throw _privateConstructorUsedError;
+  Map<String, double> get categorySeverities =>
+      throw _privateConstructorUsedError;
+  Map<String, List<String>> get categoryImages =>
+      throw _privateConstructorUsedError;
+  String get technicalRecommendation => throw _privateConstructorUsedError;
+  String get technicalResponsible => throw _privateConstructorUsedError;
+  String get temporalType => throw _privateConstructorUsedError;
+  bool get hasSoilSample => throw _privateConstructorUsedError;
 
   /// Serializes this OccurrenceDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -68,6 +77,13 @@ abstract class $OccurrenceDtoCopyWith<$Res> {
     List<TimelineEventDto> timeline,
     String? assignedTo,
     List<String> recommendations,
+    String phenologicalStage,
+    Map<String, double> categorySeverities,
+    Map<String, List<String>> categoryImages,
+    String technicalRecommendation,
+    String technicalResponsible,
+    String temporalType,
+    bool hasSoilSample,
   });
 }
 
@@ -100,6 +116,13 @@ class _$OccurrenceDtoCopyWithImpl<$Res, $Val extends OccurrenceDto>
     Object? timeline = null,
     Object? assignedTo = freezed,
     Object? recommendations = null,
+    Object? phenologicalStage = null,
+    Object? categorySeverities = null,
+    Object? categoryImages = null,
+    Object? technicalRecommendation = null,
+    Object? technicalResponsible = null,
+    Object? temporalType = null,
+    Object? hasSoilSample = null,
   }) {
     return _then(
       _value.copyWith(
@@ -159,6 +182,34 @@ class _$OccurrenceDtoCopyWithImpl<$Res, $Val extends OccurrenceDto>
                 ? _value.recommendations
                 : recommendations // ignore: cast_nullable_to_non_nullable
                       as List<String>,
+            phenologicalStage: null == phenologicalStage
+                ? _value.phenologicalStage
+                : phenologicalStage // ignore: cast_nullable_to_non_nullable
+                      as String,
+            categorySeverities: null == categorySeverities
+                ? _value.categorySeverities
+                : categorySeverities // ignore: cast_nullable_to_non_nullable
+                      as Map<String, double>,
+            categoryImages: null == categoryImages
+                ? _value.categoryImages
+                : categoryImages // ignore: cast_nullable_to_non_nullable
+                      as Map<String, List<String>>,
+            technicalRecommendation: null == technicalRecommendation
+                ? _value.technicalRecommendation
+                : technicalRecommendation // ignore: cast_nullable_to_non_nullable
+                      as String,
+            technicalResponsible: null == technicalResponsible
+                ? _value.technicalResponsible
+                : technicalResponsible // ignore: cast_nullable_to_non_nullable
+                      as String,
+            temporalType: null == temporalType
+                ? _value.temporalType
+                : temporalType // ignore: cast_nullable_to_non_nullable
+                      as String,
+            hasSoilSample: null == hasSoilSample
+                ? _value.hasSoilSample
+                : hasSoilSample // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -189,6 +240,13 @@ abstract class _$$OccurrenceDtoImplCopyWith<$Res>
     List<TimelineEventDto> timeline,
     String? assignedTo,
     List<String> recommendations,
+    String phenologicalStage,
+    Map<String, double> categorySeverities,
+    Map<String, List<String>> categoryImages,
+    String technicalRecommendation,
+    String technicalResponsible,
+    String temporalType,
+    bool hasSoilSample,
   });
 }
 
@@ -220,6 +278,13 @@ class __$$OccurrenceDtoImplCopyWithImpl<$Res>
     Object? timeline = null,
     Object? assignedTo = freezed,
     Object? recommendations = null,
+    Object? phenologicalStage = null,
+    Object? categorySeverities = null,
+    Object? categoryImages = null,
+    Object? technicalRecommendation = null,
+    Object? technicalResponsible = null,
+    Object? temporalType = null,
+    Object? hasSoilSample = null,
   }) {
     return _then(
       _$OccurrenceDtoImpl(
@@ -279,6 +344,34 @@ class __$$OccurrenceDtoImplCopyWithImpl<$Res>
             ? _value._recommendations
             : recommendations // ignore: cast_nullable_to_non_nullable
                   as List<String>,
+        phenologicalStage: null == phenologicalStage
+            ? _value.phenologicalStage
+            : phenologicalStage // ignore: cast_nullable_to_non_nullable
+                  as String,
+        categorySeverities: null == categorySeverities
+            ? _value._categorySeverities
+            : categorySeverities // ignore: cast_nullable_to_non_nullable
+                  as Map<String, double>,
+        categoryImages: null == categoryImages
+            ? _value._categoryImages
+            : categoryImages // ignore: cast_nullable_to_non_nullable
+                  as Map<String, List<String>>,
+        technicalRecommendation: null == technicalRecommendation
+            ? _value.technicalRecommendation
+            : technicalRecommendation // ignore: cast_nullable_to_non_nullable
+                  as String,
+        technicalResponsible: null == technicalResponsible
+            ? _value.technicalResponsible
+            : technicalResponsible // ignore: cast_nullable_to_non_nullable
+                  as String,
+        temporalType: null == temporalType
+            ? _value.temporalType
+            : temporalType // ignore: cast_nullable_to_non_nullable
+                  as String,
+        hasSoilSample: null == hasSoilSample
+            ? _value.hasSoilSample
+            : hasSoilSample // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -302,9 +395,18 @@ class _$OccurrenceDtoImpl extends _OccurrenceDto {
     final List<TimelineEventDto> timeline = const [],
     this.assignedTo,
     final List<String> recommendations = const [],
+    this.phenologicalStage = 'VE - Emergência',
+    final Map<String, double> categorySeverities = const {},
+    final Map<String, List<String>> categoryImages = const {},
+    this.technicalRecommendation = '',
+    this.technicalResponsible = '',
+    this.temporalType = 'Sazonal',
+    this.hasSoilSample = false,
   }) : _images = images,
        _timeline = timeline,
        _recommendations = recommendations,
+       _categorySeverities = categorySeverities,
+       _categoryImages = categoryImages,
        super._();
 
   factory _$OccurrenceDtoImpl.fromJson(Map<String, dynamic> json) =>
@@ -359,8 +461,43 @@ class _$OccurrenceDtoImpl extends _OccurrenceDto {
   }
 
   @override
+  @JsonKey()
+  final String phenologicalStage;
+  final Map<String, double> _categorySeverities;
+  @override
+  @JsonKey()
+  Map<String, double> get categorySeverities {
+    if (_categorySeverities is EqualUnmodifiableMapView)
+      return _categorySeverities;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_categorySeverities);
+  }
+
+  final Map<String, List<String>> _categoryImages;
+  @override
+  @JsonKey()
+  Map<String, List<String>> get categoryImages {
+    if (_categoryImages is EqualUnmodifiableMapView) return _categoryImages;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_categoryImages);
+  }
+
+  @override
+  @JsonKey()
+  final String technicalRecommendation;
+  @override
+  @JsonKey()
+  final String technicalResponsible;
+  @override
+  @JsonKey()
+  final String temporalType;
+  @override
+  @JsonKey()
+  final bool hasSoilSample;
+
+  @override
   String toString() {
-    return 'OccurrenceDto(id: $id, title: $title, description: $description, type: $type, severity: $severity, areaName: $areaName, date: $date, status: $status, images: $images, latitude: $latitude, longitude: $longitude, timeline: $timeline, assignedTo: $assignedTo, recommendations: $recommendations)';
+    return 'OccurrenceDto(id: $id, title: $title, description: $description, type: $type, severity: $severity, areaName: $areaName, date: $date, status: $status, images: $images, latitude: $latitude, longitude: $longitude, timeline: $timeline, assignedTo: $assignedTo, recommendations: $recommendations, phenologicalStage: $phenologicalStage, categorySeverities: $categorySeverities, categoryImages: $categoryImages, technicalRecommendation: $technicalRecommendation, technicalResponsible: $technicalResponsible, temporalType: $temporalType, hasSoilSample: $hasSoilSample)';
   }
 
   @override
@@ -390,12 +527,33 @@ class _$OccurrenceDtoImpl extends _OccurrenceDto {
             const DeepCollectionEquality().equals(
               other._recommendations,
               _recommendations,
-            ));
+            ) &&
+            (identical(other.phenologicalStage, phenologicalStage) ||
+                other.phenologicalStage == phenologicalStage) &&
+            const DeepCollectionEquality().equals(
+              other._categorySeverities,
+              _categorySeverities,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._categoryImages,
+              _categoryImages,
+            ) &&
+            (identical(
+                  other.technicalRecommendation,
+                  technicalRecommendation,
+                ) ||
+                other.technicalRecommendation == technicalRecommendation) &&
+            (identical(other.technicalResponsible, technicalResponsible) ||
+                other.technicalResponsible == technicalResponsible) &&
+            (identical(other.temporalType, temporalType) ||
+                other.temporalType == temporalType) &&
+            (identical(other.hasSoilSample, hasSoilSample) ||
+                other.hasSoilSample == hasSoilSample));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     title,
@@ -411,7 +569,14 @@ class _$OccurrenceDtoImpl extends _OccurrenceDto {
     const DeepCollectionEquality().hash(_timeline),
     assignedTo,
     const DeepCollectionEquality().hash(_recommendations),
-  );
+    phenologicalStage,
+    const DeepCollectionEquality().hash(_categorySeverities),
+    const DeepCollectionEquality().hash(_categoryImages),
+    technicalRecommendation,
+    technicalResponsible,
+    temporalType,
+    hasSoilSample,
+  ]);
 
   /// Create a copy of OccurrenceDto
   /// with the given fields replaced by the non-null parameter values.
@@ -443,6 +608,13 @@ abstract class _OccurrenceDto extends OccurrenceDto {
     final List<TimelineEventDto> timeline,
     final String? assignedTo,
     final List<String> recommendations,
+    final String phenologicalStage,
+    final Map<String, double> categorySeverities,
+    final Map<String, List<String>> categoryImages,
+    final String technicalRecommendation,
+    final String technicalResponsible,
+    final String temporalType,
+    final bool hasSoilSample,
   }) = _$OccurrenceDtoImpl;
   const _OccurrenceDto._() : super._();
 
@@ -477,6 +649,20 @@ abstract class _OccurrenceDto extends OccurrenceDto {
   String? get assignedTo;
   @override
   List<String> get recommendations;
+  @override
+  String get phenologicalStage;
+  @override
+  Map<String, double> get categorySeverities;
+  @override
+  Map<String, List<String>> get categoryImages;
+  @override
+  String get technicalRecommendation;
+  @override
+  String get technicalResponsible;
+  @override
+  String get temporalType;
+  @override
+  bool get hasSoilSample;
 
   /// Create a copy of OccurrenceDto
   /// with the given fields replaced by the non-null parameter values.

@@ -46,6 +46,7 @@ import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 // import 'package:latlong2/latlong.dart';
 
 import '../features/settings/presentation/settings_screen.dart';
+import 'package:latlong2/latlong.dart';
 import '../features/settings/presentation/settings_subpages.dart';
 import '../features/feedback/presentation/feedback_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/scan_result_screen.dart';
@@ -125,7 +126,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/map',
-            builder: (context, state) => const HomeScreen(),
+            builder: (context, state) {
+              final location = state.extra as LatLng?;
+              return HomeScreen(initialLocation: location);
+            },
           ),
           // Sub-routes for /map
           GoRoute(
@@ -353,6 +357,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             initialSeverity: extras?['severity'],
             initialLatitude: extras?['latitude'],
             initialLongitude: extras?['longitude'],
+            recurrentFrom: extras?['recurrentFrom'] as Occurrence?,
           );
         },
       ),

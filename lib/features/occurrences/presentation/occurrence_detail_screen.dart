@@ -5,6 +5,7 @@ import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_detail_provider.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
 import 'package:soloforte_app/features/occurrences/domain/entities/occurrence.dart';
+import 'package:soloforte_app/features/reports/application/pdf_generator_service.dart';
 import 'package:soloforte_app/shared/widgets/primary_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
@@ -194,12 +195,121 @@ class OccurrenceDetailScreen extends ConsumerWidget {
                             value:
                                 '${occurrence.latitude.toStringAsFixed(4)}, ${occurrence.longitude.toStringAsFixed(4)}',
                           ),
-                          if (occurrence.assignedTo != null) ...[
+                          if (occurrence.assignedTo != null &&
+                              occurrence.assignedTo!.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             _InfoRow(
                               label: 'Atribuído a',
                               value: occurrence.assignedTo!,
                             ),
+                          ],
+                          const SizedBox(height: 8),
+                          _InfoRow(
+                            label: 'Estádio',
+                            value: occurrence.phenologicalStage,
+                          ),
+                          const SizedBox(height: 8),
+                          _InfoRow(
+                            label: 'Tipo Temporal',
+                            value: occurrence.temporalType,
+                          ),
+                          const SizedBox(height: 8),
+                          _InfoRow(
+                            label: 'Amostra de Solo',
+                            value: occurrence.hasSoilSample
+                                ? 'Coletada'
+                                : 'Não coletada',
+                            valueColor: occurrence.hasSoilSample
+                                ? AppColors.success
+                                : null,
+                          ),
+                          if (occurrence.technicalResponsible.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            _InfoRow(
+                              label: 'Responsável',
+                              value: occurrence.technicalResponsible,
+                            ),
+                          ],
+                          if (occurrence.categorySeverities.isNotEmpty) ...[
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8.0),
+                              child: Divider(),
+                            ),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Categorias & Severidade',
+                                style: AppTypography.bodySmall.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            ...occurrence.categorySeverities.entries.map((e) {
+                              final category = e.key;
+                              final severity = e.value;
+                              final images =
+                                  occurrence.categoryImages[category] ?? [];
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          category,
+                                          style: AppTypography.bodyMedium,
+                                        ),
+                                        Text(
+                                          '${(severity * 100).toInt()}%',
+                                          style: AppTypography.bodyMedium
+                                              .copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: _getSeverityColor(
+                                                  severity,
+                                                ),
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (images.isNotEmpty)
+                                      Container(
+                                        height: 60,
+                                        margin: const EdgeInsets.only(top: 4),
+                                        child: ListView(
+                                          scrollDirection: Axis.horizontal,
+                                          children: images
+                                              .map(
+                                                (url) => Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        right: 4,
+                                                      ),
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                    child: _ImageCard(
+                                                      url,
+                                                    ), // Reusing existing card, will adjust size via constraints if needed or use simple image
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            }),
                           ],
                         ],
                       ),
@@ -207,6 +317,27 @@ class OccurrenceDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Technical Recommendation
+                if (occurrence.technicalRecommendation.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Recomendação Técnica', style: AppTypography.h4),
+                        const SizedBox(height: 8),
+                        Text(
+                          occurrence.technicalRecommendation,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
 
                 // Description
                 Padding(
@@ -254,6 +385,16 @@ class OccurrenceDetailScreen extends ConsumerWidget {
                     ),
                   ),
 
+                const SizedBox(height: 24),
+
+                // Temporal Analysis Section
+                _TemporalAnalysisSection(
+                  currentOccurrence: occurrence,
+                  allOccurrences:
+                      ref.watch(occurrenceControllerProvider).asData?.value ??
+                      [],
+                ),
+
                 const SizedBox(height: 32),
 
                 // Actions
@@ -262,10 +403,27 @@ class OccurrenceDetailScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       PrimaryButton(
+                        text: 'Relatório Técnico',
+                        onPressed: () async {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Gerando relatório...'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                          await ref
+                              .read(pdfGeneratorServiceProvider)
+                              .generateOccurrenceTechnicalReport(occurrence);
+                        },
+                        icon: Icons.picture_as_pdf,
+                        backgroundColor: AppColors.primary,
+                      ),
+                      const SizedBox(height: 12),
+                      PrimaryButton(
                         text: 'Ver no Mapa',
                         onPressed: () {
                           context.push(
-                            '/dashboard/map',
+                            '/map',
                             extra: LatLng(
                               occurrence.latitude,
                               occurrence.longitude,
@@ -282,8 +440,18 @@ class OccurrenceDetailScreen extends ConsumerWidget {
                         PrimaryButton(
                           text: 'Marcar como Resolvida',
                           onPressed: () async {
+                            final newEvent = TimelineEvent(
+                              id: DateTime.now().millisecondsSinceEpoch
+                                  .toString(),
+                              title: 'Status Alterado',
+                              description: 'Ocorrência marcada como resolvida.',
+                              date: DateTime.now(),
+                              type: 'status_change',
+                              authorName: 'Usuário',
+                            );
                             final updated = occurrence.copyWith(
                               status: 'resolved',
+                              timeline: [...occurrence.timeline, newEvent],
                             );
                             await ref
                                 .read(occurrenceControllerProvider.notifier)
@@ -295,6 +463,23 @@ class OccurrenceDetailScreen extends ConsumerWidget {
                           icon: Icons.check,
                           backgroundColor: AppColors.success,
                         ),
+                      const SizedBox(height: 12),
+                      // Recurrence Button - creates new occurrence from technical data
+                      PrimaryButton(
+                        text: 'Criar Ocorrência Recorrente',
+                        onPressed: () {
+                          // Navigate to NewOccurrenceScreen with only technical data
+                          // Does NOT copy: id, date, status, images, location, timeline
+                          context.push(
+                            '/occurrences/new',
+                            extra: {'recurrentFrom': occurrence},
+                          );
+                        },
+                        icon: Icons.repeat,
+                        backgroundColor: Colors.white,
+                        textColor: AppColors.textSecondary,
+                        borderColor: AppColors.border,
+                      ),
                     ],
                   ),
                 ),
@@ -499,5 +684,326 @@ class _TimelineItem extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Widget that displays temporal analysis of occurrences in the same area.
+/// Read-only, no AI, no predictions - just historical data visualization.
+class _TemporalAnalysisSection extends StatefulWidget {
+  final Occurrence currentOccurrence;
+  final List<Occurrence> allOccurrences;
+
+  const _TemporalAnalysisSection({
+    required this.currentOccurrence,
+    required this.allOccurrences,
+  });
+
+  @override
+  State<_TemporalAnalysisSection> createState() =>
+      _TemporalAnalysisSectionState();
+}
+
+class _TemporalAnalysisSectionState extends State<_TemporalAnalysisSection> {
+  String _groupBy = 'data'; // data, categoria, status, ano
+
+  List<Occurrence> get _relatedOccurrences {
+    // Filter occurrences from the same area, excluding current
+    return widget.allOccurrences
+        .where(
+          (o) =>
+              o.areaName == widget.currentOccurrence.areaName &&
+              o.id != widget.currentOccurrence.id,
+        )
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date)); // Most recent first
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final related = _relatedOccurrences;
+
+    if (related.isEmpty) {
+      return const SizedBox.shrink(); // No related occurrences
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with grouping selector
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Histórico da Área (${related.length})',
+                style: AppTypography.h4,
+              ),
+              PopupMenuButton<String>(
+                initialValue: _groupBy,
+                onSelected: (value) => setState(() => _groupBy = value),
+                icon: const Icon(Icons.filter_list, size: 20),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'data', child: Text('Por Data')),
+                  const PopupMenuItem(
+                    value: 'categoria',
+                    child: Text('Por Categoria'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'status',
+                    child: Text('Por Status'),
+                  ),
+                  const PopupMenuItem(value: 'ano', child: Text('Por Ano')),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Grouped list
+          _buildGroupedList(related),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupedList(List<Occurrence> occurrences) {
+    switch (_groupBy) {
+      case 'categoria':
+        return _buildByCategoryGroup(occurrences);
+      case 'status':
+        return _buildByStatusGroup(occurrences);
+      case 'ano':
+        return _buildByYearGroup(occurrences);
+      default:
+        return _buildByDateList(occurrences);
+    }
+  }
+
+  Widget _buildByDateList(List<Occurrence> occurrences) {
+    return Column(
+      children: occurrences
+          .take(5)
+          .map((o) => _buildOccurrenceCard(o))
+          .toList(),
+    );
+  }
+
+  Widget _buildByCategoryGroup(List<Occurrence> occurrences) {
+    final grouped = <String, List<Occurrence>>{};
+    for (final o in occurrences) {
+      final cats = o.categorySeverities.keys.toList();
+      final label = cats.isNotEmpty ? cats.join(', ') : o.type;
+      grouped.putIfAbsent(label, () => []).add(o);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: grouped.entries
+          .map(
+            (entry) => _buildGroupHeader(
+              entry.key,
+              entry.value.length,
+              entry.value.take(3).toList(),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildByStatusGroup(List<Occurrence> occurrences) {
+    final grouped = <String, List<Occurrence>>{};
+    for (final o in occurrences) {
+      grouped.putIfAbsent(o.status, () => []).add(o);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: grouped.entries
+          .map(
+            (entry) => _buildGroupHeader(
+              _getStatusLabel(entry.key),
+              entry.value.length,
+              entry.value.take(3).toList(),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildByYearGroup(List<Occurrence> occurrences) {
+    final grouped = <int, List<Occurrence>>{};
+    for (final o in occurrences) {
+      grouped.putIfAbsent(o.date.year, () => []).add(o);
+    }
+
+    final sortedYears = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: sortedYears
+          .map(
+            (year) => _buildGroupHeader(
+              year.toString(),
+              grouped[year]!.length,
+              grouped[year]!.take(3).toList(),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildGroupHeader(String title, int count, List<Occurrence> items) {
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: Row(
+        children: [
+          Text(
+            title,
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              count.toString(),
+              style: AppTypography.caption.copyWith(color: AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+      children: items.map((o) => _buildOccurrenceCard(o)).toList(),
+    );
+  }
+
+  Widget _buildOccurrenceCard(Occurrence o) {
+    return InkWell(
+      onTap: () => context.push('/occurrences/${o.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            // Date column
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  '${o.date.day}',
+                  style: AppTypography.h4.copyWith(color: AppColors.primary),
+                ),
+                Text(
+                  '${_getMonthAbbr(o.date.month)}/${o.date.year.toString().substring(2)}',
+                  style: AppTypography.caption,
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    o.title.length > 30
+                        ? '${o.title.substring(0, 30)}...'
+                        : o.title,
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      _buildStatusChip(o.status),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${(o.severity * 100).toInt()}%',
+                        style: AppTypography.caption.copyWith(
+                          color: _getSeverityColor(o.severity),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Arrow
+            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: _getStatusColor(status).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        _getStatusLabel(status),
+        style: AppTypography.caption.copyWith(
+          color: _getStatusColor(status),
+          fontSize: 10,
+        ),
+      ),
+    );
+  }
+
+  String _getStatusLabel(String status) {
+    return switch (status) {
+      'active' => 'Ativa',
+      'monitoring' => 'Monitorando',
+      'resolved' => 'Resolvida',
+      _ => status,
+    };
+  }
+
+  Color _getStatusColor(String status) {
+    return switch (status) {
+      'active' => AppColors.error,
+      'monitoring' => AppColors.warning,
+      'resolved' => AppColors.success,
+      _ => Colors.grey,
+    };
+  }
+
+  Color _getSeverityColor(double severity) {
+    if (severity > 0.7) return AppColors.error;
+    if (severity > 0.4) return AppColors.warning;
+    return AppColors.success;
+  }
+
+  String _getMonthAbbr(int month) {
+    const months = [
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
+    ];
+    return months[month - 1];
   }
 }

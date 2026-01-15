@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
@@ -26,6 +27,8 @@ class NewOccurrenceScreen extends ConsumerStatefulWidget {
   // Pre-filled coordinates from map pin selection
   final double? initialLatitude;
   final double? initialLongitude;
+  // Recurrence: creates new occurrence from existing, copying only technical data
+  final Occurrence? recurrentFrom;
 
   const NewOccurrenceScreen({
     super.key,
@@ -37,6 +40,7 @@ class NewOccurrenceScreen extends ConsumerStatefulWidget {
     this.initialSeverity,
     this.initialLatitude,
     this.initialLongitude,
+    this.recurrentFrom,
   });
 
   @override
@@ -49,9 +53,44 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  String _selectedType = 'pest';
-  double _severity = 0.5;
-  String _selectedArea = 'Talhão Norte'; // Mock default
+  // New State variables
+  String _phenologicalStage = 'VE - Emergência';
+  final Map<String, double> _categorySeverities = {};
+  final _techRecommendationController = TextEditingController();
+  final _techResponsibleController = TextEditingController();
+  String _temporalType = 'Sazonal';
+  bool _hasSoilSample = false;
+
+  final List<String> _validCategories = [
+    'Doença',
+    'Insetos',
+    'Ervas daninhas',
+    'Nutrientes',
+    'Água',
+  ];
+
+  final List<String> _phenologicalStages = [
+    'VE - Emergência',
+    'VC - Cotilédones',
+    'V1 - 1ª Trifoliolada',
+    'V2 - 2ª Trifoliolada',
+    'V3 - 3ª Trifoliolada',
+    'V4 - 4ª Trifoliolada',
+    'V5 - 5ª Trifoliolada',
+    'R1 - Florescimento',
+    'R2 - Floração Plena',
+    'R3 - Vagens 1cm',
+    'R4 - Vagens 2cm',
+    'R5.1 - Início Enchimento',
+    'R5.3 - 50% Enchimento',
+    'R5.5 - 100% Enchimento',
+    'R6 - Grãos Formados',
+    'R7 - Início Maturação',
+    'R8 - Maturação Plena',
+  ];
+
+  // Legacy/Helper
+  String _selectedArea = 'Talhão Norte';
   bool _isLoading = false;
 
   double? _latitude;
@@ -62,13 +101,8 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
 
   // State
   List<String> _existingImages = [];
-  // Mock Areas
-  final List<String> _areas = [
-    'Talhão Norte',
-    'Lavoura Sul',
-    'Área Teste',
-    'Borda Oeste',
-  ];
+  final Map<String, List<File>> _capturedCategoryImages = {};
+  final Map<String, List<String>> _existingCategoryImages = {};
 
   @override
   void initState() {
@@ -77,12 +111,43 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
       final occ = widget.initialOccurrence!;
       _titleController.text = occ.title;
       _descriptionController.text = occ.description;
-      _selectedType = occ.type;
-      _severity = occ.severity;
+      // Map legacy type if needed, but rely on new categories
+      // _selectedType = occ.type;
+      // _severity = occ.severity;
       _selectedArea = occ.areaName;
       _latitude = occ.latitude;
       _longitude = occ.longitude;
       _existingImages = List.from(occ.images);
+
+      // Load new fields
+      _phenologicalStage = occ.phenologicalStage;
+      _categorySeverities.addAll(occ.categorySeverities);
+      _techRecommendationController.text = occ.technicalRecommendation;
+      _techResponsibleController.text = occ.technicalResponsible;
+      _temporalType = occ.temporalType;
+      _hasSoilSample = occ.hasSoilSample;
+
+      // Load category images
+      if (occ.categoryImages.isNotEmpty) {
+        _existingCategoryImages.addAll(occ.categoryImages);
+      }
+    } else if (widget.recurrentFrom != null) {
+      // RECURRENCE: Copy only technical data, NOT images/location/status/date/timeline
+      final src = widget.recurrentFrom!;
+
+      // Technical data to copy
+      _phenologicalStage = src.phenologicalStage;
+      _categorySeverities.addAll(src.categorySeverities);
+      _techRecommendationController.text = src.technicalRecommendation;
+      _techResponsibleController.text = src.technicalResponsible;
+      _temporalType = src.temporalType;
+      _hasSoilSample = src.hasSoilSample;
+      _selectedArea = src.areaName;
+      _descriptionController.text = 'Recorrência de: ${src.title}';
+
+      // DO NOT copy: id, date, status, images, categoryImages, location, timeline
+      // Get current location for new occurrence
+      _getCurrentLocation();
     } else {
       // Pre-fill from arguments if available
       if (widget.initialTitle != null) {
@@ -91,8 +156,8 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
       if (widget.initialDescription != null) {
         _descriptionController.text = widget.initialDescription!;
       }
-      if (widget.initialType != null) _selectedType = widget.initialType!;
-      if (widget.initialSeverity != null) _severity = widget.initialSeverity!;
+      // if (widget.initialType != null) _selectedType = widget.initialType!;
+      // if (widget.initialSeverity != null) _severity = widget.initialSeverity!;
       if (widget.initialImagePath != null) {
         _capturedImages.add(File(widget.initialImagePath!));
       }
@@ -167,7 +232,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
     }
   }
 
-  void _showImageSourceActionSheet(BuildContext context) {
+  void _showImageSourceActionSheet(BuildContext context, [String? category]) {
     showModalBottomSheet(
       context: context,
       builder: (ctx) => SafeArea(
@@ -178,7 +243,11 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
               title: const Text('Câmera'),
               onTap: () {
                 Navigator.pop(ctx);
-                _pickImage(ImageSource.camera);
+                if (category != null) {
+                  _pickCategoryImage(category, ImageSource.camera);
+                } else {
+                  _pickImage(ImageSource.camera);
+                }
               },
             ),
             ListTile(
@@ -186,13 +255,41 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
               title: const Text('Galeria'),
               onTap: () {
                 Navigator.pop(ctx);
-                _pickImage(ImageSource.gallery);
+                if (category != null) {
+                  _pickCategoryImage(category, ImageSource.gallery);
+                } else {
+                  _pickImage(ImageSource.gallery);
+                }
               },
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _pickCategoryImage(String category, ImageSource source) async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        imageQuality: 80,
+      );
+      if (picked != null) {
+        setState(() {
+          if (!_capturedCategoryImages.containsKey(category)) {
+            _capturedCategoryImages[category] = [];
+          }
+          _capturedCategoryImages[category]!.add(File(picked.path));
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao selecionar imagem: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -346,62 +443,8 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
                 ),
               SizedBox(height: AppSpacing.lg),
 
-              // Title
-              CustomTextInput(
-                label: 'Título',
-                hint: 'Ex: Lagarta na folha',
-                controller: _titleController,
-                validator: (val) => val == null || val.isEmpty
-                    ? 'Por favor, insira um título'
-                    : null,
-              ),
-              SizedBox(height: AppSpacing.md),
-
-              // Type Selector
-              Text('Tipo', style: AppTypography.label),
-              const SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _TypeChip(
-                      label: 'Praga',
-                      value: 'pest',
-                      groupValue: _selectedType,
-                      onChanged: (val) => setState(() => _selectedType = val),
-                      icon: Icons.bug_report,
-                    ),
-                    const SizedBox(width: 8),
-                    _TypeChip(
-                      label: 'Doença',
-                      value: 'disease',
-                      groupValue: _selectedType,
-                      onChanged: (val) => setState(() => _selectedType = val),
-                      icon: Icons.coronavirus,
-                    ),
-                    const SizedBox(width: 8),
-                    _TypeChip(
-                      label: 'Deficiência',
-                      value: 'deficiency',
-                      groupValue: _selectedType,
-                      onChanged: (val) => setState(() => _selectedType = val),
-                      icon: Icons.spa,
-                    ),
-                    const SizedBox(width: 8),
-                    _TypeChip(
-                      label: 'Daninha',
-                      value: 'weed',
-                      groupValue: _selectedType,
-                      onChanged: (val) => setState(() => _selectedType = val),
-                      icon: Icons.grass,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: AppSpacing.lg),
-
-              // Area Selector
-              Text('Área Afetada', style: AppTypography.label),
+              // Estádio Fenológico
+              Text('Estádio Fenológico', style: AppTypography.label),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -411,25 +454,308 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: _selectedArea,
+                    value: _phenologicalStage,
                     isExpanded: true,
-                    items: _areas.map((String value) {
+                    items: _phenologicalStages.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(value),
                       );
                     }).toList(),
                     onChanged: (newValue) {
-                      setState(() {
-                        _selectedArea = newValue!;
-                      });
+                      if (newValue != null) {
+                        setState(() => _phenologicalStage = newValue);
+                      }
                     },
                   ),
                 ),
               ),
               SizedBox(height: AppSpacing.lg),
 
-              // Location Section
+              // Categorias e Severidade
+              Text('Categorias da Ocorrência', style: AppTypography.label),
+              const SizedBox(height: 8),
+              ..._validCategories.map((category) {
+                final isSelected = _categorySeverities.containsKey(category);
+                final severity = _categorySeverities[category] ?? 0.5;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.blue.withOpacity(0.05)
+                        : Colors.white,
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primary
+                          : Colors.grey.shade200,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: isSelected,
+                            activeColor: AppColors.primary,
+                            onChanged: (val) {
+                              setState(() {
+                                if (val == true) {
+                                  _categorySeverities[category] = 0.5;
+                                } else {
+                                  _categorySeverities.remove(category);
+                                  // Optional: Clean up images if deselected? Keeping for now to avoid data loss.
+                                }
+                              });
+                            },
+                          ),
+                          Text(category, style: AppTypography.bodyMedium),
+                        ],
+                      ),
+                      if (isSelected) ...[
+                        Row(
+                          children: [
+                            Text('Severidade', style: AppTypography.caption),
+                            Expanded(
+                              child: Slider(
+                                value: severity,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _categorySeverities[category] = val;
+                                  });
+                                },
+                                activeColor: _getSeverityColor(severity),
+                              ),
+                            ),
+                            Text(
+                              '${(severity * 100).toInt()}%',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: _getSeverityColor(severity),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Category Photos UI
+                        Container(
+                          height: 80,
+                          margin: const EdgeInsets.only(top: 8),
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              // Add Button for Category
+                              GestureDetector(
+                                onTap: () => _showImageSourceActionSheet(
+                                  context,
+                                  category,
+                                ),
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.add_a_photo,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Existing Category Images
+                              if (_existingCategoryImages.containsKey(category))
+                                ..._existingCategoryImages[category]!
+                                    .asMap()
+                                    .entries
+                                    .map((entry) {
+                                      final index = entry.key;
+                                      final url = entry.value;
+                                      return Stack(
+                                        children: [
+                                          Container(
+                                            width: 80,
+                                            height: 80,
+                                            margin: const EdgeInsets.only(
+                                              right: 8,
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: _buildSafeImageThumbnail(
+                                                url,
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 0,
+                                            right: 8,
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  _existingCategoryImages[category]!
+                                                      .removeAt(index);
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  2,
+                                                ),
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.black54,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.close,
+                                                  size: 14,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }),
+
+                              // Captured Category Images
+                              if (_capturedCategoryImages.containsKey(category))
+                                ..._capturedCategoryImages[category]!
+                                    .asMap()
+                                    .entries
+                                    .map((entry) {
+                                      final index = entry.key;
+                                      final file = entry.value;
+                                      return Stack(
+                                        children: [
+                                          Container(
+                                            width: 80,
+                                            height: 80,
+                                            margin: const EdgeInsets.only(
+                                              right: 8,
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: _buildSafeFileThumbnail(
+                                                file,
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 0,
+                                            right: 8,
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  _capturedCategoryImages[category]!
+                                                      .removeAt(index);
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  2,
+                                                ),
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.black54,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.close,
+                                                  size: 14,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }).toList(),
+              SizedBox(height: AppSpacing.lg),
+
+              // Observações Gerais
+              CustomTextInput(
+                label: 'Observações Gerais',
+                hint: 'Descreva os detalhes da ocorrência...',
+                controller: _descriptionController,
+                maxLines: 3,
+              ),
+              SizedBox(height: AppSpacing.lg),
+
+              // Recomendações Técnicas
+              CustomTextInput(
+                label: 'Recomendações Técnicas',
+                hint: 'Insira as recomendações para manejo...',
+                controller: _techRecommendationController,
+                maxLines: 3,
+              ),
+              SizedBox(height: AppSpacing.lg),
+
+              // Responsável Técnico
+              CustomTextInput(
+                label: 'Responsável Técnico',
+                hint: 'Nome do responsável',
+                controller: _techResponsibleController,
+              ),
+              SizedBox(height: AppSpacing.lg),
+
+              // Tipo de Ocorrência
+              Text('Tipo de Ocorrência', style: AppTypography.label),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text('Sazonal'),
+                      value: 'Sazonal',
+                      groupValue: _temporalType,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) => setState(() => _temporalType = val!),
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text('Permanente'),
+                      value: 'Permanente',
+                      groupValue: _temporalType,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) => setState(() => _temporalType = val!),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: AppSpacing.lg),
+
+              // Amostra de Solo
+              SwitchListTile(
+                title: Text(
+                  'Amostra de Solo Coletada?',
+                  style: AppTypography.bodyMedium,
+                ),
+                value: _hasSoilSample,
+                onChanged: (val) => setState(() => _hasSoilSample = val),
+                activeColor: AppColors.primary,
+                contentPadding: EdgeInsets.zero,
+              ),
+              SizedBox(height: AppSpacing.lg),
+
+              // Location Section (Reused Visuals)
               Text('Localização (GPS)', style: AppTypography.label),
               const SizedBox(height: 8),
               Container(
@@ -486,45 +812,6 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: AppSpacing.lg),
-
-              // Severity Slider
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Severidade', style: AppTypography.label),
-                  Text(
-                    '${(_severity * 100).toInt()}%',
-                    style: AppTypography.h4.copyWith(
-                      color: _getSeverityColor(_severity),
-                    ),
-                  ),
-                ],
-              ),
-              Slider(
-                value: _severity,
-                onChanged: (val) => setState(() => _severity = val),
-                activeColor: _getSeverityColor(_severity),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Leve', style: AppTypography.caption),
-                  Text('Crítica', style: AppTypography.caption),
-                ],
-              ),
-              SizedBox(height: AppSpacing.lg),
-
-              // Description
-              CustomTextInput(
-                label: 'Descrição Detalhada',
-                hint: 'Descreva os sintomas observados...',
-                controller: _descriptionController,
-                maxLines: 4,
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Insira uma descrição' : null,
-              ),
-              SizedBox(height: AppSpacing.xxl),
 
               // Submit Button
               PrimaryButton(
@@ -594,6 +881,22 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
     // LoggerService.i('Submitting occurrence: ${_titleController.text}');
 
     try {
+      // Prepare category images
+      final Map<String, List<String>> finalCategoryImages = {};
+
+      // Merge existing
+      _existingCategoryImages.forEach((key, value) {
+        finalCategoryImages[key] = List.from(value);
+      });
+
+      // Merge captured
+      _capturedCategoryImages.forEach((key, value) {
+        if (!finalCategoryImages.containsKey(key)) {
+          finalCategoryImages[key] = [];
+        }
+        finalCategoryImages[key]!.addAll(value.map((e) => e.path));
+      });
+
       final finalImages = [
         ..._existingImages,
         ..._capturedImages.map((e) => e.path),
@@ -601,31 +904,40 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
 
       final occurrenceData = Occurrence(
         id: widget.initialOccurrence?.id ?? const Uuid().v4(),
-        title: _titleController.text,
+        title: _categorySeverities.isNotEmpty
+            ? _categorySeverities.keys.join(', ')
+            : 'Ocorrência', // Default title if not using text input
         description: _descriptionController.text,
-        type: _selectedType,
-        severity: _severity,
-        // TODO: Uncomment when model supports clientId/areaId after build_runner
-        // clientId: 'mock-client-1',
-        // areaId: 'mock-area-1',
+        type: _categorySeverities.isNotEmpty
+            ? (_categorySeverities.containsKey('Doença')
+                  ? 'disease'
+                  : _categorySeverities.containsKey('Insetos')
+                  ? 'pest'
+                  : _categorySeverities.containsKey('Ervas daninhas')
+                  ? 'weed'
+                  : _categorySeverities.containsKey('Nutrientes')
+                  ? 'deficiency'
+                  : 'other')
+            : 'other',
+        severity: _categorySeverities.isNotEmpty
+            ? _categorySeverities.values.reduce(
+                (a, b) => a > b ? a : b,
+              ) // Max severity
+            : 0.0,
         areaName: _selectedArea,
         date: widget.initialOccurrence?.date ?? DateTime.now(),
         status: widget.initialOccurrence?.status ?? 'active',
         images: finalImages,
         latitude: _latitude ?? -23.5505,
         longitude: _longitude ?? -46.6333,
-        timeline:
-            widget.initialOccurrence?.timeline ??
-            [
-              TimelineEvent(
-                id: const Uuid().v4(),
-                title: 'Ocorrência Registrada',
-                description: 'Identificação inicial do problema.',
-                date: DateTime.now(),
-                type: 'create',
-                authorName: 'Usuário Atual',
-              ),
-            ],
+        phenologicalStage: _phenologicalStage,
+        categorySeverities: _categorySeverities,
+        categoryImages: finalCategoryImages,
+        technicalRecommendation: _techRecommendationController.text,
+        technicalResponsible: _techResponsibleController.text,
+        temporalType: _temporalType,
+        hasSoilSample: _hasSoilSample,
+        timeline: _buildTimeline(),
       );
 
       if (widget.initialOccurrence != null) {
@@ -702,58 +1014,108 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
       }
     }
   }
-}
 
-class _TypeChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final String groupValue;
-  final Function(String) onChanged;
-  final IconData icon;
+  /// Builds a safe image thumbnail with error handling for both file paths and network URLs.
+  /// Handles kIsWeb to avoid File operations on web platform.
+  Widget _buildSafeImageThumbnail(String pathOrUrl, {double size = 80}) {
+    final isNetwork =
+        pathOrUrl.startsWith('http') || pathOrUrl.startsWith('https');
 
-  const _TypeChip({
-    required this.label,
-    required this.value,
-    required this.groupValue,
-    required this.onChanged,
-    required this.icon,
-  });
+    if (isNetwork) {
+      return Image.network(
+        pathOrUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(size),
+      );
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = value == groupValue;
-    return ChoiceChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: isSelected ? Colors.white : AppColors.textPrimary,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textPrimary,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) onChanged(value);
-      },
-      selectedColor: AppColors.primary,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? Colors.transparent : Colors.grey.shade300,
-        ),
-      ),
-      showCheckmark: false,
+    // On web, file paths don't work - show placeholder
+    if (kIsWeb) {
+      return _buildImagePlaceholder(size);
+    }
+
+    return Image.file(
+      File(pathOrUrl),
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildImagePlaceholder(size),
     );
+  }
+
+  Widget _buildSafeFileThumbnail(File file, {double size = 80}) {
+    if (kIsWeb) {
+      return _buildImagePlaceholder(size);
+    }
+    return Image.file(
+      file,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildImagePlaceholder(size),
+    );
+  }
+
+  Widget _buildImagePlaceholder(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Center(
+        child: Icon(Icons.broken_image, color: Colors.grey, size: 24),
+      ),
+    );
+  }
+
+  /// Builds the timeline for the occurrence based on context:
+  /// - Edit: Appends "Editada" event to existing timeline
+  /// - Recurrence: Creates new timeline with "Recorrência" event
+  /// - Create: Creates new timeline with "Registrada" event
+  List<TimelineEvent> _buildTimeline() {
+    final now = DateTime.now();
+
+    if (widget.initialOccurrence != null) {
+      // EDIT: Append edit event to existing timeline
+      return [
+        ...widget.initialOccurrence!.timeline,
+        TimelineEvent(
+          id: const Uuid().v4(),
+          title: 'Ocorrência Editada',
+          description: 'Dados da ocorrência atualizados.',
+          date: now,
+          type: 'edit',
+          authorName: 'Usuário',
+        ),
+      ];
+    } else if (widget.recurrentFrom != null) {
+      // RECURRENCE: New timeline with recurrence event
+      return [
+        TimelineEvent(
+          id: const Uuid().v4(),
+          title: 'Ocorrência Recorrente',
+          description: 'Criada a partir de: ${widget.recurrentFrom!.title}',
+          date: now,
+          type: 'recurrence',
+          authorName: 'Usuário',
+        ),
+      ];
+    } else {
+      // CREATE: New timeline
+      return [
+        TimelineEvent(
+          id: const Uuid().v4(),
+          title: 'Ocorrência Registrada',
+          description: 'Identificação inicial do problema.',
+          date: now,
+          type: 'create',
+          authorName: 'Usuário',
+        ),
+      ];
+    }
   }
 }

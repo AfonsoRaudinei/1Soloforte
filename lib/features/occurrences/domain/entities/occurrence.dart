@@ -19,6 +19,13 @@ class Occurrence with _$Occurrence {
     @Default([]) List<TimelineEvent> timeline,
     String? assignedTo,
     @Default([]) List<String> recommendations,
+    @Default('VE - Emergência') String phenologicalStage,
+    @Default({}) Map<String, double> categorySeverities,
+    @Default({}) Map<String, List<String>> categoryImages,
+    @Default('') String technicalRecommendation,
+    @Default('') String technicalResponsible,
+    @Default('Sazonal') String temporalType,
+    @Default(false) bool hasSoilSample,
   }) = _Occurrence;
 }
 

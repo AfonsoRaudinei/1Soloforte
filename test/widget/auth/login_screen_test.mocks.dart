@@ -138,4 +138,22 @@ class MockIAuthService extends _i1.Mock implements _i3.IAuthService {
             ),
           )
           as _i4.Future<_i2.AuthState>);
+
+  @override
+  _i4.Future<void> updatePassword(String? newPassword) =>
+      (super.noSuchMethod(
+            Invocation.method(#updatePassword, [newPassword]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> reauthenticate(String? password) =>
+      (super.noSuchMethod(
+            Invocation.method(#reauthenticate, [password]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }
