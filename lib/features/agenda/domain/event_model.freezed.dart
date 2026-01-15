@@ -483,6 +483,8 @@ mixin _$Event {
       throw _privateConstructorUsedError; // Integrations & Metadata
   Map<String, dynamic>? get weatherForecast =>
       throw _privateConstructorUsedError;
+  Map<String, double>? get locationCoordinates =>
+      throw _privateConstructorUsedError; // Added for Map integration
   DateTime? get completedAt => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
   DateTime? get updatedAt => throw _privateConstructorUsedError;
@@ -520,6 +522,7 @@ abstract class $EventCopyWith<$Res> {
     String? notes,
     EventRecurrence? recurrence,
     Map<String, dynamic>? weatherForecast,
+    Map<String, double>? locationCoordinates,
     DateTime? completedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -561,6 +564,7 @@ class _$EventCopyWithImpl<$Res, $Val extends Event>
     Object? notes = freezed,
     Object? recurrence = freezed,
     Object? weatherForecast = freezed,
+    Object? locationCoordinates = freezed,
     Object? completedAt = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
@@ -639,6 +643,10 @@ class _$EventCopyWithImpl<$Res, $Val extends Event>
                 ? _value.weatherForecast
                 : weatherForecast // ignore: cast_nullable_to_non_nullable
                       as Map<String, dynamic>?,
+            locationCoordinates: freezed == locationCoordinates
+                ? _value.locationCoordinates
+                : locationCoordinates // ignore: cast_nullable_to_non_nullable
+                      as Map<String, double>?,
             completedAt: freezed == completedAt
                 ? _value.completedAt
                 : completedAt // ignore: cast_nullable_to_non_nullable
@@ -698,6 +706,7 @@ abstract class _$$EventImplCopyWith<$Res> implements $EventCopyWith<$Res> {
     String? notes,
     EventRecurrence? recurrence,
     Map<String, dynamic>? weatherForecast,
+    Map<String, double>? locationCoordinates,
     DateTime? completedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -739,6 +748,7 @@ class __$$EventImplCopyWithImpl<$Res>
     Object? notes = freezed,
     Object? recurrence = freezed,
     Object? weatherForecast = freezed,
+    Object? locationCoordinates = freezed,
     Object? completedAt = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
@@ -817,6 +827,10 @@ class __$$EventImplCopyWithImpl<$Res>
             ? _value._weatherForecast
             : weatherForecast // ignore: cast_nullable_to_non_nullable
                   as Map<String, dynamic>?,
+        locationCoordinates: freezed == locationCoordinates
+            ? _value._locationCoordinates
+            : locationCoordinates // ignore: cast_nullable_to_non_nullable
+                  as Map<String, double>?,
         completedAt: freezed == completedAt
             ? _value.completedAt
             : completedAt // ignore: cast_nullable_to_non_nullable
@@ -856,13 +870,15 @@ class _$EventImpl implements _Event {
     this.notes,
     this.recurrence,
     final Map<String, dynamic>? weatherForecast,
+    final Map<String, double>? locationCoordinates,
     this.completedAt,
     this.createdAt,
     this.updatedAt,
   }) : _participants = participants,
        _checklist = checklist,
        _attachmentUrls = attachmentUrls,
-       _weatherForecast = weatherForecast;
+       _weatherForecast = weatherForecast,
+       _locationCoordinates = locationCoordinates;
 
   factory _$EventImpl.fromJson(Map<String, dynamic> json) =>
       _$$EventImplFromJson(json);
@@ -939,6 +955,18 @@ class _$EventImpl implements _Event {
     return EqualUnmodifiableMapView(value);
   }
 
+  final Map<String, double>? _locationCoordinates;
+  @override
+  Map<String, double>? get locationCoordinates {
+    final value = _locationCoordinates;
+    if (value == null) return null;
+    if (_locationCoordinates is EqualUnmodifiableMapView)
+      return _locationCoordinates;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  // Added for Map integration
   @override
   final DateTime? completedAt;
   @override
@@ -948,7 +976,7 @@ class _$EventImpl implements _Event {
 
   @override
   String toString() {
-    return 'Event(id: $id, title: $title, description: $description, startTime: $startTime, endTime: $endTime, type: $type, status: $status, location: $location, clientId: $clientId, clientName: $clientName, areaId: $areaId, areaName: $areaName, participants: $participants, checklist: $checklist, attachmentUrls: $attachmentUrls, notes: $notes, recurrence: $recurrence, weatherForecast: $weatherForecast, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Event(id: $id, title: $title, description: $description, startTime: $startTime, endTime: $endTime, type: $type, status: $status, location: $location, clientId: $clientId, clientName: $clientName, areaId: $areaId, areaName: $areaName, participants: $participants, checklist: $checklist, attachmentUrls: $attachmentUrls, notes: $notes, recurrence: $recurrence, weatherForecast: $weatherForecast, locationCoordinates: $locationCoordinates, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -993,6 +1021,10 @@ class _$EventImpl implements _Event {
               other._weatherForecast,
               _weatherForecast,
             ) &&
+            const DeepCollectionEquality().equals(
+              other._locationCoordinates,
+              _locationCoordinates,
+            ) &&
             (identical(other.completedAt, completedAt) ||
                 other.completedAt == completedAt) &&
             (identical(other.createdAt, createdAt) ||
@@ -1023,6 +1055,7 @@ class _$EventImpl implements _Event {
     notes,
     recurrence,
     const DeepCollectionEquality().hash(_weatherForecast),
+    const DeepCollectionEquality().hash(_locationCoordinates),
     completedAt,
     createdAt,
     updatedAt,
@@ -1062,6 +1095,7 @@ abstract class _Event implements Event {
     final String? notes,
     final EventRecurrence? recurrence,
     final Map<String, dynamic>? weatherForecast,
+    final Map<String, double>? locationCoordinates,
     final DateTime? completedAt,
     final DateTime? createdAt,
     final DateTime? updatedAt,
@@ -1105,6 +1139,8 @@ abstract class _Event implements Event {
   EventRecurrence? get recurrence; // Integrations & Metadata
   @override
   Map<String, dynamic>? get weatherForecast;
+  @override
+  Map<String, double>? get locationCoordinates; // Added for Map integration
   @override
   DateTime? get completedAt;
   @override

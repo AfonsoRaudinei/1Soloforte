@@ -14,7 +14,13 @@ class VisitController extends _$VisitController {
     return ref.read(visitRepositoryProvider).getActiveVisit();
   }
 
-  Future<void> checkIn(Client client) async {
+  Future<void> checkIn({
+    required Client client,
+    String? areaName,
+    String? areaId,
+    String? activityType,
+    String? notes,
+  }) async {
     state = const AsyncLoading();
     try {
       // Check permissions
@@ -37,6 +43,10 @@ class VisitController extends _$VisitController {
         latitude: position.latitude,
         longitude: position.longitude,
         status: VisitStatus.ongoing,
+        areaName: areaName,
+        areaId: areaId,
+        activityType: activityType,
+        checkInNotes: notes,
       );
 
       await ref.read(visitRepositoryProvider).saveVisit(newVisit);

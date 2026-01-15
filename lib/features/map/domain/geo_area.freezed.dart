@@ -34,6 +34,15 @@ mixin _$GeoArea {
   String get type =>
       throw _privateConstructorUsedError; // polygon, circle, rectangle
   DateTime? get createdAt => throw _privateConstructorUsedError;
+  String? get clientId => throw _privateConstructorUsedError;
+  String? get clientName => throw _privateConstructorUsedError;
+  String? get fieldId => throw _privateConstructorUsedError;
+  String? get fieldName => throw _privateConstructorUsedError;
+  String? get notes => throw _privateConstructorUsedError;
+  int? get colorValue => throw _privateConstructorUsedError;
+  String? get activeVisitId => throw _privateConstructorUsedError;
+  DateTime? get lastVisitDate => throw _privateConstructorUsedError;
+  bool get isDashed => throw _privateConstructorUsedError;
 
   /// Serializes this GeoArea to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -60,6 +69,15 @@ abstract class $GeoAreaCopyWith<$Res> {
     LatLng? center,
     String type,
     DateTime? createdAt,
+    String? clientId,
+    String? clientName,
+    String? fieldId,
+    String? fieldName,
+    String? notes,
+    int? colorValue,
+    String? activeVisitId,
+    DateTime? lastVisitDate,
+    bool isDashed,
   });
 }
 
@@ -88,6 +106,15 @@ class _$GeoAreaCopyWithImpl<$Res, $Val extends GeoArea>
     Object? center = freezed,
     Object? type = null,
     Object? createdAt = freezed,
+    Object? clientId = freezed,
+    Object? clientName = freezed,
+    Object? fieldId = freezed,
+    Object? fieldName = freezed,
+    Object? notes = freezed,
+    Object? colorValue = freezed,
+    Object? activeVisitId = freezed,
+    Object? lastVisitDate = freezed,
+    Object? isDashed = null,
   }) {
     return _then(
       _value.copyWith(
@@ -131,6 +158,42 @@ class _$GeoAreaCopyWithImpl<$Res, $Val extends GeoArea>
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            clientId: freezed == clientId
+                ? _value.clientId
+                : clientId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            clientName: freezed == clientName
+                ? _value.clientName
+                : clientName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            fieldId: freezed == fieldId
+                ? _value.fieldId
+                : fieldId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            fieldName: freezed == fieldName
+                ? _value.fieldName
+                : fieldName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            notes: freezed == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            colorValue: freezed == colorValue
+                ? _value.colorValue
+                : colorValue // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            activeVisitId: freezed == activeVisitId
+                ? _value.activeVisitId
+                : activeVisitId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            lastVisitDate: freezed == lastVisitDate
+                ? _value.lastVisitDate
+                : lastVisitDate // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            isDashed: null == isDashed
+                ? _value.isDashed
+                : isDashed // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -156,6 +219,15 @@ abstract class _$$GeoAreaImplCopyWith<$Res> implements $GeoAreaCopyWith<$Res> {
     LatLng? center,
     String type,
     DateTime? createdAt,
+    String? clientId,
+    String? clientName,
+    String? fieldId,
+    String? fieldName,
+    String? notes,
+    int? colorValue,
+    String? activeVisitId,
+    DateTime? lastVisitDate,
+    bool isDashed,
   });
 }
 
@@ -183,6 +255,15 @@ class __$$GeoAreaImplCopyWithImpl<$Res>
     Object? center = freezed,
     Object? type = null,
     Object? createdAt = freezed,
+    Object? clientId = freezed,
+    Object? clientName = freezed,
+    Object? fieldId = freezed,
+    Object? fieldName = freezed,
+    Object? notes = freezed,
+    Object? colorValue = freezed,
+    Object? activeVisitId = freezed,
+    Object? lastVisitDate = freezed,
+    Object? isDashed = null,
   }) {
     return _then(
       _$GeoAreaImpl(
@@ -226,6 +307,42 @@ class __$$GeoAreaImplCopyWithImpl<$Res>
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        clientId: freezed == clientId
+            ? _value.clientId
+            : clientId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        clientName: freezed == clientName
+            ? _value.clientName
+            : clientName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        fieldId: freezed == fieldId
+            ? _value.fieldId
+            : fieldId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        fieldName: freezed == fieldName
+            ? _value.fieldName
+            : fieldName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        notes: freezed == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        colorValue: freezed == colorValue
+            ? _value.colorValue
+            : colorValue // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        activeVisitId: freezed == activeVisitId
+            ? _value.activeVisitId
+            : activeVisitId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        lastVisitDate: freezed == lastVisitDate
+            ? _value.lastVisitDate
+            : lastVisitDate // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        isDashed: null == isDashed
+            ? _value.isDashed
+            : isDashed // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -246,6 +363,15 @@ class _$GeoAreaImpl implements _GeoArea {
     this.center,
     this.type = 'polygon',
     this.createdAt,
+    this.clientId,
+    this.clientName,
+    this.fieldId,
+    this.fieldName,
+    this.notes,
+    this.colorValue,
+    this.activeVisitId,
+    this.lastVisitDate,
+    this.isDashed = false,
   }) : _points = points,
        _holes = holes;
 
@@ -293,10 +419,29 @@ class _$GeoAreaImpl implements _GeoArea {
   // polygon, circle, rectangle
   @override
   final DateTime? createdAt;
+  @override
+  final String? clientId;
+  @override
+  final String? clientName;
+  @override
+  final String? fieldId;
+  @override
+  final String? fieldName;
+  @override
+  final String? notes;
+  @override
+  final int? colorValue;
+  @override
+  final String? activeVisitId;
+  @override
+  final DateTime? lastVisitDate;
+  @override
+  @JsonKey()
+  final bool isDashed;
 
   @override
   String toString() {
-    return 'GeoArea(id: $id, name: $name, points: $points, holes: $holes, areaHectares: $areaHectares, perimeterKm: $perimeterKm, radius: $radius, center: $center, type: $type, createdAt: $createdAt)';
+    return 'GeoArea(id: $id, name: $name, points: $points, holes: $holes, areaHectares: $areaHectares, perimeterKm: $perimeterKm, radius: $radius, center: $center, type: $type, createdAt: $createdAt, clientId: $clientId, clientName: $clientName, fieldId: $fieldId, fieldName: $fieldName, notes: $notes, colorValue: $colorValue, activeVisitId: $activeVisitId, lastVisitDate: $lastVisitDate, isDashed: $isDashed)';
   }
 
   @override
@@ -316,12 +461,28 @@ class _$GeoAreaImpl implements _GeoArea {
             (identical(other.center, center) || other.center == center) &&
             (identical(other.type, type) || other.type == type) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+                other.createdAt == createdAt) &&
+            (identical(other.clientId, clientId) ||
+                other.clientId == clientId) &&
+            (identical(other.clientName, clientName) ||
+                other.clientName == clientName) &&
+            (identical(other.fieldId, fieldId) || other.fieldId == fieldId) &&
+            (identical(other.fieldName, fieldName) ||
+                other.fieldName == fieldName) &&
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.colorValue, colorValue) ||
+                other.colorValue == colorValue) &&
+            (identical(other.activeVisitId, activeVisitId) ||
+                other.activeVisitId == activeVisitId) &&
+            (identical(other.lastVisitDate, lastVisitDate) ||
+                other.lastVisitDate == lastVisitDate) &&
+            (identical(other.isDashed, isDashed) ||
+                other.isDashed == isDashed));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     name,
@@ -333,7 +494,16 @@ class _$GeoAreaImpl implements _GeoArea {
     center,
     type,
     createdAt,
-  );
+    clientId,
+    clientName,
+    fieldId,
+    fieldName,
+    notes,
+    colorValue,
+    activeVisitId,
+    lastVisitDate,
+    isDashed,
+  ]);
 
   /// Create a copy of GeoArea
   /// with the given fields replaced by the non-null parameter values.
@@ -362,6 +532,15 @@ abstract class _GeoArea implements GeoArea {
     final LatLng? center,
     final String type,
     final DateTime? createdAt,
+    final String? clientId,
+    final String? clientName,
+    final String? fieldId,
+    final String? fieldName,
+    final String? notes,
+    final int? colorValue,
+    final String? activeVisitId,
+    final DateTime? lastVisitDate,
+    final bool isDashed,
   }) = _$GeoAreaImpl;
 
   factory _GeoArea.fromJson(Map<String, dynamic> json) = _$GeoAreaImpl.fromJson;
@@ -387,6 +566,24 @@ abstract class _GeoArea implements GeoArea {
   String get type; // polygon, circle, rectangle
   @override
   DateTime? get createdAt;
+  @override
+  String? get clientId;
+  @override
+  String? get clientName;
+  @override
+  String? get fieldId;
+  @override
+  String? get fieldName;
+  @override
+  String? get notes;
+  @override
+  int? get colorValue;
+  @override
+  String? get activeVisitId;
+  @override
+  DateTime? get lastVisitDate;
+  @override
+  bool get isDashed;
 
   /// Create a copy of GeoArea
   /// with the given fields replaced by the non-null parameter values.

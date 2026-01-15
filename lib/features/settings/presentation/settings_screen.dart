@@ -5,6 +5,7 @@ import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/settings/presentation/widgets/settings_widgets.dart';
 import 'providers/settings_provider.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -14,128 +15,147 @@ class SettingsScreen extends ConsumerWidget {
     final settingsAsync = ref.watch(settingsControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundSecondary,
-      body: Column(
-        children: [
-          _buildHeader(context),
-          Expanded(
-            child: settingsAsync.when(
-              data: (settings) => SingleChildScrollView(
-                padding: const EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 20,
-                  bottom: 32,
+      backgroundColor: const Color(0xFFF2F2F7),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: settingsAsync.when(
+                data: (settings) => SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
+                  ),
+                  child: Column(
+                    children: [
+                      _buildProfileIdentitySection(context, settings),
+                      const SizedBox(height: 32),
+
+                      _buildManagementSection(context),
+                      const SizedBox(height: 24),
+
+                      _buildVisualStyleSection(
+                        context,
+                        ref,
+                        settings.visualStyle,
+                      ),
+                      const SizedBox(height: 24),
+
+                      _buildNotificationsSection(context, ref, settings),
+                      const SizedBox(height: 24),
+
+                      _buildMapsDataSection(context, ref, settings),
+                      const SizedBox(height: 24),
+
+                      _buildAppearanceSection(context),
+                      const SizedBox(height: 24),
+
+                      _buildSupportSection(context),
+                      const SizedBox(height: 24),
+
+                      _buildPrivacySection(context),
+                      const SizedBox(height: 24),
+
+                      _buildAboutSection(context),
+                      const SizedBox(height: 48),
+
+                      _buildLogoutSection(context, ref),
+                      const SizedBox(height: 48),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    _buildProfileIdentitySection(context, settings),
-                    const SizedBox(height: 24),
-
-                    _buildVisualStyleSection(
-                      context,
-                      ref,
-                      settings.visualStyle,
-                    ),
-                    const SizedBox(height: 24),
-
-                    _buildNotificationsSection(context, ref, settings),
-                    const SizedBox(height: 24),
-
-                    _buildMapsDataSection(context, ref, settings),
-                    const SizedBox(height: 24),
-
-                    _buildAppearanceSection(context),
-                    const SizedBox(height: 24),
-
-                    _buildSupportSection(context),
-                    const SizedBox(height: 24),
-
-                    _buildPrivacySection(context),
-                    const SizedBox(height: 24),
-
-                    _buildAboutSection(context),
-                    const SizedBox(height: 32),
-
-                    _buildLogoutSection(context, ref),
-                    const SizedBox(height: 32),
-                  ],
-                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) =>
+                    Center(child: Text('Erro ao carregar configurações: $err')),
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) =>
-                  Center(child: Text('Erro ao carregar configurações: $err')),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  // --- New Section: Management ---
+  Widget _buildManagementSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SettingsSectionLabel('GESTÃO & RECURSOS'),
+        SettingsCardContainer(
+          children: [
+            SettingsNavigableRow(
+              icon: Icons.agriculture_outlined,
+              iconGradient: _greenGradient,
+              title: 'Safra',
+              subtitle: 'Gerenciar safras e ciclos',
+              onTap: () => context.push('/map/settings/harvest'),
+            ),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
+            SettingsNavigableRow(
+              icon: Icons.hub_outlined,
+              iconGradient: _purpleGradient,
+              title: 'Integrações',
+              subtitle: 'Conectar sensores e serviços',
+              onTap: () => context.push('/map/settings/integrations'),
+            ),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
+            SettingsNavigableRow(
+              icon: Icons.newspaper_outlined,
+              iconGradient: _orangeGradient,
+              title: 'Notícias',
+              subtitle: 'Atualizações do setor',
+              onTap: () => context.push('/map/settings/news'),
+            ),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
+            SettingsNavigableRow(
+              icon: Icons.link,
+              iconGradient: _defaultGradient,
+              title: 'LinkHub',
+              subtitle: 'Acesso rápido',
+              onTap: () => context.push('/map/settings/link-hub'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(top: 60, bottom: 24, left: 20, right: 20),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.gray700, AppColors.gray900],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      padding: const EdgeInsets.only(top: 24, bottom: 8, left: 16, right: 16),
+      color: const Color(0xFFF2F2F7),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/map');
-                }
-              },
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              style: IconButton.styleFrom(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
+          IconButton(
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/map');
+              }
+            },
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            style: IconButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              alignment: Alignment.centerLeft,
             ),
           ),
           const SizedBox(height: 24),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.settings,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Configurações',
-                    style: AppTypography.h3.copyWith(color: Colors.white),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Customize sua experiência',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          Text(
+            'Configurações',
+            style: AppTypography.h2.copyWith(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Gerencie suas preferências',
+            style: AppTypography.bodyMedium.copyWith(color: Colors.grey[600]),
           ),
         ],
       ),
@@ -160,9 +180,7 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             // Logo Upload
             GestureDetector(
-              onTap: () async {
-                // TODO: Implement image picker logic
-              },
+              onTap: () => context.push('/map/settings/logo'),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -211,7 +229,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
 
             // Edit Info
             SettingsNavigableRow(
@@ -219,9 +237,7 @@ class SettingsScreen extends ConsumerWidget {
               iconGradient: _greenGradient,
               title: 'Informações Cadastrais',
               subtitle: 'CNPJ, Endereço e Contatos',
-              onTap: () {
-                // Navigate to farm info edit
-              },
+              onTap: () => context.push('/map/settings/info'),
             ),
           ],
         ),
@@ -300,7 +316,7 @@ class SettingsScreen extends ConsumerWidget {
                     .updateSetting(pushNotifications: val);
               },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
 
             SettingsSwitchRow(
               icon: Icons.email_outlined,
@@ -314,7 +330,7 @@ class SettingsScreen extends ConsumerWidget {
                     .updateSetting(emailNotifications: val);
               },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
 
             SettingsSwitchRow(
               icon: Icons.warning_amber_rounded,
@@ -357,7 +373,7 @@ class SettingsScreen extends ConsumerWidget {
                     .updateSetting(offlineMode: val);
               },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
 
             SettingsSwitchRow(
               icon: Icons.sync,
@@ -371,14 +387,14 @@ class SettingsScreen extends ConsumerWidget {
                     .updateSetting(autoSync: val);
               },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
 
             SettingsNavigableRow(
               icon: Icons.storage,
               iconGradient: _orangeGradient,
               title: 'Gerenciar Armazenamento',
               subtitle: 'Limpar cache de mapas e dados',
-              onTap: () {},
+              onTap: () => context.push('/map/settings/storage'),
             ),
           ],
         ),
@@ -398,15 +414,15 @@ class SettingsScreen extends ConsumerWidget {
               iconGradient: _greenGradient,
               title: 'Idioma',
               subtitle: 'Português (BR)',
-              onTap: () {},
+              onTap: () => context.push('/map/settings/language'),
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
             SettingsNavigableRow(
               icon: Icons.dark_mode_outlined,
               iconGradient: [Colors.black87, Colors.black54],
               title: 'Tema Escuro',
               subtitle: 'Sistema',
-              onTap: () {},
+              onTap: () => context.push('/map/settings/theme'),
             ),
           ],
         ),
@@ -426,15 +442,19 @@ class SettingsScreen extends ConsumerWidget {
               iconGradient: _defaultGradient,
               title: 'Central de Ajuda',
               subtitle: 'Perguntas frequentes e tutoriais',
-              onTap: () {},
+              onTap: () {
+                context.push('/map/settings/help');
+              },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
             SettingsNavigableRow(
               icon: Icons.chat_bubble_outline,
               iconGradient: _purpleGradient,
               title: 'Falar com Suporte',
               subtitle: 'Atendimento via chat',
-              onTap: () {},
+              onTap: () {
+                context.push('/map/settings/contact');
+              },
             ),
           ],
         ),
@@ -455,18 +475,20 @@ class SettingsScreen extends ConsumerWidget {
               title: 'Alterar Senha',
               subtitle: 'Segurança da conta',
               onTap: () {
-                context.push('/forgot-password');
+                context.push('/map/settings/password');
               },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
             SettingsNavigableRow(
               icon: Icons.description_outlined,
               iconGradient: _defaultGradient,
               title: 'Termos de Uso',
               subtitle: 'Regras de utilização',
-              onTap: () {},
+              onTap: () {
+                context.push('/map/settings/terms');
+              },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
             SettingsNavigableRow(
               icon: Icons.privacy_tip_outlined,
               iconGradient: _purpleGradient,
@@ -512,9 +534,12 @@ class SettingsScreen extends ConsumerWidget {
                   child: const Text('Cancelar'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(ctx);
-                    context.go('/login');
+                    await ref.read(authServiceProvider).logout();
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
                   },
                   child: const Text(
                     'Sair',

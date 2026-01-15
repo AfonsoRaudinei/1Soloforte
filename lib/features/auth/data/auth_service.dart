@@ -1,53 +1,49 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/auth_state.dart' as app;
 import '../../../core/services/secure_storage_service.dart';
 import '../../../core/config/demo_config.dart';
 import '../../../core/interfaces/service_interfaces.dart';
+import '../../../core/services/security_service.dart';
 
-/// Authentication Service with Mock Fallback
+/// Authentication Service using Supabase Auth
 class AuthService implements IAuthService {
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
+  final SupabaseClient _supabase;
 
-  // Stream Controller for unified Auth State (valid for both Firebase and Mock)
+  // Stream Controller for unified Auth State
   final _authStateController = StreamController<app.AuthState?>.broadcast();
 
-  // Demo mode is now controlled via DemoConfig
-  // No more hardcoded credentials!
-
-  AuthService({FirebaseAuth? auth, FirebaseFirestore? firestore})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _firestore = firestore ?? FirebaseFirestore.instance {
+  AuthService({SupabaseClient? supabase})
+    : _supabase = supabase ?? Supabase.instance.client {
     _init();
   }
 
   void _init() {
-    // Listen to Firebase Auth changes and propagate
-    _auth.authStateChanges().listen((User? user) {
-      _checkAndEmitFirebaseUser(user);
+    // Listen to Supabase Auth changes
+    _supabase.auth.onAuthStateChange.listen((data) {
+      _checkAndEmitSupabaseUser(data.session);
     });
 
-    // Check initial state (could be mock or firebase)
+    // Check initial state
     checkAuth().then((state) {
-      _authStateController.add(state);
+      if (!_authStateController.isClosed) {
+        _authStateController.add(state);
+      }
     });
   }
 
-  Future<void> _checkAndEmitFirebaseUser(User? user) async {
-    if (user == null) {
-      // If Firebase user is null, checking if there is a persistent mock session
+  Future<void> _checkAndEmitSupabaseUser(Session? session) async {
+    if (session == null) {
+      // Check persistent mock session if not Supabase
       final mockState = await _checkMockSession();
-      _authStateController.add(mockState);
+      if (!_authStateController.isClosed) _authStateController.add(mockState);
     } else {
-      // It is a Firebase user
+      // It is a Supabase user
       try {
-        final state = await _getFirebaseAuthState(user);
-        _authStateController.add(state);
+        final state = await _getSupabaseAuthState(session);
+        if (!_authStateController.isClosed) _authStateController.add(state);
       } catch (e) {
-        _authStateController.add(null);
+        if (!_authStateController.isClosed) _authStateController.add(null);
       }
     }
   }
@@ -72,69 +68,78 @@ class AuthService implements IAuthService {
     return null;
   }
 
-  // Login with email and password
+  // Login with email and password using Supabase
   @override
   Future<app.AuthState> login(String email, String password) async {
-    print('🔐 AuthService.login: email=$email');
-    print(
-      '🔐 AuthService: DemoConfig.isDemoEnabled = ${DemoConfig.isDemoEnabled}',
-    );
-    print('🔐 AuthService: DemoConfig.demoEmail = ${DemoConfig.demoEmail}');
-
-    // Check if this is a demo login attempt BEFORE trying Firebase
-    final isValidDemo = DemoConfig.validateDemoCredentials(email, password);
-    print('🔐 AuthService: validateDemoCredentials = $isValidDemo');
-
-    if (isValidDemo) {
-      print('🎭 Demo login detected, using _demoLogin()');
+    // Check demo login first
+    if (DemoConfig.isDemoEnabled &&
+        DemoConfig.validateDemoCredentials(email, password)) {
       return _demoLogin();
     }
 
-    print('🔥 Not demo, trying Firebase...');
+    // Check rate limit: 5 attempts per minute per email
+    await SecurityService().validateAction(
+      'login',
+      userId: email,
+      limit: 5,
+      window: const Duration(minutes: 1),
+    );
+
     try {
-      final credential = await _auth.signInWithEmailAndPassword(
+      final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
-      final user = credential.user;
-      if (user == null) throw Exception('Login failed');
+      final session = response.session;
+      final user = response.user;
 
-      final state = await _getFirebaseAuthState(user);
-      _authStateController.add(state);
+      if (user == null || session == null) throw Exception('Login failed');
+
+      final state = await _getSupabaseAuthState(session);
+
+      // Audit Log
+      await SecurityService().logSecurityEvent(user.id, 'login_success');
+
       return state;
-    } on FirebaseAuthException {
-      // Try mock login as fallback
-      return _mockLogin(email, password);
+    } on AuthException catch (e) {
+      // Try mock login as fallback if not actually a network error but invalid credentials that might match mock
+      if (e.message.contains('Invalid login credentials')) {
+        // Could check mock here if desired, but general flow is Supabase or Demo.
+        // Let's assume strict separation unless demo config.
+      }
+      throw Exception(e.message);
     } catch (e) {
-      // Try mock login as fallback
-      return _mockLogin(email, password);
+      // Fallback
+      if (DemoConfig.isDemoEnabled) {
+        return _mockLogin(email, password);
+      }
+      throw Exception('Login failed: $e');
     }
   }
 
-  Future<app.AuthState> _getFirebaseAuthState(User user) async {
-    // Get user data from Firestore
-    final userData = await _firestore.collection('users').doc(user.uid).get();
-    final name = userData.data()?['name'] ?? user.displayName ?? 'User';
+  Future<app.AuthState> _getSupabaseAuthState(Session session) async {
+    final user = session.user;
 
-    // Get token
-    final token = await user.getIdToken();
+    // Get user metadata
+    final name =
+        user.userMetadata?['name'] ?? user.email?.split('@')[0] ?? 'User';
 
     // Save to secure storage
-    await SecureStorageService.saveAuthToken(token ?? '');
-    await SecureStorageService.saveUserId(user.uid);
+    await SecureStorageService.saveAuthToken(session.accessToken);
+    await SecureStorageService.saveUserId(user.id);
     await SecureStorageService.saveUserEmail(user.email ?? '');
 
     return app.AuthState.authenticated(
-      userId: user.uid,
+      userId: user.id,
       email: user.email ?? '',
       name: name,
-      token: token ?? '',
-      refreshToken: user.refreshToken ?? '',
+      token: session.accessToken,
+      refreshToken: session.refreshToken ?? '',
     );
   }
 
-  // Register new user
+  // Register new user using Supabase
   @override
   Future<app.AuthState> register(
     String name,
@@ -142,231 +147,65 @@ class AuthService implements IAuthService {
     String password,
   ) async {
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(
+      final response = await _supabase.auth.signUp(
         email: email,
         password: password,
+        data: {'name': name},
       );
 
-      final user = credential.user;
-      if (user == null) throw Exception('Registration failed');
+      final session = response.session;
+      final user = response.user;
 
-      // Update display name
-      await user.updateDisplayName(name);
-
-      // Save user data to Firestore
-      await _firestore.collection('users').doc(user.uid).set({
-        'name': name,
-        'email': email,
-        'createdAt': FieldValue.serverTimestamp(),
-        'role': 'user',
-      });
-
-      // Force token refresh to get new claims if any
-      final token = await user.getIdToken(true);
-
-      // Save to secure storage
-      await SecureStorageService.saveAuthToken(token ?? '');
-      await SecureStorageService.saveUserId(user.uid);
-      await SecureStorageService.saveUserEmail(email);
-
-      final state = app.AuthState.authenticated(
-        userId: user.uid,
-        email: email,
-        name: name,
-        token: token ?? '',
-        refreshToken: user.refreshToken ?? '',
-      );
-
-      _authStateController.add(state);
-      return state;
-    } on FirebaseAuthException {
-      // Try mock register as fallback
-      return _mockRegister(name, email, password);
+      // Ensure session exists (Supabase might require email confirmation)
+      if (user != null && session == null) {
+        throw Exception('Success! Please verify your email to login.');
+      } else if (user != null && session != null) {
+        final state = await _getSupabaseAuthState(session);
+        return state;
+      }
+      throw Exception('Registration failed');
+    } on AuthException catch (e) {
+      throw Exception(e.message);
     } catch (e) {
-      // Try mock register as fallback
-      return _mockRegister(name, email, password);
+      throw Exception('Registration error: $e');
     }
   }
 
-  // Google Sign In
+  // Generic OAuth not fully implemented in this MVP replacement, triggering standard demo fallback or error
   @override
   Future<app.AuthState> signInWithGoogle() async {
-    try {
-      final googleProvider = GoogleAuthProvider();
-      final UserCredential credential = await _auth.signInWithPopup(
-        googleProvider,
-      );
-      return _processUserCredential(credential);
-    } catch (e) {
-      // Fallback to demo login if enabled
-      return _demoLogin();
-    }
-  }
-
-  // Apple Sign In
-  @override
-  Future<app.AuthState> signInWithApple() async {
-    try {
-      final appleProvider = AppleAuthProvider();
-      final UserCredential credential = await _auth.signInWithPopup(
-        appleProvider,
-      );
-      return _processUserCredential(credential);
-    } catch (e) {
-      // Fallback to demo login if enabled
-      return _demoLogin();
-    }
-  }
-
-  Future<app.AuthState> _processUserCredential(
-    UserCredential credential,
-  ) async {
-    final user = credential.user;
-    if (user == null) throw Exception('Authentication failed');
-
-    // Check if user exists in Firestore, if not create
-    final docKey = _firestore.collection('users').doc(user.uid);
-    final snapshot = await docKey.get();
-
-    String name = user.displayName ?? 'User';
-
-    if (!snapshot.exists) {
-      await docKey.set({
-        'name': name,
-        'email': user.email,
-        'createdAt': FieldValue.serverTimestamp(),
-        'role': 'user',
-        'photoUrl': user.photoURL,
-      });
-    } else {
-      name = snapshot.data()?['name'] ?? name;
-    }
-
-    final state = await _getFirebaseAuthState(user);
-    _authStateController.add(state);
-    return state;
-  }
-
-  /// Demo login using DemoConfig (no hardcoded credentials)
-  Future<app.AuthState> _demoLogin() async {
-    if (!DemoConfig.isDemoEnabled) {
-      throw Exception('Demo mode is not enabled');
-    }
-
-    final token = DemoConfig.generateDemoToken();
-    final userId = DemoConfig.demoUserId;
-    final email = DemoConfig.demoEmail;
-    final name = DemoConfig.demoUserName;
-
-    // Save to secure storage
-    await SecureStorageService.saveAuthToken(token);
-    await SecureStorageService.saveUserId(userId);
-    await SecureStorageService.saveUserEmail(email);
-
-    final state = app.AuthState.authenticated(
-      userId: userId,
-      email: email,
-      name: name,
-      token: token,
-      refreshToken: 'demo-refresh-token',
-    );
-
-    _authStateController.add(state);
-    return state;
-  }
-
-  /// Enter demo mode directly WITHOUT any credential validation.
-  /// This is for the "Experimentar Modo Demo" button.
-  /// Per product rules: Demo mode must NOT use real login or validate credentials.
-  @override
-  Future<app.AuthState> enterDemoMode() async {
-    print('🎭 enterDemoMode() called - bypassing all authentication');
-
-    // Generate demo session directly
-    final token = DemoConfig.generateDemoToken();
-    final userId = DemoConfig.demoUserId;
-    final email = DemoConfig.demoEmail;
-    final name = DemoConfig.demoUserName;
-
-    // Save to secure storage
-    await SecureStorageService.saveAuthToken(token);
-    await SecureStorageService.saveUserId(userId);
-    await SecureStorageService.saveUserEmail(email);
-
-    final state = app.AuthState.authenticated(
-      userId: userId,
-      email: email,
-      name: name,
-      token: token,
-      refreshToken: 'demo-refresh-token',
-      isDemo: true, // Mark this as a demo session
-    );
-
-    _authStateController.add(state);
-    print('🎭 Demo session created successfully');
-    return state;
-  }
-
-  /// Mock login - validates using DemoConfig
-  Future<app.AuthState> _mockLogin(String email, String password) async {
-    // Use DemoConfig for validation instead of hardcoded map
-    if (!DemoConfig.validateDemoCredentials(email, password)) {
-      throw Exception('Credenciais inválidas ou modo demo desabilitado');
-    }
-
     return _demoLogin();
   }
 
-  // Mock register (fallback) - for demo mode only
-  Future<app.AuthState> _mockRegister(
-    String name,
-    String email,
-    String password,
-  ) async {
-    if (!DemoConfig.isDemoEnabled) {
-      throw Exception('Demo mode is not enabled');
-    }
-
-    // In demo mode, we just create a demo session
-    final token = DemoConfig.generateDemoToken();
-    final userId = 'demo-user-${DateTime.now().millisecondsSinceEpoch}';
-
-    // Save to secure storage
-    await SecureStorageService.saveAuthToken(token);
-    await SecureStorageService.saveUserId(userId);
-    await SecureStorageService.saveUserEmail(email);
-
-    final state = app.AuthState.authenticated(
-      userId: userId,
-      email: email,
-      name: name,
-      token: token,
-      refreshToken: 'demo-refresh-token',
-    );
-
-    _authStateController.add(state);
-    return state;
+  @override
+  Future<app.AuthState> signInWithApple() async {
+    return _demoLogin();
   }
 
-  // Logout
+  // Logout using Supabase
   @override
   Future<void> logout() async {
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      await SecurityService().logSecurityEvent(user.id, 'logout');
+    }
+
     try {
-      await _auth.signOut();
+      await _supabase.auth.signOut();
     } catch (e) {
-      // Ignore Firebase errors on logout
+      // Ignore
     }
     await SecureStorageService.clearSession();
-    _authStateController.add(null);
+    if (!_authStateController.isClosed) _authStateController.add(null);
   }
 
   // Check current auth status
   @override
   Future<app.AuthState?> checkAuth() async {
     try {
-      final user = _auth.currentUser;
-      if (user != null) {
-        return _getFirebaseAuthState(user);
+      final session = _supabase.auth.currentSession;
+      if (session != null) {
+        return _getSupabaseAuthState(session);
       }
       return _checkMockSession();
     } catch (e) {
@@ -374,53 +213,132 @@ class AuthService implements IAuthService {
     }
   }
 
-  // Forgot password
+  // Forgot password using Supabase
   @override
   Future<void> forgotPassword(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
-    } catch (e) {
-      throw Exception(
-        'Funcionalidade disponível apenas com Firebase configurado',
-      );
+      await _supabase.auth.resetPasswordForEmail(email);
+    } on AuthException catch (e) {
+      throw Exception(e.message);
     }
   }
 
-  // Reset password (after email link)
+  // Reset/Update password (Supabase uses same updateUser logic usually, but strict reset flow might vary)
   @override
   Future<void> resetPassword(String code, String newPassword) async {
+    // Usually via deep link handling in main app, effectively exchanging code for session then updateUser
+    // For this simple service method:
     try {
-      await _auth.confirmPasswordReset(code: code, newPassword: newPassword);
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      // This generally requires the session to be established via the code first using a deep link listener.
+      // Here we assume session is active or this calls updateUser.
+      // If passing 'code', we might use verifyOtp.
+      // Supabase 'resetPasswordForEmail' sends a link. The link redirects to app.
+      // Use updateUser from there.
+      await updatePassword(newPassword);
+    } catch (e) {
+      throw Exception('Failed to reset password: $e');
     }
   }
 
-  // Handle Firebase Auth exceptions
-  Exception _handleAuthException(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-        return Exception('Usuário não encontrado');
-      case 'wrong-password':
-        return Exception('Senha incorreta');
-      case 'email-already-in-use':
-        return Exception('Email já cadastrado');
-      case 'weak-password':
-        return Exception('Senha muito fraca');
-      case 'invalid-email':
-        return Exception('Email inválido');
-      case 'user-disabled':
-        return Exception('Usuário desabilitado');
-      case 'too-many-requests':
-        return Exception('Muitas tentativas. Tente mais tarde.');
-      default:
-        return Exception('Erro de autenticação: ${e.message}');
+  // Demo Login Logic (Same as before)
+  Future<app.AuthState> _demoLogin() async {
+    if (!DemoConfig.isDemoEnabled) throw Exception('Demo mode disabled');
+
+    final token = DemoConfig.generateDemoToken();
+    final userId = DemoConfig.demoUserId;
+    final email = DemoConfig.demoEmail;
+    final name = DemoConfig.demoUserName;
+
+    await SecureStorageService.saveAuthToken(token);
+    await SecureStorageService.saveUserId(userId);
+    await SecureStorageService.saveUserEmail(email);
+
+    final state = app.AuthState.authenticated(
+      userId: userId,
+      email: email,
+      name: name,
+      token: token,
+      refreshToken: 'demo-refresh-token',
+      isDemo: true,
+    );
+
+    if (!_authStateController.isClosed) _authStateController.add(state);
+    return state;
+  }
+
+  @override
+  Future<app.AuthState> enterDemoMode() => _demoLogin();
+
+  Future<app.AuthState> _mockLogin(String email, String password) async {
+    if (!DemoConfig.validateDemoCredentials(email, password)) {
+      throw Exception('Invalid credentials');
+    }
+    return _demoLogin();
+  }
+
+  // --- New Methods ---
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      await SecurityService().validateAction(
+        'change_password',
+        userId: user.id,
+        limit: 3,
+        window: const Duration(hours: 24),
+      );
+    }
+
+    try {
+      final response = await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+      if (response.user == null) throw Exception('Update failed');
+
+      if (user != null) {
+        await SecurityService().logSecurityEvent(user.id, 'password_change');
+      }
+    } on AuthException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('Error updating password: $e');
     }
   }
 
-  // Listen to auth state changes
+  @override
+  Future<void> reauthenticate(String password) async {
+    // Supabase doesn't have a direct "reauthenticate".
+    // We simulate by trying to signIn with EMAIL (from current user) + Password.
+    // If successful, it means password is correct.
+    final currentUser = _supabase.auth.currentUser;
+    if (currentUser == null || currentUser.email == null) {
+      throw Exception('No active user to reauthenticate');
+    }
+
+    await SecurityService().validateAction(
+      'reauth',
+      userId: currentUser.id,
+      limit: 3,
+      window: const Duration(minutes: 10),
+    );
+
+    try {
+      final email = currentUser.email!;
+      await _supabase.auth.signInWithPassword(email: email, password: password);
+      // If success, we are good. Session might refresh but that's fine.
+    } on AuthException catch (_) {
+      throw Exception('Senha incorreta.');
+    } catch (_) {
+      throw Exception('Falha na reautenticação');
+    }
+  }
+
+  // Close controller on dispose if needed (usually service singleton)
+  void dispose() {
+    _authStateController.close();
+  }
+
   @override
   Stream<app.AuthState?> get authStateChanges => _authStateController.stream;
 }

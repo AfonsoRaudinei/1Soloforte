@@ -96,8 +96,9 @@ class ErrorView extends StatelessWidget {
 
   IconData get _displayIcon {
     if (icon != null) return icon!;
-    if (error is AppException)
+    if (error is AppException) {
       return _getIconForException(error as AppException);
+    }
     return Icons.error_outline;
   }
 

@@ -50,6 +50,12 @@ abstract interface class IAuthService {
   /// Enter demo mode directly without authentication.
   /// This creates a special demo session that bypasses all credential validation.
   Future<AuthState> enterDemoMode();
+
+  /// Update password (requires re-authentication or active session).
+  Future<void> updatePassword(String newPassword);
+
+  /// Re-authenticate user with password (for sensitive actions).
+  Future<void> reauthenticate(String password);
 }
 
 /// Interface for secure storage service.

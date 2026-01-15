@@ -29,6 +29,17 @@ _$GeoAreaImpl _$$GeoAreaImplFromJson(Map<String, dynamic> json) =>
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
+      clientId: json['clientId'] as String?,
+      clientName: json['clientName'] as String?,
+      fieldId: json['fieldId'] as String?,
+      fieldName: json['fieldName'] as String?,
+      notes: json['notes'] as String?,
+      colorValue: (json['colorValue'] as num?)?.toInt(),
+      activeVisitId: json['activeVisitId'] as String?,
+      lastVisitDate: json['lastVisitDate'] == null
+          ? null
+          : DateTime.parse(json['lastVisitDate'] as String),
+      isDashed: json['isDashed'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$GeoAreaImplToJson(_$GeoAreaImpl instance) =>
@@ -42,4 +53,13 @@ Map<String, dynamic> _$$GeoAreaImplToJson(_$GeoAreaImpl instance) =>
       'center': instance.center,
       'type': instance.type,
       'createdAt': instance.createdAt?.toIso8601String(),
+      'clientId': instance.clientId,
+      'clientName': instance.clientName,
+      'fieldId': instance.fieldId,
+      'fieldName': instance.fieldName,
+      'notes': instance.notes,
+      'colorValue': instance.colorValue,
+      'activeVisitId': instance.activeVisitId,
+      'lastVisitDate': instance.lastVisitDate?.toIso8601String(),
+      'isDashed': instance.isDashed,
     };

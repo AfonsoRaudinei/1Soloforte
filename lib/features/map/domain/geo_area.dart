@@ -4,6 +4,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'geo_area.freezed.dart';
 part 'geo_area.g.dart';
 
+// Trigger rebuild
+
 @freezed
 abstract class GeoArea with _$GeoArea {
   const factory GeoArea({
@@ -20,6 +22,15 @@ abstract class GeoArea with _$GeoArea {
     LatLng? center,
     @Default('polygon') String type, // polygon, circle, rectangle
     DateTime? createdAt,
+    String? clientId,
+    String? clientName,
+    String? fieldId,
+    String? fieldName,
+    String? notes,
+    int? colorValue,
+    String? activeVisitId,
+    DateTime? lastVisitDate,
+    @Default(false) bool isDashed,
   }) = _GeoArea;
 
   factory GeoArea.fromJson(Map<String, dynamic> json) =>

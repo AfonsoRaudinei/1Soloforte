@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/config/env_config.dart';
 
 import 'core/error/global_error_handler.dart';
 import 'core/router.dart';
@@ -32,6 +34,18 @@ Future<void> main() async {
     debugPrint(
       'Firebase initialization failed (ignoring for development/unsupported platforms): $e',
     );
+  }
+
+  // Initialize Supabase
+  try {
+    if (EnvConfig.useSupabase) {
+      await Supabase.initialize(
+        url: EnvConfig.supabaseUrl,
+        anonKey: EnvConfig.supabaseAnonKey,
+      );
+    }
+  } catch (e) {
+    debugPrint('Supabase init failed (check env config): $e');
   }
 
   // Run app with error zone protection

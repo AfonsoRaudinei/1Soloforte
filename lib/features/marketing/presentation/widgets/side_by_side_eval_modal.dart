@@ -197,6 +197,9 @@ class _SideBySideEvalModalState extends State<SideBySideEvalModal> {
                         Navigator.pop(context, {
                           'type': 'side_by_side',
                           'title': _titleController.text,
+                          'description': _descriptionController.text,
+                          'latitude': widget.latitude,
+                          'longitude': widget.longitude,
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('✅ Avaliação Salva!')),

@@ -88,68 +88,67 @@ class SideMenu extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Section Header - Sistema
-                  _buildSectionHeader('SISTEMA'),
+                  // 1. Topo Fixo: Voltar ao Mapa
+                  _buildSectionHeader('NAVEGAÇÃO'),
+                  _DrawerItem(
+                    icon: Icons.map_outlined,
+                    label: 'Voltar ao Mapa',
+                    isSelected: location == '/map',
+                    onTap: () => context.go('/map'),
+                  ),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Divider(height: 1),
+                  ),
+
+                  // 2. Ações do Sistema
+                  _buildSectionHeader('AÇÕES DO SISTEMA'),
+
+                  _DrawerItem(
+                    icon: Icons.bug_report_outlined,
+                    label: 'Ocorrências',
+                    isSelected: location.startsWith('/map/occurrences'),
+                    onTap: () => context.go('/map/occurrences'),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.campaign_outlined, // Marketing icon
+                    label: 'Publicação',
+                    isSelected: location.startsWith('/map/marketing'),
+                    onTap: () => context.go('/map/marketing'),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.bar_chart_outlined,
+                    label: 'Relatórios',
+                    isSelected: location.startsWith('/map/reports'),
+                    onTap: () => context.go('/map/reports'),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.people_outline,
+                    label: 'Clientes',
+                    isSelected: location.startsWith('/map/clients'),
+                    onTap: () => context.go('/map/clients'),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.calendar_today_outlined,
+                    label: 'Agenda',
+                    isSelected: location.startsWith('/map/calendar'),
+                    onTap: () => context.go('/map/calendar'),
+                  ),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Divider(height: 1),
+                  ),
+
+                  // 3. Configurações
+                  _buildSectionHeader('CONFIGURAÇÕES'),
 
                   _DrawerItem(
                     icon: Icons.settings_outlined,
                     label: 'Configurações',
                     isSelected: location.startsWith('/map/settings'),
                     onTap: () => context.go('/map/settings'),
-                  ),
-                  _DrawerItem(
-                    icon: Icons.hub_outlined,
-                    label: 'Integrações',
-                    isSelected: location.startsWith('/map/integrations'),
-                    onTap: () => context.go('/map/integrations'),
-                  ),
-                  _DrawerItem(
-                    icon: Icons.agriculture_outlined,
-                    label: 'Safra',
-                    isSelected: location.startsWith('/map/harvest'),
-                    onTap: () => context.go('/map/harvest'),
-                  ),
-
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: Divider(height: 1),
-                  ),
-
-                  // Section Header - Suporte
-                  _buildSectionHeader('SUPORTE & INFO'),
-
-                  _DrawerItem(
-                    icon: Icons.support_agent_outlined,
-                    label: 'Suporte',
-                    isSelected: location.startsWith('/map/support'),
-                    onTap: () => context.go('/map/support'),
-                  ),
-                  _DrawerItem(
-                    icon: Icons.newspaper_outlined,
-                    label: 'Notícias',
-                    isSelected: location.startsWith('/map/feed'),
-                    onTap: () => context.go('/map/feed'),
-                  ),
-                  _DrawerItem(
-                    icon: Icons.link,
-                    label: 'LinkHub',
-                    isSelected: location.startsWith('/map/link-hub'),
-                    onTap: () => context.go('/map/link-hub'),
-                  ),
-
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: Divider(height: 1),
-                  ),
-
-                  // Quick Access to Map
-                  _buildSectionHeader('NAVEGAÇÃO'),
-
-                  _DrawerItem(
-                    icon: Icons.map_outlined,
-                    label: 'Voltar ao Mapa',
-                    isSelected: location == '/map',
-                    onTap: () => context.go('/map'),
                   ),
 
                   const SizedBox(height: 20),

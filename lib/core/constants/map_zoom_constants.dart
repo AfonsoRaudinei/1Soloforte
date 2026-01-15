@@ -6,7 +6,7 @@ library;
 
 /// Zoom mínimo: evita visualizar o globo inteiro, mantém contexto territorial
 /// Nível de país ou macro-região do Brasil
-const double kAgriculturalMinZoom = 4.0;
+const double kAgriculturalMinZoom = 10.0;
 
 /// Zoom máximo: evita zoom urbano (ruas/edifícios), adequado para talhões
 /// Permite visualizar polígonos e áreas de plantio sem detalhes urbanos

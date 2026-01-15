@@ -8,6 +8,7 @@ import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
+import 'package:soloforte_app/features/agenda/presentation/weekly_planning_screen.dart';
 
 class AgendaScreen extends ConsumerStatefulWidget {
   const AgendaScreen({super.key});
@@ -23,7 +24,8 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventsState = ref.watch(agendaControllerProvider);
+    final eventsState = ref.watch(filteredAgendaProvider);
+    final filterState = ref.watch(agendaFilterProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -37,6 +39,15 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
         title: const Text('Agenda'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: Icon(
+              Icons.filter_list,
+              color: filterState.statuses.length < EventStatus.values.length
+                  ? AppColors.primary
+                  : null,
+            ),
+            onPressed: () => _showFilterDialog(context),
+          ),
           TextButton.icon(
             onPressed: () =>
                 context.push('/dashboard/calendar/new', extra: _selectedDay),
@@ -141,15 +152,30 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
 
               const SizedBox(height: 8),
 
-              // Legend
+              // Legend (Interactive Type Filter)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildLegendItem('•', 'Visita agendada'),
-                    _buildLegendItem('○', 'Lembrete'), // Hollow circle usually
-                    _buildLegendItem('◆', 'Aplicação'),
+                    _buildLegendItem(
+                      '•',
+                      'Visita agendada',
+                      EventType.technicalVisit,
+                      filterState.isTypeSelected(EventType.technicalVisit),
+                    ),
+                    _buildLegendItem(
+                      '○',
+                      'Lembrete',
+                      EventType.reminder,
+                      filterState.isTypeSelected(EventType.reminder),
+                    ),
+                    _buildLegendItem(
+                      '◆',
+                      'Aplicação',
+                      EventType.application,
+                      filterState.isTypeSelected(EventType.application),
+                    ),
                   ],
                 ),
               ),
@@ -164,9 +190,9 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                     _buildDayHeader(_selectedDay),
                     const SizedBox(height: 8),
                     if (dailyEvents.isEmpty) _buildEmptyState(),
-                    ...dailyEvents
-                        .map((event) => _buildEventCard(context, event))
-                        ,
+                    ...dailyEvents.map(
+                      (event) => _buildEventCard(context, event),
+                    ),
 
                     const SizedBox(height: 24),
                     // Tomorrow preview if wanted, or just buttons
@@ -220,8 +246,15 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () {},
-                        child: const Text('Ver Lista Complete'),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const WeeklyPlanningScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('Planejamento Semanal'),
                       ),
                     ),
                   ],
@@ -234,6 +267,59 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
         error: (error, stack) => Center(child: Text('Erro: $error')),
       ),
     );
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final filterState = ref.watch(agendaFilterProvider);
+            return AlertDialog(
+              title: const Text('Filtrar Status'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: EventStatus.values.map((status) {
+                    return CheckboxListTile(
+                      title: Text(_getStatusLabel(status)),
+                      value: filterState.isStatusSelected(status),
+                      onChanged: (_) {
+                        ref
+                            .read(agendaFilterProvider.notifier)
+                            .toggleStatus(status);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _getStatusLabel(EventStatus status) {
+    switch (status) {
+      case EventStatus.scheduled:
+        return 'Planejado';
+      case EventStatus.inProgress:
+        return 'Em Andamento';
+      case EventStatus.completed:
+        return 'Concluído';
+      case EventStatus.cancelled:
+        return 'Cancelado';
+      case EventStatus.rescheduled:
+        return 'Reagendado';
+    }
   }
 
   Widget _buildMonthNavigator() {
@@ -291,14 +377,34 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
     ); // Default
   }
 
-  Widget _buildLegendItem(String symbol, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(symbol, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      ],
+  Widget _buildLegendItem(
+    String symbol,
+    String label,
+    EventType type,
+    bool isSelected,
+  ) {
+    return InkWell(
+      onTap: () {
+        ref.read(agendaFilterProvider.notifier).toggleType(type);
+      },
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Opacity(
+          opacity: isSelected ? 1.0 : 0.3,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(symbol, style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -380,12 +486,30 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
             children: [
               if (event.type ==
                   EventType.technicalVisit) // Only show Iniciar for visits
-                TextButton(
-                  onPressed: () {
-                    // Action
-                  },
-                  child: const Text('Iniciar'),
-                ),
+                if (event.status == EventStatus.scheduled)
+                  TextButton(
+                    onPressed: () {
+                      final updatedEvent = event.copyWith(
+                        status: EventStatus.inProgress,
+                        updatedAt: DateTime.now(),
+                      );
+                      ref
+                          .read(agendaControllerProvider.notifier)
+                          .updateEvent(updatedEvent);
+                    },
+                    child: const Text('Iniciar'),
+                  )
+                else if (event.status == EventStatus.inProgress)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Text(
+                      'Em andamento',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
               TextButton(
                 onPressed: () {
                   context.push('/dashboard/calendar/detail', extra: event);

@@ -119,6 +119,7 @@ class ConsentManager {
 
   static Future<void> requestConsent(BuildContext context) async {
     if (await hasConsented()) return;
+    if (!context.mounted) return;
 
     final consent = await showDialog<bool>(
       context: context,

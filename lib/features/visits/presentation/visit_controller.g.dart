@@ -6,7 +6,7 @@ part of 'visit_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$visitControllerHash() => r'da40f2d67468144bcda136f771063608ec01f485';
+String _$visitControllerHash() => r'e730f6aa4abbd50b77a6849aadf499249e89f024';
 
 /// See also [VisitController].
 @ProviderFor(VisitController)

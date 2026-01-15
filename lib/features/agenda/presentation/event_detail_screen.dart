@@ -6,16 +6,19 @@ import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:soloforte_app/features/agenda/presentation/extensions/event_type_extension.dart';
 
-class EventDetailScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
+
+class EventDetailScreen extends ConsumerStatefulWidget {
   final Event event;
 
   const EventDetailScreen({super.key, required this.event});
 
   @override
-  State<EventDetailScreen> createState() => _EventDetailScreenState();
+  ConsumerState<EventDetailScreen> createState() => _EventDetailScreenState();
 }
 
-class _EventDetailScreenState extends State<EventDetailScreen> {
+class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   late Event _event;
 
   @override
@@ -44,7 +47,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           TextButton.icon(
             // [✏️ Editar]
             onPressed: () {
-              // Edit action
+              context.push('/dashboard/calendar/new', extra: _event);
             },
             icon: const Icon(Icons.edit, size: 16),
             label: const Text('Editar'),
@@ -226,7 +229,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             SizedBox(
               width: double.infinity,
               child: TextButton.icon(
-                onPressed: () {},
+                onPressed: _deleteEvent,
                 icon: const Icon(Icons.delete, color: Colors.red),
                 label: const Text(
                   'Cancelar Evento',
@@ -239,6 +242,50 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _deleteEvent() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir Evento'),
+        content: const Text('Deseja realmente excluir este evento?'),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(false),
+            child: const Text('Não'),
+          ),
+          TextButton(
+            onPressed: () => context.pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Sim, Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      // Optimistic delete or wait?
+      // State is async, but we can just fire and forget or await.
+      // Awaiting specifically.
+      await ref.read(agendaControllerProvider.notifier).deleteEvent(_event.id);
+
+      if (mounted) {
+        // Go back to Agenda
+        // context.pop(); // This pops the Detail screen.
+        // Assuming we came from Agenda list -> Detail.
+        // Or if deep link, we might want to go explicit.
+        // Requirement: "Retornar para a Agenda"
+        // If I pop, I go back to previous screen. If previous was Map, it's weird.
+        // But usually flow is Agenda -> Detail.
+        // Safety: context.go('/map/calendar');
+        context.pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Evento excluído com sucesso.')),
+        );
+      }
+    }
   }
 
   Widget _buildAsciiBox({required String title, required Widget content}) {

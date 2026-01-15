@@ -1,10 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soloforte_app/features/notifications/data/notification_repository.dart';
 import 'package:soloforte_app/features/notifications/domain/notification_model.dart';
+import '../../test_setup.dart';
 
 void main() {
   group('NotificationRepository', () {
     late NotificationRepository repository;
+
+    setUpAll(() => setupTestEnvironment());
 
     setUp(() {
       repository = NotificationRepository();

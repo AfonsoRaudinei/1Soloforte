@@ -117,7 +117,7 @@
 
 ## 🔥 QUICK WINS RESTANTES
 
-1. [ ] Corrigir 1 `use_build_context_synchronously` restante em `privacy_policy_screen.dart`
+1. [x] Corrigir 1 `use_build_context_synchronously` restante em `privacy_policy_screen.dart`
 2. [ ] Substituir 6 `print()` restantes (reports providers)
 
 ### Quick Wins de UI [2/3] 🚧

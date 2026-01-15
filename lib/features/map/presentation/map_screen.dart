@@ -10,9 +10,7 @@ import 'package:soloforte_app/features/dashboard/presentation/providers/dashboar
 import 'package:soloforte_app/features/map/application/drawing_controller.dart';
 import 'package:soloforte_app/features/map/application/geometry_utils.dart';
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
-import 'package:soloforte_app/core/presentation/widgets/premium_dialog.dart';
-import 'package:soloforte_app/features/map/presentation/widgets/save_area_dialog.dart';
-import 'package:soloforte_app/features/ndvi/presentation/ndvi_detail_screen.dart';
+import 'package:soloforte_app/features/map/presentation/widgets/save_area_bottom_sheet.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
 import 'package:soloforte_app/features/occurrences/presentation/new_occurrence_screen.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/new_case_modal.dart';
@@ -21,6 +19,19 @@ import 'package:soloforte_app/core/services/analytics_service.dart';
 import 'widgets/drawing_toolbar.dart';
 import 'widgets/area_details_sheet.dart';
 import 'widgets/map_bottom_bar.dart';
+import 'widgets/drawing_measurement_overlay.dart';
+import 'package:intl/intl.dart';
+import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
+import 'package:soloforte_app/features/agenda/domain/event_model.dart';
+import 'package:soloforte_app/features/visits/presentation/widgets/check_in_modal.dart';
+import 'package:soloforte_app/features/visits/presentation/widgets/check_out_modal.dart';
+import 'package:soloforte_app/features/visits/presentation/visit_controller.dart';
+import 'package:soloforte_app/features/visits/domain/entities/visit.dart';
+import 'package:soloforte_app/features/dashboard/presentation/widgets/map_layers/drawing_layer.dart';
+import 'package:soloforte_app/features/map/presentation/widgets/export_areas_bottom_sheet.dart';
+import 'package:soloforte_app/core/services/location/location_service.dart';
+import 'package:soloforte_app/features/dashboard/presentation/widgets/ndvi_side_panel.dart';
+import 'package:soloforte_app/features/ndvi/application/ndvi_controller.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   final LatLng? initialLocation;
@@ -33,6 +44,116 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
+  bool _hasCheckedNearbyAreas = false;
+  bool _showNdviPanel = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkNearbyAreas();
+    });
+  }
+
+  Future<void> _checkNearbyAreas() async {
+    if (_hasCheckedNearbyAreas) return;
+    _hasCheckedNearbyAreas = true;
+
+    try {
+      final locationService = ref.read(locationServiceProvider);
+      final userPos = await locationService.getCurrentPosition();
+
+      if (!mounted) return;
+
+      final drawingState = ref.read(drawingControllerProvider);
+      final savedAreas = drawingState.savedAreas;
+
+      const distance = Distance();
+      GeoArea? nearest;
+      double minDst = double.infinity;
+
+      for (var area in savedAreas) {
+        if (area.center == null) continue;
+        final d = distance(userPos, area.center!); // Distance in meters
+        if (d < 500 && d < minDst) {
+          // 500m threshold
+          minDst = d;
+          nearest = area;
+        }
+      }
+
+      if (nearest != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Você está próximo da área "${nearest.name}".'),
+            action: SnackBarAction(
+              label: 'Usar Área',
+              onPressed: () {
+                // Select area
+                ref
+                    .read(drawingControllerProvider.notifier)
+                    .selectArea(nearest!.id);
+                // Open details
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) => AreaDetailsSheet(
+                    area: nearest!,
+                    onDelete: () {
+                      Navigator.pop(ctx);
+                      ref
+                          .read(drawingControllerProvider.notifier)
+                          .deleteArea(nearest!.id);
+                    },
+                    onEdit: () {
+                      Navigator.pop(ctx);
+                      ref
+                          .read(drawingControllerProvider.notifier)
+                          .startEditingArea(nearest!);
+                    },
+                    onAnalyze: () {
+                      Navigator.pop(ctx);
+
+                      ref
+                          .read(ndviControllerProvider.notifier)
+                          .initializeForArea(nearest!);
+
+                      setState(() {
+                        _showNdviPanel = true;
+                      });
+                    },
+                    onStartVisit: (area) {
+                      Navigator.pop(ctx);
+                      // Trigger visit logic (Check-in) matches _handleMapTap logic
+                      // We can duplicate the logic or extract it?
+                      // For now just open simple check-in
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (ctx) => DraggableScrollableSheet(
+                          initialChildSize: 0.7,
+                          minChildSize: 0.5,
+                          maxChildSize: 0.95,
+                          builder: (_, controller) =>
+                              CheckInModal(initialArea: area),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+            duration: const Duration(seconds: 10),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      // Ignore location errors silently
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +165,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final drawingState = ref.watch(drawingControllerProvider);
 
     final occurrencesState = ref.watch(occurrenceControllerProvider);
+    final agendaEvents = ref.watch(
+      filteredAgendaProvider,
+    ); // Fetched from Agenda Module
 
     // Sync Dashboard Mode -> Drawing Controller
     ref.listen<DashboardState>(dashboardControllerProvider, (prev, next) {
@@ -69,6 +193,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               .setMode(MapMode.neutral);
         }
       }
+    });
+
+    // Sync Visit Controller -> Drawing Controller (Update Area Status)
+    ref.listen<AsyncValue<Visit?>>(visitControllerProvider, (prev, next) {
+      next.whenData((visit) {
+        if (visit != null && visit.areaId != null) {
+          if (visit.status == VisitStatus.ongoing) {
+            ref
+                .read(drawingControllerProvider.notifier)
+                .updateAreaVisitStatus(visit.areaId!, activeVisitId: visit.id);
+          } else if (visit.status == VisitStatus.completed) {
+            ref
+                .read(drawingControllerProvider.notifier)
+                .updateAreaVisitStatus(
+                  visit.areaId!,
+                  activeVisitId: null, // Clear active visit
+                  lastVisitDate: visit.checkOutTime ?? DateTime.now(),
+                );
+          }
+        }
+      });
     });
 
     return Scaffold(
@@ -100,17 +245,69 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 maxZoom: kAgriculturalMaxZoom,
               ),
 
+              // NDVI Overlay (If loaded by controller from SidePanel)
+              Consumer(
+                builder: (context, ref, _) {
+                  final ndviState = ref.watch(ndviControllerProvider);
+                  if (ndviState.currentImageBytes != null && _showNdviPanel) {
+                    final area = ndviState.currentArea;
+                    if (area == null || area.points.isEmpty) {
+                      return const SizedBox();
+                    }
+
+                    final bbox = GeometryUtils.calculateBBox(area.points);
+                    final bounds = LatLngBounds(
+                      LatLng(bbox[1], bbox[0]),
+                      LatLng(bbox[3], bbox[2]),
+                    );
+
+                    return OverlayImageLayer(
+                      overlayImages: [
+                        OverlayImage(
+                          bounds: bounds,
+                          imageProvider: MemoryImage(
+                            ndviState.currentImageBytes!,
+                          ),
+                          opacity: 0.7,
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
+
               // 1. Saved Areas (Drawings)
               PolygonLayer(
                 polygons: drawingState.savedAreas.map((area) {
                   final isSelected = area.id == drawingState.selectedAreaId;
+                  final hasActiveVisit = area.activeVisitId != null;
+
+                  final fillColor = hasActiveVisit
+                      ? Colors.green.withValues(alpha: 0.4)
+                      : (area.colorValue != null
+                            ? Color(
+                                area.colorValue!,
+                              ).withValues(alpha: isSelected ? 0.5 : 0.3)
+                            : AppColors.primary.withValues(
+                                alpha: isSelected ? 0.5 : 0.3,
+                              ));
+
+                  final borderColor = hasActiveVisit
+                      ? Colors.greenAccent
+                      : (isSelected
+                            ? Colors.white
+                            : (area.colorValue != null
+                                  ? Color(area.colorValue!)
+                                  : AppColors.primary));
+
                   return Polygon(
                     points: area.points,
-                    color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.5)
-                        : AppColors.primary.withValues(alpha: 0.3),
-                    borderColor: isSelected ? Colors.white : AppColors.primary,
-                    borderStrokeWidth: isSelected ? 3 : 2,
+                    color: fillColor,
+                    borderColor: borderColor,
+                    borderStrokeWidth: hasActiveVisit
+                        ? 3
+                        : (isSelected ? 3 : 2),
                   );
                 }).toList(),
               ),
@@ -124,10 +321,173 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       width: 40,
                       height: 40,
                       child: GestureDetector(
-                        onTap: () {
-                          // TODO: Show details
+                        onTap: () async {
+                          // FIX: Open details/edit modal
+                          final result = await showModalBottomSheet<bool>(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (ctx) => DraggableScrollableSheet(
+                              initialChildSize: 0.85,
+                              minChildSize: 0.5,
+                              maxChildSize: 0.95,
+                              builder: (_, scrollController) => Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(20),
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(20),
+                                  ),
+                                  child: NewOccurrenceScreen(
+                                    initialOccurrence: occ,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+
+                          if (result == true) {
+                            // Optional: Refresh or show feedback manually if needed,
+                            // but provider updates automatically.
+                          }
                         },
                         child: _buildPin(occ.type, false),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+              // 5. Agenda Events Pins (Read-Only)
+              if (agendaEvents.hasValue)
+                MarkerLayer(
+                  markers: agendaEvents.value!.where((e) => e.locationCoordinates != null).map((
+                    event,
+                  ) {
+                    final lat = event.locationCoordinates!['lat']!;
+                    final lng = event.locationCoordinates!['lng']!;
+                    return Marker(
+                      point: LatLng(lat, lng),
+                      width: 40,
+                      height: 40,
+                      child: GestureDetector(
+                        onTap: () {
+                          // Show View-Only Event Details
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (ctx) => DraggableScrollableSheet(
+                              initialChildSize: 0.5,
+                              minChildSize: 0.4,
+                              maxChildSize: 0.9,
+                              builder: (_, scrollParams) {
+                                return Container(
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(20),
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Evento da Agenda',
+                                            style: AppTypography.caption,
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.close),
+                                            onPressed: () => Navigator.pop(ctx),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        event.title,
+                                        style: AppTypography.h3,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        '${DateFormat('dd/MM/yyyy HH:mm').format(event.startTime)} - ${DateFormat('HH:mm').format(event.endTime)}',
+                                        style: AppTypography.bodyMedium
+                                            .copyWith(color: Colors.grey[700]),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Row(
+                                        children: [
+                                          Chip(
+                                            label: Text(
+                                              event.status.name.toUpperCase(),
+                                            ),
+                                            backgroundColor: Colors.grey[200],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          if (event.type ==
+                                              EventType.technicalVisit)
+                                            const Chip(
+                                              label: Text('Visita Técnica'),
+                                              backgroundColor:
+                                                  AppColors.primaryLight,
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 24),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: OutlinedButton(
+                                          onPressed: () {
+                                            // Navigate to Agenda for editing (Not implemented in this scope as requested)
+                                            // Navigator.pushNamed(context, '/agenda');
+                                            Navigator.pop(ctx);
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Edição disponível apenas na Agenda',
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: const Text('Ver na Agenda'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.blueGrey,
+                              width: 2,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black26, blurRadius: 4),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.event,
+                            color: Colors.blueGrey,
+                            size: 24,
+                          ),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -151,54 +511,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   ],
                 ),
 
-              // 4. Drawing Preview Layers
-              if (drawingState.isDrawing &&
-                  drawingState.currentPoints.isNotEmpty)
-                PolygonLayer(
-                  polygons: [
-                    Polygon(
-                      points: drawingState.currentPoints,
-                      color: AppColors.secondary.withValues(alpha: 0.2),
-                      borderColor: AppColors.secondary,
-                      borderStrokeWidth: 2,
-                    ),
-                  ],
-                ),
-              if (drawingState.isDrawing &&
-                  drawingState.activeTool == 'circle' &&
-                  drawingState.circleCenter != null)
-                CircleLayer(
-                  circles: [
-                    CircleMarker(
-                      point: drawingState.circleCenter!,
-                      radius: drawingState.circleRadius,
-                      useRadiusInMeter: true,
-                      color: AppColors.secondary.withValues(alpha: 0.2),
-                      borderColor: AppColors.secondary,
-                      borderStrokeWidth: 2,
-                    ),
-                  ],
-                ),
-              if (drawingState.isDrawing &&
-                  drawingState.activeTool == 'polygon')
-                MarkerLayer(
-                  markers: drawingState.currentPoints
-                      .map(
-                        (p) => Marker(
-                          point: p,
-                          width: 14,
-                          height: 14,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.secondary),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
+              // 4. Drawing Preview Layers (Using dedicated widget)
+              const DrawingLayer(),
             ],
           ),
 
@@ -235,9 +549,32 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 ),
                 FloatingActionButton.small(
                   heroTag: 'settings',
-                  onPressed: () {}, // Settings action
+                  onPressed: () {
+                    // Open Export Options
+                    final selectedId = drawingState.selectedAreaId;
+                    GeoArea? selectedArea;
+                    if (selectedId != null) {
+                      try {
+                        selectedArea = drawingState.savedAreas.firstWhere(
+                          (a) => a.id == selectedId,
+                        );
+                      } catch (_) {}
+                    }
+
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) => ExportAreasBottomSheet(
+                        allAreas: drawingState.savedAreas,
+                        selectedArea: selectedArea,
+                      ),
+                    );
+                  },
                   backgroundColor: Colors.white,
-                  child: const Icon(Icons.settings, color: Colors.black),
+                  child: const Icon(
+                    Icons.download,
+                    color: Colors.black,
+                  ), // Changed icon to download/export for clarity
                 ),
               ],
             ),
@@ -295,6 +632,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 ),
               ),
             ),
+
+          // Real-time Area Measurement Overlay (Drawing Mode)
+          const DrawingMeasurementOverlay(),
 
           // Marketing CTA (When pin is set)
           if (dashboardState.activeMode == MapMode.marketing &&
@@ -360,27 +700,22 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               child: DrawingToolbar(),
             ),
 
-          // Top Right Save Button while drawing (if enough points)
-          if (drawingState.isDrawing)
+          // Top Right Save Button while drawing (if enough points) => REMOVED (Moved to DrawingToolbar)
+
+          // NDVI Side Panel
+          if (_showNdviPanel)
             Positioned(
-              top: 40,
-              right: 70,
-              child: drawingState.currentPoints.length >= 3
-                  ? ElevatedButton.icon(
-                      onPressed: () =>
-                          _showSaveDialog(context, drawingController),
-                      icon: const Icon(Icons.check, size: 16),
-                      label: const Text('Salvar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+              top: 0,
+              bottom: 0,
+              right: 0,
+              child: Material(
+                elevation: 16,
+                child: NdviSidePanel(
+                  onClose: () {
+                    setState(() => _showNdviPanel = false);
+                  },
+                ),
+              ),
             ),
         ],
       ),
@@ -565,12 +900,54 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           },
           onAnalyze: () {
             Navigator.pop(ctx);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => NDVIDetailScreen(area: tapped!),
-              ),
-            );
+            // Requirement: No route change, open side panel.
+            ref
+                .read(ndviControllerProvider.notifier)
+                .initializeForArea(tapped!);
+            setState(() {
+              _showNdviPanel = true;
+            });
+          },
+          onStartVisit: (area) {
+            Navigator.pop(ctx);
+            if (area.activeVisitId != null) {
+              // Manage existing visit (Check Out)
+              final currentVisit = ref.read(visitControllerProvider).value;
+              if (currentVisit != null &&
+                  currentVisit.id == area.activeVisitId) {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) => DraggableScrollableSheet(
+                    initialChildSize: 0.9,
+                    minChildSize: 0.5,
+                    maxChildSize: 0.95,
+                    builder: (_, controller) =>
+                        CheckOutModal(visit: currentVisit),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Erro ao carregar dados da visita ativa.'),
+                  ),
+                );
+              }
+            } else {
+              // Start new visit (Check In)
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (ctx) => DraggableScrollableSheet(
+                  initialChildSize: 0.7,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.95,
+                  builder: (_, controller) => CheckInModal(initialArea: area),
+                ),
+              );
+            }
           },
         ),
       );
@@ -578,10 +955,34 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   void _showSaveDialog(BuildContext context, DrawingController controller) {
-    PremiumDialog.show(
+    showModalBottomSheet(
       context: context,
-      builder: (context) =>
-          SaveAreaDialog(onSave: (name) => controller.saveArea(name)),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SaveAreaBottomSheet(
+        onSave:
+            ({
+              required name,
+              required clientId,
+              required clientName,
+              fieldId,
+              fieldName,
+              notes,
+              colorValue,
+              required isDashed,
+            }) {
+              controller.saveArea(
+                name: name,
+                clientId: clientId,
+                clientName: clientName,
+                fieldId: fieldId,
+                fieldName: fieldName,
+                notes: notes,
+                colorValue: colorValue,
+                isDashed: isDashed,
+              );
+            },
+      ),
     );
   }
 

@@ -13,6 +13,7 @@ import '../features/auth/presentation/register_screen.dart';
 import '../features/visits/presentation/check_in_screen.dart';
 import '../features/visits/presentation/visit_dashboard_screen.dart';
 import '../features/visits/presentation/visit_detail_screen.dart';
+import '../features/visits/presentation/check_in_out_screen.dart';
 
 import '../features/visits/presentation/check_out_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
@@ -45,10 +46,12 @@ import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 // import 'package:latlong2/latlong.dart';
 
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/settings/presentation/settings_subpages.dart';
 import '../features/feedback/presentation/feedback_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/scan_result_screen.dart';
 import 'package:soloforte_app/features/scanner/domain/scan_result_model.dart';
 import 'package:soloforte_app/features/marketing/presentation/marketing_screen.dart';
+import 'package:soloforte_app/features/marketing/presentation/feed_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/scan_history_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/pest_library_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/scanner_home_screen.dart';
@@ -57,7 +60,11 @@ import 'package:soloforte_app/features/reports/presentation/new_report_screen.da
 import 'package:soloforte_app/features/reports/presentation/report_detail_screen.dart';
 import 'package:soloforte_app/features/visits/presentation/active_visit_screen.dart';
 import '../features/link_hub/presentation/link_hub_screen.dart';
+import '../features/settings/presentation/change_password_screen.dart'; // Import ChangePasswordScreen
 import '../features/privacy/presentation/privacy_policy_screen.dart';
+import '../features/support/presentation/help_center_screen.dart';
+import '../features/settings/presentation/customer_support_screen.dart';
+import '../features/settings/presentation/terms_of_use_screen.dart';
 
 // Keys
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -146,36 +153,114 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const WeatherScreen(),
           ),
           GoRoute(
-            path: '/map/harvest',
-            builder: (context, state) => const HarvestListScreen(),
-          ),
-          GoRoute(
-            path: '/map/integrations',
-            builder: (context, state) => const IntegrationsScreen(),
-          ),
-          GoRoute(
             path: '/map/marketing',
             builder: (context, state) => const MarketingScreen(),
-          ),
-          GoRoute(
-            path: '/map/support',
-            builder: (context, state) => const SupportHomeScreen(),
-          ),
-          GoRoute(
-            path: '/map/settings',
-            builder: (context, state) => const SettingsScreen(),
-          ),
-          GoRoute(
-            path: '/map/feedback',
-            builder: (context, state) => const FeedbackScreen(),
-          ),
-          GoRoute(
-            path: '/map/link-hub',
-            builder: (context, state) => const LinkHubScreen(),
           ),
         ],
       ),
       // Full screen routes (outside ShellRoute)
+      GoRoute(
+        path: '/map/settings',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SettingsScreen(),
+        routes: [
+          GoRoute(
+            path: 'logo',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const FarmLogoScreen(),
+          ),
+          GoRoute(
+            path: 'info',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const FarmInfoScreen(),
+          ),
+          GoRoute(
+            path: 'harvest',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const HarvestSettingsScreen(),
+          ),
+          GoRoute(
+            path: 'integrations',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const IntegrationsSettingsScreen(),
+          ),
+          GoRoute(
+            path: 'news',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const NewsScreen(),
+          ),
+          GoRoute(
+            path: 'link-hub',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const LinkHubSettingsScreen(),
+          ),
+          GoRoute(
+            path: 'storage',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const StorageSettingsScreen(),
+          ),
+          GoRoute(
+            path: 'language',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const LanguageSettingsScreen(),
+          ),
+          GoRoute(
+            path: 'theme',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const ThemeSettingsScreen(),
+          ),
+          GoRoute(
+            path: 'password',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const ChangePasswordScreen(),
+          ),
+          GoRoute(
+            path: 'help',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const HelpCenterScreen(),
+          ),
+          GoRoute(
+            path: 'contact',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const CustomerSupportScreen(),
+          ),
+          GoRoute(
+            path: 'terms',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const TermsOfUseScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/map/harvest',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const HarvestListScreen(),
+      ),
+      GoRoute(
+        path: '/map/integrations',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const IntegrationsScreen(),
+      ),
+      GoRoute(
+        path: '/map/support',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SupportHomeScreen(),
+      ),
+      GoRoute(
+        path: '/map/feed',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const FeedScreen(),
+      ),
+      GoRoute(
+        path: '/map/link-hub',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const LinkHubScreen(),
+      ),
+      GoRoute(
+        path: '/map/feedback',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const FeedbackScreen(),
+      ),
       GoRoute(
         path: '/map/harvest/new',
         parentNavigatorKey: _rootNavigatorKey,
@@ -229,6 +314,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/check-in',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const CheckInScreen(),
+      ),
+      GoRoute(
+        path: '/check-in-out',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CheckInOutScreen(),
       ),
 
       // Reports Feature
@@ -350,6 +440,27 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
           return VisitDetailScreen(visitId: state.pathParameters['id']!);
+        },
+      ),
+      // Fix for Agenda/Calendar routes using /dashboard prefix
+      GoRoute(
+        path: '/dashboard/calendar/new',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is Event) {
+            return EventFormScreen(event: extra);
+          }
+          final initialDate = extra as DateTime?;
+          return EventFormScreen(initialDate: initialDate);
+        },
+      ),
+      GoRoute(
+        path: '/dashboard/calendar/detail',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final event = state.extra as Event;
+          return EventDetailScreen(event: event);
         },
       ),
     ],

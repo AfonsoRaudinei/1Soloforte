@@ -4,12 +4,13 @@ import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static const _databaseName = "soloforte.db";
-  static const _databaseVersion = 3; // Incremented version to 3
+  static const _databaseVersion = 4; // Incremented version to 4
 
   static const tableVisits = 'visits';
   static const tableAreas = 'areas';
   static const tableOccurrences = 'occurrences';
   static const tableTickets = 'tickets';
+  static const tableMarketingPosts = 'marketing_posts';
 
   // Singleton pattern
   DatabaseHelper._privateConstructor();
@@ -45,6 +46,7 @@ class DatabaseHelper {
     await _createAreasTable(db);
     await _createOccurrencesTable(db);
     await _createTicketsTable(db);
+    await _createMarketingPostsTable(db);
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -61,6 +63,10 @@ class DatabaseHelper {
 
     if (oldVersion < 3) {
       await _createTicketsTable(db);
+    }
+
+    if (oldVersion < 4) {
+      await _createMarketingPostsTable(db);
     }
   }
 
@@ -106,6 +112,16 @@ class DatabaseHelper {
       CREATE TABLE $tableTickets (
         id TEXT PRIMARY KEY,
         status TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        json_data TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future _createMarketingPostsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableMarketingPosts (
+        id TEXT PRIMARY KEY,
         created_at INTEGER NOT NULL,
         json_data TEXT NOT NULL
       )

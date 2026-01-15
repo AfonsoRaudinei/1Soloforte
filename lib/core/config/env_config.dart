@@ -55,10 +55,28 @@ class EnvConfig {
     }
   }
 
-  // Sentry DSN
+  // Google API Key (for Maps, Geocoding, etc.)
+  static String get googleApiKey {
+    // Try to get from environment variable first
+    const envGoogleApiKey = String.fromEnvironment('GOOGLE_API_KEY');
+    if (envGoogleApiKey.isNotEmpty) {
+      return envGoogleApiKey;
+    }
+
+    // Fallback to hardcoded key (should be overridden by environment variable in production)
+    return 'AIzaSyB6W7iXI4xuNLQjQM7MvEm7oVlBBamAJb8';
+  }
+
   static String get sentryDsn {
     return const String.fromEnvironment('SENTRY_DSN', defaultValue: '');
   }
+
+  // Supabase Configuration
+  static const String supabaseUrl = 'https://PLACEHOLDER.supabase.co';
+  static const String supabaseAnonKey = 'PLACEHOLDER_KEY';
+
+  // Flag to know if we should use Supabase (even if just for Settings)
+  static bool get useSupabase => true;
 
   // Debug mode
   static bool get isDebug {

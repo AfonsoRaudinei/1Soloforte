@@ -89,6 +89,7 @@ class Event with _$Event {
 
     // Integrations & Metadata
     Map<String, dynamic>? weatherForecast,
+    Map<String, double>? locationCoordinates, // Added for Map integration
     DateTime? completedAt,
     DateTime? createdAt,
     DateTime? updatedAt,

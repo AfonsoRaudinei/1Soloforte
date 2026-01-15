@@ -16,9 +16,30 @@ class AppSettings with _$AppSettings {
     @Default(ThemeMode.system) ThemeMode themeMode,
     @Default('ios') String visualStyle,
     String? farmLogoPath,
+    String? farmName,
+    String? farmCnpj,
+    String? farmAddress,
+    String? farmCity,
+    String? farmState,
+    String? farmPhone,
+    String? farmEmail,
+    @Default([]) List<HarvestSetting> harvests,
+    @Default({}) Map<String, bool> integrations,
     String? language,
   }) = _AppSettings;
 
   factory AppSettings.fromJson(Map<String, dynamic> json) =>
       _$AppSettingsFromJson(json);
+}
+
+@freezed
+class HarvestSetting with _$HarvestSetting {
+  const factory HarvestSetting({
+    required String id,
+    required String name,
+    @Default(false) bool isActive,
+  }) = _HarvestSetting;
+
+  factory HarvestSetting.fromJson(Map<String, dynamic> json) =>
+      _$HarvestSettingFromJson(json);
 }

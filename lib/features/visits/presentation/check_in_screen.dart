@@ -110,7 +110,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       // We pass the selected client. The active visit controller handles logic.
       await ref
           .read(visitControllerProvider.notifier)
-          .checkIn(_selectedClient!);
+          .checkIn(client: _selectedClient!);
 
       // Additional logic for Areas/Activity Type would go here in a real implementation
       // For now we just use the existing basic checkIn method

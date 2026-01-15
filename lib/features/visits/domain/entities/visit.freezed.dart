@@ -24,6 +24,10 @@ mixin _$Visit {
   double get latitude => throw _privateConstructorUsedError;
   double get longitude => throw _privateConstructorUsedError;
   String? get checkOutNotes => throw _privateConstructorUsedError;
+  String? get areaName => throw _privateConstructorUsedError;
+  String? get areaId => throw _privateConstructorUsedError;
+  String? get activityType => throw _privateConstructorUsedError;
+  String? get checkInNotes => throw _privateConstructorUsedError;
   List<String> get photos => throw _privateConstructorUsedError;
   List<String> get occurrenceIds => throw _privateConstructorUsedError;
   Map<String, bool> get checklist => throw _privateConstructorUsedError;
@@ -51,6 +55,10 @@ abstract class $VisitCopyWith<$Res> {
     double latitude,
     double longitude,
     String? checkOutNotes,
+    String? areaName,
+    String? areaId,
+    String? activityType,
+    String? checkInNotes,
     List<String> photos,
     List<String> occurrenceIds,
     Map<String, bool> checklist,
@@ -85,6 +93,10 @@ class _$VisitCopyWithImpl<$Res, $Val extends Visit>
     Object? latitude = null,
     Object? longitude = null,
     Object? checkOutNotes = freezed,
+    Object? areaName = freezed,
+    Object? areaId = freezed,
+    Object? activityType = freezed,
+    Object? checkInNotes = freezed,
     Object? photos = null,
     Object? occurrenceIds = null,
     Object? checklist = null,
@@ -122,6 +134,22 @@ class _$VisitCopyWithImpl<$Res, $Val extends Visit>
             checkOutNotes: freezed == checkOutNotes
                 ? _value.checkOutNotes
                 : checkOutNotes // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            areaName: freezed == areaName
+                ? _value.areaName
+                : areaName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            areaId: freezed == areaId
+                ? _value.areaId
+                : areaId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            activityType: freezed == activityType
+                ? _value.activityType
+                : activityType // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            checkInNotes: freezed == checkInNotes
+                ? _value.checkInNotes
+                : checkInNotes // ignore: cast_nullable_to_non_nullable
                       as String?,
             photos: null == photos
                 ? _value.photos
@@ -183,6 +211,10 @@ abstract class _$$VisitImplCopyWith<$Res> implements $VisitCopyWith<$Res> {
     double latitude,
     double longitude,
     String? checkOutNotes,
+    String? areaName,
+    String? areaId,
+    String? activityType,
+    String? checkInNotes,
     List<String> photos,
     List<String> occurrenceIds,
     Map<String, bool> checklist,
@@ -217,6 +249,10 @@ class __$$VisitImplCopyWithImpl<$Res>
     Object? latitude = null,
     Object? longitude = null,
     Object? checkOutNotes = freezed,
+    Object? areaName = freezed,
+    Object? areaId = freezed,
+    Object? activityType = freezed,
+    Object? checkInNotes = freezed,
     Object? photos = null,
     Object? occurrenceIds = null,
     Object? checklist = null,
@@ -254,6 +290,22 @@ class __$$VisitImplCopyWithImpl<$Res>
         checkOutNotes: freezed == checkOutNotes
             ? _value.checkOutNotes
             : checkOutNotes // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        areaName: freezed == areaName
+            ? _value.areaName
+            : areaName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        areaId: freezed == areaId
+            ? _value.areaId
+            : areaId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        activityType: freezed == activityType
+            ? _value.activityType
+            : activityType // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        checkInNotes: freezed == checkInNotes
+            ? _value.checkInNotes
+            : checkInNotes // ignore: cast_nullable_to_non_nullable
                   as String?,
         photos: null == photos
             ? _value._photos
@@ -299,6 +351,10 @@ class _$VisitImpl implements _Visit {
     required this.latitude,
     required this.longitude,
     this.checkOutNotes,
+    this.areaName,
+    this.areaId,
+    this.activityType,
+    this.checkInNotes,
     final List<String> photos = const [],
     final List<String> occurrenceIds = const [],
     final Map<String, bool> checklist = const {},
@@ -325,6 +381,14 @@ class _$VisitImpl implements _Visit {
   final double longitude;
   @override
   final String? checkOutNotes;
+  @override
+  final String? areaName;
+  @override
+  final String? areaId;
+  @override
+  final String? activityType;
+  @override
+  final String? checkInNotes;
   final List<String> _photos;
   @override
   @JsonKey()
@@ -372,7 +436,7 @@ class _$VisitImpl implements _Visit {
 
   @override
   String toString() {
-    return 'Visit(id: $id, client: $client, checkInTime: $checkInTime, checkOutTime: $checkOutTime, latitude: $latitude, longitude: $longitude, checkOutNotes: $checkOutNotes, photos: $photos, occurrenceIds: $occurrenceIds, checklist: $checklist, routePoints: $routePoints, distanceTraveled: $distanceTraveled, eventId: $eventId, status: $status)';
+    return 'Visit(id: $id, client: $client, checkInTime: $checkInTime, checkOutTime: $checkOutTime, latitude: $latitude, longitude: $longitude, checkOutNotes: $checkOutNotes, areaName: $areaName, areaId: $areaId, activityType: $activityType, checkInNotes: $checkInNotes, photos: $photos, occurrenceIds: $occurrenceIds, checklist: $checklist, routePoints: $routePoints, distanceTraveled: $distanceTraveled, eventId: $eventId, status: $status)';
   }
 
   @override
@@ -392,6 +456,13 @@ class _$VisitImpl implements _Visit {
                 other.longitude == longitude) &&
             (identical(other.checkOutNotes, checkOutNotes) ||
                 other.checkOutNotes == checkOutNotes) &&
+            (identical(other.areaName, areaName) ||
+                other.areaName == areaName) &&
+            (identical(other.areaId, areaId) || other.areaId == areaId) &&
+            (identical(other.activityType, activityType) ||
+                other.activityType == activityType) &&
+            (identical(other.checkInNotes, checkInNotes) ||
+                other.checkInNotes == checkInNotes) &&
             const DeepCollectionEquality().equals(other._photos, _photos) &&
             const DeepCollectionEquality().equals(
               other._occurrenceIds,
@@ -421,6 +492,10 @@ class _$VisitImpl implements _Visit {
     latitude,
     longitude,
     checkOutNotes,
+    areaName,
+    areaId,
+    activityType,
+    checkInNotes,
     const DeepCollectionEquality().hash(_photos),
     const DeepCollectionEquality().hash(_occurrenceIds),
     const DeepCollectionEquality().hash(_checklist),
@@ -448,6 +523,10 @@ abstract class _Visit implements Visit {
     required final double latitude,
     required final double longitude,
     final String? checkOutNotes,
+    final String? areaName,
+    final String? areaId,
+    final String? activityType,
+    final String? checkInNotes,
     final List<String> photos,
     final List<String> occurrenceIds,
     final Map<String, bool> checklist,
@@ -471,6 +550,14 @@ abstract class _Visit implements Visit {
   double get longitude;
   @override
   String? get checkOutNotes;
+  @override
+  String? get areaName;
+  @override
+  String? get areaId;
+  @override
+  String? get activityType;
+  @override
+  String? get checkInNotes;
   @override
   List<String> get photos;
   @override

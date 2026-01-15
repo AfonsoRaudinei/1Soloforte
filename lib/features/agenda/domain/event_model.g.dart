@@ -81,6 +81,8 @@ _$EventImpl _$$EventImplFromJson(Map<String, dynamic> json) => _$EventImpl(
       ? null
       : EventRecurrence.fromJson(json['recurrence'] as Map<String, dynamic>),
   weatherForecast: json['weatherForecast'] as Map<String, dynamic>?,
+  locationCoordinates: (json['locationCoordinates'] as Map<String, dynamic>?)
+      ?.map((k, e) => MapEntry(k, (e as num).toDouble())),
   completedAt: json['completedAt'] == null
       ? null
       : DateTime.parse(json['completedAt'] as String),
@@ -112,6 +114,7 @@ Map<String, dynamic> _$$EventImplToJson(_$EventImpl instance) =>
       'notes': instance.notes,
       'recurrence': instance.recurrence,
       'weatherForecast': instance.weatherForecast,
+      'locationCoordinates': instance.locationCoordinates,
       'completedAt': instance.completedAt?.toIso8601String(),
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),

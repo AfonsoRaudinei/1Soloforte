@@ -4,9 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/map/application/drawing_controller.dart';
-import 'package:soloforte_app/features/map/presentation/widgets/premium_glass_container.dart';
-import 'package:soloforte_app/core/presentation/widgets/premium_dialog.dart';
-import 'package:soloforte_app/features/map/presentation/widgets/save_area_dialog.dart';
+// PremiumGlassContainer import removed
+import 'package:soloforte_app/features/map/presentation/widgets/save_area_bottom_sheet.dart';
 
 class DrawingToolbar extends ConsumerWidget {
   const DrawingToolbar({super.key});
@@ -16,333 +15,300 @@ class DrawingToolbar extends ConsumerWidget {
     final state = ref.watch(drawingControllerProvider);
     final controller = ref.read(drawingControllerProvider.notifier);
 
+    // If not drawing, we show a minimized FAB (although MapScreen might hide this)
     if (!state.isDrawing) {
       return Align(
-        alignment: Alignment.bottomCenter,
+        alignment: Alignment.bottomRight,
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: FloatingActionButton.extended(
+          padding: const EdgeInsets.only(bottom: 100, right: 16),
+          child: FloatingActionButton(
+            mini: true,
+            heroTag: "minimized_drawing_fab",
             onPressed: () {
               HapticFeedback.lightImpact();
               controller.startDrawing();
             },
-            icon: const Icon(Icons.edit_location_alt_outlined),
-            label: const Text('Desenhar Área'),
             backgroundColor: AppColors.primary,
+            child: const Icon(Icons.edit_location_alt_outlined),
           ),
         ),
       );
     }
 
+    // --- Active Drawing Logic ---
+
+    // Save/Commit check
+    bool canSave = false;
     final isPolygon = state.activeTool == 'polygon';
     final isCircle = state.activeTool == 'circle';
     final isRectangle = state.activeTool == 'rectangle';
 
-    bool canSave = false;
     if (isPolygon) canSave = state.currentPoints.length >= 3;
     if (isCircle) {
       canSave = state.circleCenter != null && state.circleRadius > 0;
     }
     if (isRectangle) canSave = state.currentPoints.length >= 4;
 
-    // Check if we have holes pending save or main area
-    if (state.activeHoles.isNotEmpty && state.currentPoints.isEmpty) {
-      canSave = true; // Can save if we just added holes
-    }
-    if (state.isSubtracting && state.currentPoints.length >= 3) {
-      canSave = true; // Can save (commit) the hole
-    }
-
-    String instructionText = 'Toque no mapa para adicionar vértices';
-    if (state.isSubtracting) {
-      instructionText = 'Desenhe a área para remover (Furo)';
-    } else if (isCircle) {
-      instructionText = 'Toque no centro e arraste para definir o raio';
+    // Formatting Instruction Text
+    String instructionText = 'Toque no mapa para adicionar pontos';
+    if (isCircle) {
+      instructionText = 'Toque no centro e arraste para o raio';
     } else if (isRectangle) {
-      instructionText = 'Toque em dois cantos opostos para criar o retângulo';
+      instructionText = 'Marque dois cantos opostos';
+    } else if (isPolygon && state.editingAreaId != null) {
+      instructionText = 'Arraste os pontos para editar';
     }
 
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: PremiumGlassContainer(
-        margin: const EdgeInsets.only(bottom: 24, left: 16, right: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              state.isSubtracting ? 'Modo Remover Área' : 'Modo Desenho',
-              style: AppTypography.h3.copyWith(
-                fontSize: 16,
-                color: state.isSubtracting
-                    ? AppColors.error
-                    : AppColors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            // Tool Switcher (Disabled if subtracting)
-            Opacity(
-              opacity: state.isSubtracting ? 0.5 : 1.0,
-              child: IgnorePointer(
-                ignoring: state.isSubtracting,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100]?.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _ToolSegment(
-                          label: 'Polígono',
-                          icon: Icons.polyline,
-                          isSelected: isPolygon,
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            controller.setTool('polygon');
-                          },
-                        ),
-                      ),
-                      Expanded(
-                        child: _ToolSegment(
-                          label: 'Círculo',
-                          icon: Icons.radio_button_unchecked,
-                          isSelected: isCircle,
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            controller.setTool('circle');
-                          },
-                        ),
-                      ),
-                      Expanded(
-                        child: _ToolSegment(
-                          label: 'Retângulo',
-                          icon: Icons.crop_square,
-                          isSelected: state.activeTool == 'rectangle',
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            controller.setTool('rectangle');
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+    // Determine Active Icon
+    IconData activeToolIcon;
+    switch (state.activeTool) {
+      case 'circle':
+        activeToolIcon = Icons.radio_button_unchecked;
+        break;
+      case 'rectangle':
+        activeToolIcon = Icons.crop_square;
+        break;
+      case 'polygon':
+      default:
+        activeToolIcon = Icons.polyline;
+    }
 
-            // Subtraction / Removal Mode Toggle
-            if (isPolygon) ...[
-              Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: state.isSubtracting
-                      ? AppColors.error.withValues(alpha: 0.1)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                  border: state.isSubtracting
-                      ? Border.all(color: AppColors.error.withValues(alpha: 0.3))
-                      : null,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      state.isSubtracting
-                          ? Icons.delete_outline
-                          : Icons.add_circle_outline,
-                      size: 16,
-                      color: state.isSubtracting
-                          ? AppColors.error
-                          : AppColors.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Modo Remover (Criar Furo)",
-                      style: AppTypography.caption.copyWith(
-                        color: state.isSubtracting
-                            ? AppColors.error
-                            : AppColors.textSecondary,
-                        fontWeight: state.isSubtracting
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Switch.adaptive(
-                      value: state.isSubtracting,
-                      activeColor: AppColors.error,
-                      onChanged: (val) {
-                        HapticFeedback.selectionClick();
-                        controller.setMode(val);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-            ],
-
-            Text(
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 1. Instruction Toast (Float above toolbar)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
               instructionText,
-              style: AppTypography.bodySmall.copyWith(
-                color: state.isSubtracting ? AppColors.error : null,
-              ),
-              textAlign: TextAlign.center,
+              style: AppTypography.caption.copyWith(color: Colors.white),
             ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                if (isPolygon) ...[
-                  _ToolButton(
-                    icon: Icons.undo,
-                    label: 'Desfazer',
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      controller.undoLastPoint();
-                    },
-                    isEnabled: state.history.isNotEmpty,
-                  ),
-                ],
-                _ToolButton(
-                  icon: Icons.close,
-                  label: 'Cancelar',
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    controller.stopDrawing();
-                  },
-                  color: AppColors.error,
-                  isEnabled: true,
-                ),
-                _ToolButton(
-                  icon: state.isSubtracting
-                      ? Icons.check_circle_outline
-                      : Icons.check,
-                  label: state.isSubtracting ? 'Confirmar Furo' : 'Salvar',
-                  onTap: () {
-                    HapticFeedback.heavyImpact();
-                    if (state.isSubtracting) {
-                      // Just save to commit hole/exit mode, but keep drawing
-                      controller.saveArea("temp");
-                    } else {
-                      PremiumDialog.show(
-                        context: context,
-                        builder: (context) => SaveAreaDialog(
-                          onSave: (name) => controller.saveArea(name),
-                        ),
-                      );
-                    }
-                  },
-                  color: AppColors.secondary,
-                  isEnabled: canSave,
+          ),
+
+          // 2. Compact Toolbar (Pill)
+          Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-          ],
-        ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // A. Tool Selector (Menu)
+                PopupMenuButton<String>(
+                  tooltip: 'Selecionar Ferramenta',
+                  offset: const Offset(0, -120),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  onSelected: (val) {
+                    HapticFeedback.selectionClick();
+                    controller.setTool(val);
+                  },
+                  itemBuilder: (ctx) => [
+                    _buildMenuItem('polygon', 'Polígono', Icons.polyline),
+                    _buildMenuItem(
+                      'circle',
+                      'Círculo',
+                      Icons.radio_button_unchecked,
+                    ),
+                    _buildMenuItem('rectangle', 'Retângulo', Icons.crop_square),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      activeToolIcon,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 4),
+
+                // C. Divider
+                Container(
+                  height: 24,
+                  width: 1,
+                  color: Colors.grey[300],
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+
+                // D. Undo
+                IconButton(
+                  tooltip: 'Desfazer',
+                  onPressed: state.history.isNotEmpty
+                      ? () {
+                          HapticFeedback.lightImpact();
+                          controller.undoLastPoint();
+                        }
+                      : null,
+                  icon: const Icon(Icons.undo),
+                  color: Colors.black87,
+                  disabledColor: Colors.black26,
+                ),
+
+                // E. Cancel/Close
+                IconButton(
+                  tooltip: 'Cancelar',
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    controller.stopDrawing();
+                  },
+                  icon: const Icon(Icons.close),
+                  color: Colors.black87,
+                ),
+
+                const SizedBox(width: 4),
+
+                // F. Save/Confirm (Highlighted)
+                AnimatedScale(
+                  scale: canSave ? 1.0 : 0.8,
+                  duration: const Duration(milliseconds: 200),
+                  child: FloatingActionButton.small(
+                    elevation: 0,
+                    heroTag: "save_drawing_btn",
+                    backgroundColor: canSave
+                        ? AppColors.secondary
+                        : Colors.grey[300],
+                    onPressed: canSave
+                        ? () {
+                            HapticFeedback.heavyImpact();
+                            _handleSave(context, controller, state);
+                          }
+                        : null,
+                    child: Icon(
+                      Icons.check,
+                      color: canSave ? Colors.white : Colors.grey[500],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-class _ToolSegment extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ToolSegment({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          boxShadow: isSelected
-              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)]
-              : null,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
+  PopupMenuItem<String> _buildMenuItem(
+    String value,
+    String label,
+    IconData icon,
+  ) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.black54),
+          const SizedBox(width: 12),
+          Text(label, style: AppTypography.bodySmall),
+        ],
       ),
     );
   }
-}
 
-class _ToolButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isEnabled;
-  final Color? color;
+  void _handleSave(
+    BuildContext context,
+    DrawingController controller,
+    dynamic state,
+  ) {
+    if (state.editingAreaId != null) {
+      // Editing Flow
+      try {
+        final existing = state.savedAreas.firstWhere(
+          (a) => a.id == state.editingAreaId,
+        );
 
-  const _ToolButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.isEnabled,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveColor = isEnabled
-        ? (color ?? AppColors.textPrimary)
-        : AppColors.textDisabled;
-
-    return InkWell(
-      onTap: isEnabled ? onTap : null,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: effectiveColor),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTypography.caption.copyWith(color: effectiveColor),
-            ),
-          ],
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => SaveAreaBottomSheet(
+            initialData: existing,
+            onSave:
+                ({
+                  required name,
+                  required clientId,
+                  required clientName,
+                  fieldId,
+                  fieldName,
+                  notes,
+                  colorValue,
+                  required isDashed,
+                }) {
+                  controller.saveArea(
+                    name: name,
+                    clientId: clientId,
+                    clientName: clientName,
+                    fieldId: fieldId,
+                    fieldName: fieldName,
+                    notes: notes,
+                    colorValue: colorValue,
+                  );
+                },
+            onCancel: () {
+              controller.stopDrawing();
+            },
+          ),
+        );
+      } catch (e) {
+        controller.saveArea(name: "Área Editada");
+      }
+    } else {
+      // New Area Flow
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => SaveAreaBottomSheet(
+          onSave:
+              ({
+                required name,
+                required clientId,
+                required clientName,
+                fieldId,
+                fieldName,
+                notes,
+                colorValue,
+                required isDashed,
+              }) {
+                controller.saveArea(
+                  name: name,
+                  clientId: clientId,
+                  clientName: clientName,
+                  fieldId: fieldId,
+                  fieldName: fieldName,
+                  notes: notes,
+                  colorValue: colorValue,
+                  isDashed: isDashed,
+                );
+              },
+          onCancel: () {
+            controller.stopDrawing();
+          },
         ),
-      ),
-    );
+      );
+    }
   }
 }

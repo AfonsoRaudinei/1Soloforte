@@ -4,18 +4,34 @@ import 'package:soloforte_app/core/widgets/expandable_fab.dart';
 
 void main() {
   group('ExpandableFab Widget', () {
+    Widget buildTestWidget({
+      VoidCallback? onDrawArea,
+      VoidCallback? onNewOccurrence,
+      VoidCallback? onPestScanner,
+      VoidCallback? onNewReport,
+    }) {
+      return MaterialApp(
+        home: Scaffold(
+          body: SizedBox.expand(
+            child: ExpandableFab(
+              onDrawArea: onDrawArea,
+              onNewOccurrence: onNewOccurrence,
+              onPestScanner: onPestScanner,
+              onNewReport: onNewReport,
+            ),
+          ),
+        ),
+      );
+    }
+
     testWidgets('renders FAB button', (WidgetTester tester) async {
       // Arrange & Act
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ExpandableFab(
-              onDrawArea: () {},
-              onNewOccurrence: () {},
-              onPestScanner: () {},
-              onNewReport: () {},
-            ),
-          ),
+        buildTestWidget(
+          onDrawArea: () {},
+          onNewOccurrence: () {},
+          onPestScanner: () {},
+          onNewReport: () {},
         ),
       );
 
@@ -27,15 +43,11 @@ void main() {
     testWidgets('expands on tap', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ExpandableFab(
-              onDrawArea: () {},
-              onNewOccurrence: () {},
-              onPestScanner: () {},
-              onNewReport: () {},
-            ),
-          ),
+        buildTestWidget(
+          onDrawArea: () {},
+          onNewOccurrence: () {},
+          onPestScanner: () {},
+          onNewReport: () {},
         ),
       );
 
@@ -58,15 +70,11 @@ void main() {
       bool drawAreaCalled = false;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ExpandableFab(
-              onDrawArea: () => drawAreaCalled = true,
-              onNewOccurrence: () {},
-              onPestScanner: () {},
-              onNewReport: () {},
-            ),
-          ),
+        buildTestWidget(
+          onDrawArea: () => drawAreaCalled = true,
+          onNewOccurrence: () {},
+          onPestScanner: () {},
+          onNewReport: () {},
         ),
       );
 
@@ -75,6 +83,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Act - Tap action button
+      await tester.ensureVisible(find.text('Desenhar Área'));
       await tester.tap(find.text('Desenhar Área'));
       await tester.pumpAndSettle();
 
@@ -85,15 +94,11 @@ void main() {
     testWidgets('collapses when tapping backdrop', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ExpandableFab(
-              onDrawArea: () {},
-              onNewOccurrence: () {},
-              onPestScanner: () {},
-              onNewReport: () {},
-            ),
-          ),
+        buildTestWidget(
+          onDrawArea: () {},
+          onNewOccurrence: () {},
+          onPestScanner: () {},
+          onNewReport: () {},
         ),
       );
 
@@ -102,7 +107,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Act - Tap backdrop (outside action buttons)
-      await tester.tapAt(const Offset(10, 10));
+      await tester.tapAt(const Offset(20, 20));
       await tester.pumpAndSettle();
 
       // Assert

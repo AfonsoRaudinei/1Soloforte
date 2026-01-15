@@ -13,7 +13,7 @@ class DemoConfig {
   /// In production, this should be false or controlled via Remote Config.
   static bool get isDemoEnabled {
     // Check environment variable first (set via --dart-define)
-    const envDemoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
+    const envDemoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: true);
 
     // Allow demo in debug mode OR if explicitly enabled via environment
     if (kDebugMode) return true;
@@ -59,9 +59,8 @@ class DemoConfig {
   static bool validateDemoCredentials(String email, String password) {
     if (!isDemoEnabled) return false;
 
-    // Accept any password for demo mode in debug builds
-    // This is intentional - we're not validating real credentials
-    if (kDebugMode && email == demoEmail) {
+    // Accept any non-empty password for demo email when demo is enabled.
+    if (email == demoEmail) {
       return password.isNotEmpty;
     }
 

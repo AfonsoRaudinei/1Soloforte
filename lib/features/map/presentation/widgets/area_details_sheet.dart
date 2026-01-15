@@ -7,11 +7,14 @@ import 'package:soloforte_app/core/presentation/widgets/premium_dialog.dart';
 import 'package:soloforte_app/features/map/presentation/widgets/premium_glass_container.dart';
 import 'package:intl/intl.dart';
 
-class AreaDetailsSheet extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class AreaDetailsSheet extends ConsumerWidget {
   final GeoArea area;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
   final VoidCallback onAnalyze;
+  final Function(GeoArea) onStartVisit;
 
   const AreaDetailsSheet({
     super.key,
@@ -19,10 +22,11 @@ class AreaDetailsSheet extends StatelessWidget {
     required this.onDelete,
     required this.onEdit,
     required this.onAnalyze,
+    required this.onStartVisit,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return PremiumGlassContainer(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
       padding: const EdgeInsets.all(16),
@@ -49,10 +53,39 @@ class AreaDetailsSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(area.name, style: AppTypography.h3),
-                  Text(
-                    'Criado em ${DateFormat('dd/MM/yyyy HH:mm').format(area.createdAt ?? DateTime.now())}',
-                    style: AppTypography.caption,
-                  ),
+                  if (area.clientName != null)
+                    Text(area.clientName!, style: AppTypography.bodySmall),
+                  if (area.activeVisitId != null)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.green),
+                      ),
+                      child: const Text(
+                        'Visita em andamento',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  else if (area.lastVisitDate != null)
+                    Text(
+                      'Última visita: ${DateFormat('dd/MM HH:mm').format(area.lastVisitDate!)}',
+                      style: AppTypography.caption,
+                    )
+                  else
+                    Text(
+                      'Criado em ${DateFormat('dd/MM/yyyy HH:mm').format(area.createdAt ?? DateTime.now())}',
+                      style: AppTypography.caption,
+                    ),
                 ],
               ),
               IconButton(
@@ -86,44 +119,46 @@ class AreaDetailsSheet extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    // Confirm delete
-                    PremiumDialog.show(
-                      context: context,
-                      builder: (context) => PremiumDialog(
-                        title: 'Excluir Área?',
-                        content: const Text(
-                          'Esta ação não pode ser desfeita e removerá todos os dados associados.',
-                          textAlign: TextAlign.center,
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.textSecondary,
-                            ),
-                            child: const Text('Cancelar'),
-                          ),
-                          FilledButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              Navigator.pop(context); // Close dialog
-                              onDelete();
-                              Navigator.pop(context); // Close sheet
-                            },
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.error,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                  onPressed: area.activeVisitId != null
+                      ? null
+                      : () {
+                          HapticFeedback.lightImpact();
+                          // Confirm delete
+                          PremiumDialog.show(
+                            context: context,
+                            builder: (context) => PremiumDialog(
+                              title: 'Excluir Área?',
+                              content: const Text(
+                                'Esta ação não pode ser desfeita e removerá todos os dados associados.',
+                                textAlign: TextAlign.center,
                               ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppColors.textSecondary,
+                                  ),
+                                  child: const Text('Cancelar'),
+                                ),
+                                FilledButton(
+                                  onPressed: () {
+                                    HapticFeedback.mediumImpact();
+                                    Navigator.pop(context); // Close dialog
+                                    onDelete();
+                                    Navigator.pop(context); // Close sheet
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.error,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text('Excluir'),
+                                ),
+                              ],
                             ),
-                            child: const Text('Excluir'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                          );
+                        },
                   icon: const Icon(
                     Icons.delete_outline,
                     color: AppColors.error,
@@ -144,10 +179,12 @@ class AreaDetailsSheet extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () {
-                    HapticFeedback.selectionClick();
-                    onEdit();
-                  },
+                  onPressed: area.activeVisitId != null
+                      ? null
+                      : () {
+                          HapticFeedback.selectionClick();
+                          onEdit();
+                        },
                   icon: const Icon(Icons.edit),
                   label: const Text('Editar'),
                   style: FilledButton.styleFrom(
@@ -171,6 +208,32 @@ class AreaDetailsSheet extends StatelessWidget {
             label: const Text('Análise NDVI & Satélite'),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.secondary,
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              onStartVisit(area);
+            },
+            icon: Icon(
+              area.activeVisitId != null
+                  ? Icons.work_history
+                  : Icons.play_circle_outline,
+            ),
+            label: Text(
+              area.activeVisitId != null
+                  ? 'Gerenciar Visita'
+                  : 'Iniciar Visita',
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: area.activeVisitId != null
+                  ? Colors.orange
+                  : Colors.green,
               padding: const EdgeInsets.all(16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

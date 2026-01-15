@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/features/map/application/drawing_controller.dart';
@@ -18,9 +19,7 @@ class DrawingLayer extends ConsumerWidget {
     const vertexStroke = Colors.black;
 
     // Determine points to render for Main Polygon
-    final mainPoints = drawingState.isSubtracting
-        ? drawingState.basePoints
-        : drawingState.currentPoints;
+    final mainPoints = drawingState.currentPoints;
 
     return Stack(
       children: [
@@ -31,8 +30,7 @@ class DrawingLayer extends ConsumerWidget {
               Polyline(
                 points: [
                   ...mainPoints,
-                  if ((drawingState.activeTool == 'polygon' ||
-                          drawingState.isSubtracting) &&
+                  if (drawingState.activeTool == 'polygon' &&
                       mainPoints.length > 2)
                     mainPoints.first,
                 ],
@@ -42,37 +40,21 @@ class DrawingLayer extends ConsumerWidget {
             ],
           ),
 
-        if ((drawingState.activeTool == 'polygon' ||
-                drawingState.isSubtracting) &&
-            mainPoints.length > 2)
+        if (drawingState.activeTool == 'polygon' && mainPoints.length > 2)
           PolygonLayer(
             polygons: [
               Polygon(
                 points: mainPoints,
-                holePointsList: drawingState.activeHoles,
+                // Holes removed per simplification requirement
+                holePointsList: [],
                 color: AppColors.primary.withValues(alpha: 0.2),
                 borderStrokeWidth: 0,
               ),
             ],
           ),
 
-        // 2. Subtraction/Hole Layer (The Hole being drawn right now)
-        if (drawingState.isSubtracting && drawingState.currentPoints.isNotEmpty)
-          PolygonLayer(
-            polygons: [
-              Polygon(
-                points: drawingState.currentPoints,
-                color: AppColors.error.withValues(alpha: 0.4),
-                borderColor: AppColors.error,
-                borderStrokeWidth: 2,
-                // isFilled removed (deprecated/implied by color)
-              ),
-            ],
-          ),
-
         // 3. Circle Layer
-        if (!drawingState.isSubtracting &&
-            drawingState.activeTool == 'circle' &&
+        if (drawingState.activeTool == 'circle' &&
             drawingState.circleCenter != null &&
             drawingState.circleRadius > 0)
           CircleLayer(
@@ -100,6 +82,12 @@ class DrawingLayer extends ConsumerWidget {
                 width: 32, // Hitbox
                 height: 32,
                 child: GestureDetector(
+                  onDoubleTap: () {
+                    // Remove vertex on double tap
+                    ref
+                        .read(drawingControllerProvider.notifier)
+                        .removeVertex(index);
+                  },
                   onPanUpdate: (details) {
                     // Start dragging
                     final mapCamera = MapCamera.of(context);
@@ -123,9 +111,7 @@ class DrawingLayer extends ConsumerWidget {
                       width: 18, // Visual size
                       height: 18,
                       decoration: BoxDecoration(
-                        color: drawingState.isSubtracting
-                            ? AppColors.error
-                            : vertexColor,
+                        color: vertexColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: vertexStroke, width: 2),
                         boxShadow: const [
@@ -144,8 +130,7 @@ class DrawingLayer extends ConsumerWidget {
           ),
 
         // 5. Center Handle for Circle - DRAGGABLE
-        if (!drawingState.isSubtracting &&
-            drawingState.activeTool == 'circle' &&
+        if (drawingState.activeTool == 'circle' &&
             drawingState.circleCenter != null)
           MarkerLayer(
             markers: [
@@ -185,6 +170,65 @@ class DrawingLayer extends ConsumerWidget {
                             offset: Offset(0, 2),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+        // 6. Resize Handle for Circle - DRAGGABLE
+        if (drawingState.activeTool == 'circle' &&
+            drawingState.circleCenter != null &&
+            drawingState.circleRadius > 0)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: const Distance().offset(
+                  drawingState.circleCenter!,
+                  drawingState.circleRadius,
+                  90,
+                ),
+                width: 32,
+                height: 32,
+                child: GestureDetector(
+                  onPanUpdate: (details) {
+                    final mapCamera = MapCamera.of(context);
+                    final renderBox = context.findRenderObject() as RenderBox?;
+                    if (renderBox != null) {
+                      final localPosition = renderBox.globalToLocal(
+                        details.globalPosition,
+                      );
+                      final newLatLng = mapCamera.screenOffsetToLatLng(
+                        localPosition,
+                      );
+
+                      ref
+                          .read(drawingControllerProvider.notifier)
+                          .updateCircleRadius(newLatLng);
+                    }
+                  },
+                  child: Center(
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary, width: 2),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.open_in_full,
+                        size: 10,
+                        color: Colors.black,
                       ),
                     ),
                   ),

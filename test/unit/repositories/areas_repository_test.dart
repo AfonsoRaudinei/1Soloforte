@@ -1,9 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:soloforte_app/features/areas/data/areas_repository.dart';
+import '../../test_setup.dart';
 
 void main() {
   group('AreasRepository', () {
     late AreasRepository repository;
+
+    setUpAll(() => setupTestEnvironment());
 
     setUp(() {
       repository = AreasRepository();

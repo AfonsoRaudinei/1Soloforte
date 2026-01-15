@@ -37,15 +37,7 @@ class DashboardLayout extends StatelessWidget {
             ),
       drawer: const SideMenu(),
       body: child,
-      // Only show bottom nav if NOT map and NOT a sub-feature that has its own nav?
-      // User said "Manter apenas para outras rotas fora do /map".
-      // Since /map is the new prefix for mostly everything... this is tricky.
-      // But presumably "outras rotas fora do /map" means things that are NOT the map dashboard.
-      // Wait, logically, if /map/reports is a screen, does it need a bottom bar?
-      // The new design relies on the Radial Menu on the Map Screen.
-      // Navigating to /map/reports likely takes you AWAY from the map.
-      // So on Reports screen, you might want a way back or a menu.
-      // For now, I will hide BottomNavBar for location == '/map'.
+      // Bottom Navigation Bar - Visible on all screens including Map
       bottomNavigationBar: isMap
           ? null
           : BottomNavigationBar(

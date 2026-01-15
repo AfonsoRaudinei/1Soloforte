@@ -29,6 +29,15 @@ mixin _$AppSettings {
   ThemeMode get themeMode => throw _privateConstructorUsedError;
   String get visualStyle => throw _privateConstructorUsedError;
   String? get farmLogoPath => throw _privateConstructorUsedError;
+  String? get farmName => throw _privateConstructorUsedError;
+  String? get farmCnpj => throw _privateConstructorUsedError;
+  String? get farmAddress => throw _privateConstructorUsedError;
+  String? get farmCity => throw _privateConstructorUsedError;
+  String? get farmState => throw _privateConstructorUsedError;
+  String? get farmPhone => throw _privateConstructorUsedError;
+  String? get farmEmail => throw _privateConstructorUsedError;
+  List<HarvestSetting> get harvests => throw _privateConstructorUsedError;
+  Map<String, bool> get integrations => throw _privateConstructorUsedError;
   String? get language => throw _privateConstructorUsedError;
 
   /// Serializes this AppSettings to a JSON map.
@@ -57,6 +66,15 @@ abstract class $AppSettingsCopyWith<$Res> {
     ThemeMode themeMode,
     String visualStyle,
     String? farmLogoPath,
+    String? farmName,
+    String? farmCnpj,
+    String? farmAddress,
+    String? farmCity,
+    String? farmState,
+    String? farmPhone,
+    String? farmEmail,
+    List<HarvestSetting> harvests,
+    Map<String, bool> integrations,
     String? language,
   });
 }
@@ -84,6 +102,15 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
     Object? themeMode = null,
     Object? visualStyle = null,
     Object? farmLogoPath = freezed,
+    Object? farmName = freezed,
+    Object? farmCnpj = freezed,
+    Object? farmAddress = freezed,
+    Object? farmCity = freezed,
+    Object? farmState = freezed,
+    Object? farmPhone = freezed,
+    Object? farmEmail = freezed,
+    Object? harvests = null,
+    Object? integrations = null,
     Object? language = freezed,
   }) {
     return _then(
@@ -120,6 +147,42 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
                 ? _value.farmLogoPath
                 : farmLogoPath // ignore: cast_nullable_to_non_nullable
                       as String?,
+            farmName: freezed == farmName
+                ? _value.farmName
+                : farmName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            farmCnpj: freezed == farmCnpj
+                ? _value.farmCnpj
+                : farmCnpj // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            farmAddress: freezed == farmAddress
+                ? _value.farmAddress
+                : farmAddress // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            farmCity: freezed == farmCity
+                ? _value.farmCity
+                : farmCity // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            farmState: freezed == farmState
+                ? _value.farmState
+                : farmState // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            farmPhone: freezed == farmPhone
+                ? _value.farmPhone
+                : farmPhone // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            farmEmail: freezed == farmEmail
+                ? _value.farmEmail
+                : farmEmail // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            harvests: null == harvests
+                ? _value.harvests
+                : harvests // ignore: cast_nullable_to_non_nullable
+                      as List<HarvestSetting>,
+            integrations: null == integrations
+                ? _value.integrations
+                : integrations // ignore: cast_nullable_to_non_nullable
+                      as Map<String, bool>,
             language: freezed == language
                 ? _value.language
                 : language // ignore: cast_nullable_to_non_nullable
@@ -148,6 +211,15 @@ abstract class _$$AppSettingsImplCopyWith<$Res>
     ThemeMode themeMode,
     String visualStyle,
     String? farmLogoPath,
+    String? farmName,
+    String? farmCnpj,
+    String? farmAddress,
+    String? farmCity,
+    String? farmState,
+    String? farmPhone,
+    String? farmEmail,
+    List<HarvestSetting> harvests,
+    Map<String, bool> integrations,
     String? language,
   });
 }
@@ -174,6 +246,15 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
     Object? themeMode = null,
     Object? visualStyle = null,
     Object? farmLogoPath = freezed,
+    Object? farmName = freezed,
+    Object? farmCnpj = freezed,
+    Object? farmAddress = freezed,
+    Object? farmCity = freezed,
+    Object? farmState = freezed,
+    Object? farmPhone = freezed,
+    Object? farmEmail = freezed,
+    Object? harvests = null,
+    Object? integrations = null,
     Object? language = freezed,
   }) {
     return _then(
@@ -210,6 +291,42 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
             ? _value.farmLogoPath
             : farmLogoPath // ignore: cast_nullable_to_non_nullable
                   as String?,
+        farmName: freezed == farmName
+            ? _value.farmName
+            : farmName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        farmCnpj: freezed == farmCnpj
+            ? _value.farmCnpj
+            : farmCnpj // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        farmAddress: freezed == farmAddress
+            ? _value.farmAddress
+            : farmAddress // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        farmCity: freezed == farmCity
+            ? _value.farmCity
+            : farmCity // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        farmState: freezed == farmState
+            ? _value.farmState
+            : farmState // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        farmPhone: freezed == farmPhone
+            ? _value.farmPhone
+            : farmPhone // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        farmEmail: freezed == farmEmail
+            ? _value.farmEmail
+            : farmEmail // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        harvests: null == harvests
+            ? _value._harvests
+            : harvests // ignore: cast_nullable_to_non_nullable
+                  as List<HarvestSetting>,
+        integrations: null == integrations
+            ? _value._integrations
+            : integrations // ignore: cast_nullable_to_non_nullable
+                  as Map<String, bool>,
         language: freezed == language
             ? _value.language
             : language // ignore: cast_nullable_to_non_nullable
@@ -231,8 +348,18 @@ class _$AppSettingsImpl implements _AppSettings {
     this.themeMode = ThemeMode.system,
     this.visualStyle = 'ios',
     this.farmLogoPath,
+    this.farmName,
+    this.farmCnpj,
+    this.farmAddress,
+    this.farmCity,
+    this.farmState,
+    this.farmPhone,
+    this.farmEmail,
+    final List<HarvestSetting> harvests = const [],
+    final Map<String, bool> integrations = const {},
     this.language,
-  });
+  }) : _harvests = harvests,
+       _integrations = integrations;
 
   factory _$AppSettingsImpl.fromJson(Map<String, dynamic> json) =>
       _$$AppSettingsImplFromJson(json);
@@ -261,11 +388,43 @@ class _$AppSettingsImpl implements _AppSettings {
   @override
   final String? farmLogoPath;
   @override
+  final String? farmName;
+  @override
+  final String? farmCnpj;
+  @override
+  final String? farmAddress;
+  @override
+  final String? farmCity;
+  @override
+  final String? farmState;
+  @override
+  final String? farmPhone;
+  @override
+  final String? farmEmail;
+  final List<HarvestSetting> _harvests;
+  @override
+  @JsonKey()
+  List<HarvestSetting> get harvests {
+    if (_harvests is EqualUnmodifiableListView) return _harvests;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_harvests);
+  }
+
+  final Map<String, bool> _integrations;
+  @override
+  @JsonKey()
+  Map<String, bool> get integrations {
+    if (_integrations is EqualUnmodifiableMapView) return _integrations;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_integrations);
+  }
+
+  @override
   final String? language;
 
   @override
   String toString() {
-    return 'AppSettings(pushNotificationsEnabled: $pushNotificationsEnabled, emailNotificationsEnabled: $emailNotificationsEnabled, automaticAlertsEnabled: $automaticAlertsEnabled, offlineModeEnabled: $offlineModeEnabled, autoSyncEnabled: $autoSyncEnabled, themeMode: $themeMode, visualStyle: $visualStyle, farmLogoPath: $farmLogoPath, language: $language)';
+    return 'AppSettings(pushNotificationsEnabled: $pushNotificationsEnabled, emailNotificationsEnabled: $emailNotificationsEnabled, automaticAlertsEnabled: $automaticAlertsEnabled, offlineModeEnabled: $offlineModeEnabled, autoSyncEnabled: $autoSyncEnabled, themeMode: $themeMode, visualStyle: $visualStyle, farmLogoPath: $farmLogoPath, farmName: $farmName, farmCnpj: $farmCnpj, farmAddress: $farmAddress, farmCity: $farmCity, farmState: $farmState, farmPhone: $farmPhone, farmEmail: $farmEmail, harvests: $harvests, integrations: $integrations, language: $language)';
   }
 
   @override
@@ -295,6 +454,25 @@ class _$AppSettingsImpl implements _AppSettings {
                 other.visualStyle == visualStyle) &&
             (identical(other.farmLogoPath, farmLogoPath) ||
                 other.farmLogoPath == farmLogoPath) &&
+            (identical(other.farmName, farmName) ||
+                other.farmName == farmName) &&
+            (identical(other.farmCnpj, farmCnpj) ||
+                other.farmCnpj == farmCnpj) &&
+            (identical(other.farmAddress, farmAddress) ||
+                other.farmAddress == farmAddress) &&
+            (identical(other.farmCity, farmCity) ||
+                other.farmCity == farmCity) &&
+            (identical(other.farmState, farmState) ||
+                other.farmState == farmState) &&
+            (identical(other.farmPhone, farmPhone) ||
+                other.farmPhone == farmPhone) &&
+            (identical(other.farmEmail, farmEmail) ||
+                other.farmEmail == farmEmail) &&
+            const DeepCollectionEquality().equals(other._harvests, _harvests) &&
+            const DeepCollectionEquality().equals(
+              other._integrations,
+              _integrations,
+            ) &&
             (identical(other.language, language) ||
                 other.language == language));
   }
@@ -311,6 +489,15 @@ class _$AppSettingsImpl implements _AppSettings {
     themeMode,
     visualStyle,
     farmLogoPath,
+    farmName,
+    farmCnpj,
+    farmAddress,
+    farmCity,
+    farmState,
+    farmPhone,
+    farmEmail,
+    const DeepCollectionEquality().hash(_harvests),
+    const DeepCollectionEquality().hash(_integrations),
     language,
   );
 
@@ -338,6 +525,15 @@ abstract class _AppSettings implements AppSettings {
     final ThemeMode themeMode,
     final String visualStyle,
     final String? farmLogoPath,
+    final String? farmName,
+    final String? farmCnpj,
+    final String? farmAddress,
+    final String? farmCity,
+    final String? farmState,
+    final String? farmPhone,
+    final String? farmEmail,
+    final List<HarvestSetting> harvests,
+    final Map<String, bool> integrations,
     final String? language,
   }) = _$AppSettingsImpl;
 
@@ -361,6 +557,24 @@ abstract class _AppSettings implements AppSettings {
   @override
   String? get farmLogoPath;
   @override
+  String? get farmName;
+  @override
+  String? get farmCnpj;
+  @override
+  String? get farmAddress;
+  @override
+  String? get farmCity;
+  @override
+  String? get farmState;
+  @override
+  String? get farmPhone;
+  @override
+  String? get farmEmail;
+  @override
+  List<HarvestSetting> get harvests;
+  @override
+  Map<String, bool> get integrations;
+  @override
   String? get language;
 
   /// Create a copy of AppSettings
@@ -368,5 +582,197 @@ abstract class _AppSettings implements AppSettings {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AppSettingsImplCopyWith<_$AppSettingsImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+HarvestSetting _$HarvestSettingFromJson(Map<String, dynamic> json) {
+  return _HarvestSetting.fromJson(json);
+}
+
+/// @nodoc
+mixin _$HarvestSetting {
+  String get id => throw _privateConstructorUsedError;
+  String get name => throw _privateConstructorUsedError;
+  bool get isActive => throw _privateConstructorUsedError;
+
+  /// Serializes this HarvestSetting to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of HarvestSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $HarvestSettingCopyWith<HarvestSetting> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $HarvestSettingCopyWith<$Res> {
+  factory $HarvestSettingCopyWith(
+    HarvestSetting value,
+    $Res Function(HarvestSetting) then,
+  ) = _$HarvestSettingCopyWithImpl<$Res, HarvestSetting>;
+  @useResult
+  $Res call({String id, String name, bool isActive});
+}
+
+/// @nodoc
+class _$HarvestSettingCopyWithImpl<$Res, $Val extends HarvestSetting>
+    implements $HarvestSettingCopyWith<$Res> {
+  _$HarvestSettingCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of HarvestSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? id = null, Object? name = null, Object? isActive = null}) {
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            name: null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            isActive: null == isActive
+                ? _value.isActive
+                : isActive // ignore: cast_nullable_to_non_nullable
+                      as bool,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$HarvestSettingImplCopyWith<$Res>
+    implements $HarvestSettingCopyWith<$Res> {
+  factory _$$HarvestSettingImplCopyWith(
+    _$HarvestSettingImpl value,
+    $Res Function(_$HarvestSettingImpl) then,
+  ) = __$$HarvestSettingImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String id, String name, bool isActive});
+}
+
+/// @nodoc
+class __$$HarvestSettingImplCopyWithImpl<$Res>
+    extends _$HarvestSettingCopyWithImpl<$Res, _$HarvestSettingImpl>
+    implements _$$HarvestSettingImplCopyWith<$Res> {
+  __$$HarvestSettingImplCopyWithImpl(
+    _$HarvestSettingImpl _value,
+    $Res Function(_$HarvestSettingImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of HarvestSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? id = null, Object? name = null, Object? isActive = null}) {
+    return _then(
+      _$HarvestSettingImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        name: null == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        isActive: null == isActive
+            ? _value.isActive
+            : isActive // ignore: cast_nullable_to_non_nullable
+                  as bool,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$HarvestSettingImpl implements _HarvestSetting {
+  const _$HarvestSettingImpl({
+    required this.id,
+    required this.name,
+    this.isActive = false,
+  });
+
+  factory _$HarvestSettingImpl.fromJson(Map<String, dynamic> json) =>
+      _$$HarvestSettingImplFromJson(json);
+
+  @override
+  final String id;
+  @override
+  final String name;
+  @override
+  @JsonKey()
+  final bool isActive;
+
+  @override
+  String toString() {
+    return 'HarvestSetting(id: $id, name: $name, isActive: $isActive)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$HarvestSettingImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.name, name) || other.name == name) &&
+            (identical(other.isActive, isActive) ||
+                other.isActive == isActive));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, name, isActive);
+
+  /// Create a copy of HarvestSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$HarvestSettingImplCopyWith<_$HarvestSettingImpl> get copyWith =>
+      __$$HarvestSettingImplCopyWithImpl<_$HarvestSettingImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$HarvestSettingImplToJson(this);
+  }
+}
+
+abstract class _HarvestSetting implements HarvestSetting {
+  const factory _HarvestSetting({
+    required final String id,
+    required final String name,
+    final bool isActive,
+  }) = _$HarvestSettingImpl;
+
+  factory _HarvestSetting.fromJson(Map<String, dynamic> json) =
+      _$HarvestSettingImpl.fromJson;
+
+  @override
+  String get id;
+  @override
+  String get name;
+  @override
+  bool get isActive;
+
+  /// Create a copy of HarvestSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$HarvestSettingImplCopyWith<_$HarvestSettingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

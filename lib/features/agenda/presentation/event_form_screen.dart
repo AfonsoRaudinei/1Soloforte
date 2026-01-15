@@ -11,8 +11,9 @@ import 'package:uuid/uuid.dart';
 
 class EventFormScreen extends ConsumerStatefulWidget {
   final DateTime? initialDate;
+  final Event? event;
 
-  const EventFormScreen({super.key, this.initialDate});
+  const EventFormScreen({super.key, this.initialDate, this.event});
 
   @override
   ConsumerState<EventFormScreen> createState() => _EventFormScreenState();
@@ -23,15 +24,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
 
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
-  // late TextEditingController _locationController; // Replaced by Area Dropdown mock
 
   late DateTime _startDate;
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
 
   EventType _selectedType = EventType.technicalVisit;
-  String? _selectedProducer; // Mock
-  String? _selectedArea; // Mock
+  String? _selectedProducer;
+  String? _selectedArea;
   String? _reminderOption = '1 hora antes';
 
   bool _activateReminder = false;
@@ -58,12 +58,30 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     super.initState();
     _titleController = TextEditingController();
     _descriptionController = TextEditingController();
-    // _locationController = TextEditingController();
 
-    final baseDate = widget.initialDate ?? DateTime.now();
-    _startDate = baseDate;
-    _startTime = TimeOfDay(hour: DateTime.now().hour + 1, minute: 0);
-    _endTime = TimeOfDay(hour: DateTime.now().hour + 3, minute: 0);
+    if (widget.event != null) {
+      final e = widget.event!;
+      _startDate = e.startTime;
+      _startTime = TimeOfDay.fromDateTime(e.startTime);
+      _endTime = TimeOfDay.fromDateTime(e.endTime);
+      _titleController.text = e.title;
+      _descriptionController.text = e.description;
+      _selectedType = e.type;
+
+      // Try to match location to area list, if not found, it waits as null or we could add it
+      if (!_areasMock.contains(e.location)) {
+        _areasMock.add(e.location);
+      }
+      _selectedArea = e.location;
+
+      // Infer producer from title if possible or leave blank as we don't have producer field in Event yet
+      // For now leave _selectedProducer null or default
+    } else {
+      final baseDate = widget.initialDate ?? DateTime.now();
+      _startDate = baseDate;
+      _startTime = TimeOfDay(hour: DateTime.now().hour + 1, minute: 0);
+      _endTime = TimeOfDay(hour: DateTime.now().hour + 3, minute: 0);
+    }
   }
 
   @override
@@ -117,7 +135,6 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       _startTime.minute,
     );
 
-    // Assuming same day end for simplicity based on ASCII UI "09:00 às 11:00"
     final endDateTime = DateTime(
       _startDate.year,
       _startDate.month,
@@ -127,7 +144,6 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     );
 
     if (endDateTime.isBefore(startDateTime)) {
-      // Handle cross-day or error. For now error.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Horário final deve ser após o inicial.')),
       );
@@ -135,26 +151,52 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       return;
     }
 
-    final newEvent = Event(
-      id: const Uuid().v4(),
-      title: _titleController.text,
-      description: _descriptionController.text,
-      startTime: startDateTime,
-      endTime: endDateTime,
-      type: _selectedType,
-      location: _selectedArea ?? 'Não definido',
-      status: EventStatus.scheduled,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
     try {
-      await ref.read(agendaControllerProvider.notifier).addEvent(newEvent);
-      if (mounted) {
-        context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Atividade salva com sucesso!')),
+      if (widget.event != null) {
+        // Edit existing event
+        final updatedEvent = widget.event!.copyWith(
+          title: _titleController.text,
+          description: _descriptionController.text,
+          startTime: startDateTime,
+          endTime: endDateTime,
+          type: _selectedType,
+          location: _selectedArea ?? 'Não definido',
+          updatedAt: DateTime.now(),
         );
+
+        await ref
+            .read(agendaControllerProvider.notifier)
+            .updateEvent(updatedEvent);
+
+        if (mounted) {
+          context
+              .pop(); // Returns to previous screen (Agenda or Weekly Planning)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Atividade atualizada com sucesso!')),
+          );
+        }
+      } else {
+        // Create new event
+        final newEvent = Event(
+          id: const Uuid().v4(),
+          title: _titleController.text,
+          description: _descriptionController.text,
+          startTime: startDateTime,
+          endTime: endDateTime,
+          type: _selectedType,
+          location: _selectedArea ?? 'Não definido',
+          status: EventStatus.scheduled,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        await ref.read(agendaControllerProvider.notifier).addEvent(newEvent);
+        if (mounted) {
+          context.pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Atividade salva com sucesso!')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -176,6 +218,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         (_endTime.hour - _startTime.hour) +
         (_endTime.minute - _startTime.minute) / 60;
 
+    final isEditing = widget.event != null;
+    final isInProgress = widget.event?.status == EventStatus.inProgress;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -183,7 +228,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ), // [×]
-        title: const Text('Nova Atividade'),
+        title: Text(isEditing ? 'Editar Atividade' : 'Nova Atividade'),
         actions: [
           TextButton.icon(
             // [✓ Salvar]
@@ -200,13 +245,21 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           children: [
             // Tipo de Atividade *
             _buildLabel('Tipo de Atividade *'),
-            DropdownButtonFormField<EventType>(
-              initialValue: _selectedType,
-              items: EventType.values
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t.label)))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedType = v!),
-              decoration: _inputDecoration(),
+            IgnorePointer(
+              ignoring: isInProgress,
+              child: Opacity(
+                opacity: isInProgress ? 0.5 : 1.0,
+                child: DropdownButtonFormField<EventType>(
+                  initialValue: _selectedType,
+                  items: EventType.values
+                      .map(
+                        (t) => DropdownMenuItem(value: t, child: Text(t.label)),
+                      )
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedType = v!),
+                  decoration: _inputDecoration(),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -221,38 +274,58 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
 
             // Produtor/Cliente *
             _buildLabel('Produtor/Cliente *'),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedProducer,
-              hint: const Text('Selecione...'),
-              items: _producersMock
-                  .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedProducer = v),
-              decoration: _inputDecoration(),
+            IgnorePointer(
+              ignoring: isInProgress,
+              child: Opacity(
+                opacity: isInProgress ? 0.5 : 1.0,
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedProducer,
+                  hint: const Text('Selecione...'),
+                  items: _producersMock
+                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedProducer = v),
+                  decoration: _inputDecoration(),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
             // Área/Talhão
             _buildLabel('Área/Talhão'),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedArea,
-              hint: const Text('Selecione...'),
-              items: _areasMock
-                  .map((a) => DropdownMenuItem(value: a, child: Text(a)))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedArea = v),
-              decoration: _inputDecoration(),
+            IgnorePointer(
+              ignoring: isInProgress,
+              child: Opacity(
+                opacity: isInProgress ? 0.5 : 1.0,
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedArea,
+                  hint: const Text('Selecione...'),
+                  items: _areasMock
+                      .map((a) => DropdownMenuItem(value: a, child: Text(a)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedArea = v),
+                  decoration: _inputDecoration(),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
             // Data *
             _buildLabel('Data *'),
-            InkWell(
-              onTap: _selectDate,
-              child: InputDecorator(
-                decoration: _inputDecoration(suffixIcon: Icons.calendar_today),
-                child: Text(
-                  DateFormat('dd/MMM/yyyy', 'pt_BR').format(_startDate),
+            IgnorePointer(
+              ignoring: isInProgress,
+              child: Opacity(
+                opacity: isInProgress ? 0.5 : 1.0,
+                child: InkWell(
+                  onTap: _selectDate,
+                  child: InputDecorator(
+                    decoration: _inputDecoration(
+                      suffixIcon: Icons.calendar_today,
+                    ),
+                    child: Text(
+                      DateFormat('dd/MMM/yyyy', 'pt_BR').format(_startDate),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -260,35 +333,41 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
 
             // Horário * (Start) às (End)
             _buildLabel('Horário *'),
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectTime(true),
-                    child: InputDecorator(
-                      decoration: _inputDecoration(
-                        suffixIcon: Icons.arrow_drop_down,
+            IgnorePointer(
+              ignoring: isInProgress,
+              child: Opacity(
+                opacity: isInProgress ? 0.5 : 1.0,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _selectTime(true),
+                        child: InputDecorator(
+                          decoration: _inputDecoration(
+                            suffixIcon: Icons.arrow_drop_down,
+                          ),
+                          child: Text(_startTime.format(context)),
+                        ),
                       ),
-                      child: Text(_startTime.format(context)),
                     ),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text('às'),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectTime(false),
-                    child: InputDecorator(
-                      decoration: _inputDecoration(
-                        suffixIcon: Icons.arrow_drop_down,
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text('às'),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _selectTime(false),
+                        child: InputDecorator(
+                          decoration: _inputDecoration(
+                            suffixIcon: Icons.arrow_drop_down,
+                          ),
+                          child: Text(_endTime.format(context)),
+                        ),
                       ),
-                      child: Text(_endTime.format(context)),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 4.0),

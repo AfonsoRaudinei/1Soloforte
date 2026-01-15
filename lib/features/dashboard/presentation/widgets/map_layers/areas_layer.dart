@@ -29,11 +29,20 @@ class AreasLayer extends ConsumerWidget {
     final areasAsync = ref.watch(areasControllerProvider);
     final drawingState = ref.watch(drawingControllerProvider);
 
-    // Existing DB Areas
-    final dbAreas = areasAsync.valueOrNull ?? [];
+    // Newly drawn/imported areas (Session) (Exclude editing)
+    final sessionAreas = drawingState.savedAreas
+        .where((area) => area.id != drawingState.editingAreaId)
+        .toList();
+    final sessionIds = sessionAreas.map((a) => a.id).toSet();
 
-    // Newly drawn/imported areas (Session)
-    final sessionAreas = drawingState.savedAreas;
+    // Existing DB Areas (Exclude editing AND overridden by session)
+    final dbAreas = (areasAsync.valueOrNull ?? [])
+        .where(
+          (area) =>
+              area.id != drawingState.editingAreaId &&
+              !sessionIds.contains(area.id),
+        )
+        .toList();
 
     return PolygonLayer(
       polygons: [
