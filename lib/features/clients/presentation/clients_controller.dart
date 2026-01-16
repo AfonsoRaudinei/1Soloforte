@@ -23,6 +23,34 @@ class ClientsController extends _$ClientsController {
     }
   }
 
+  Future<void> updateClient(Client client) async {
+    state = const AsyncValue.loading();
+    try {
+      await ref.read(clientsRepositoryProvider).updateClient(client);
+      final currentList = state.value ?? [];
+      final updated = [
+        for (final item in currentList)
+          if (item.id == client.id) client else item,
+      ];
+      state = AsyncValue.data(updated);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> deleteClient(String id) async {
+    state = const AsyncValue.loading();
+    try {
+      await ref.read(clientsRepositoryProvider).deleteClient(id);
+      final currentList = state.value ?? [];
+      state = AsyncValue.data(
+        currentList.where((client) => client.id != id).toList(),
+      );
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   // Method to facilitate filtering in the UI
   List<Client> filterClients(String query) {
     final clients = state.value ?? [];

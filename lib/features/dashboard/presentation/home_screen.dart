@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:soloforte_app/features/map/application/drawing_controller.dart';
 import 'package:soloforte_app/features/map/application/geometry_utils.dart';
 import 'package:soloforte_app/features/areas/presentation/providers/areas_controller.dart';
+import 'package:soloforte_app/features/areas/domain/entities/area.dart';
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
 import 'package:soloforte_app/features/map/presentation/widgets/drawing_toolbar.dart';
 import 'package:soloforte_app/features/visits/presentation/visit_controller.dart';
@@ -37,11 +38,13 @@ import 'providers/dashboard_controller.dart';
 import 'providers/dashboard_state.dart';
 import 'package:soloforte_app/features/ndvi/application/ndvi_controller.dart';
 import 'package:soloforte_app/features/ndvi/data/services/ndvi_cache_service.dart';
+import 'package:soloforte_app/features/clients/presentation/client_detail_controller.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   final LatLng? initialLocation;
+  final String? clientId;
 
-  const HomeScreen({super.key, this.initialLocation});
+  const HomeScreen({super.key, this.initialLocation, this.clientId});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -201,6 +204,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   String? _evolutionKey;
   final MarketingRepository _marketingRepository = MarketingRepository();
   List<MarketingMapPost> _marketingPosts = [];
+  bool _hasAppliedClientFocus = false;
 
   @override
   void initState() {
@@ -221,6 +225,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _positionStreamSubscription?.cancel();
     _ndviTabController.dispose();
     super.dispose();
+  }
+
+  void _applyClientFocusIfNeeded({
+    required DrawingState drawingState,
+    required List<Area> dbAreas,
+    required String? clientId,
+    required String? clientName,
+  }) {
+    if (_hasAppliedClientFocus || clientId == null) return;
+
+    LatLng? focusPoint;
+    final sessionAreas = drawingState.savedAreas
+        .where((area) => area.clientId == clientId)
+        .toList();
+    for (final area in sessionAreas) {
+      if (area.center != null) {
+        focusPoint = area.center;
+        break;
+      }
+    }
+
+    if (focusPoint == null) {
+      for (final area in dbAreas) {
+        if (area.clientId == clientId && area.coordinates.isNotEmpty) {
+          focusPoint = GeometryUtils.calculateCentroid(area.coordinates);
+          break;
+        }
+      }
+    }
+
+    if (focusPoint != null) {
+      _hasAppliedClientFocus = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _mapController.move(
+          focusPoint!,
+          _mapController.camera.zoom,
+        );
+      });
+      return;
+    }
+
+    if (clientName != null) {
+      _hasAppliedClientFocus = true;
+    }
   }
 
   Future<void> _toggleUserTracking() async {
@@ -314,6 +362,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final dashboardCtrl = ref.read(dashboardControllerProvider.notifier);
     final drawingState = ref.watch(drawingControllerProvider);
     final ndviState = ref.watch(ndviControllerProvider);
+    final areasAsync = ref.watch(areasControllerProvider);
+    final clientAsync = widget.clientId == null
+        ? null
+        : ref.watch(clientByIdProvider(widget.clientId!));
+    final clientName = clientAsync?.valueOrNull?.name;
+
+    _applyClientFocusIfNeeded(
+      drawingState: drawingState,
+      dbAreas: areasAsync.valueOrNull ?? [],
+      clientId: widget.clientId,
+      clientName: clientName,
+    );
 
     final isDrawing = ref.watch(
       drawingControllerProvider.select((s) => s.isDrawing),
@@ -371,8 +431,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ),
                     ],
                   ),
-                const AreasLayer(),
-                const OccurrencesLayer(),
+                AreasLayer(
+                  clientId: widget.clientId,
+                  clientName: clientName,
+                ),
+                OccurrencesLayer(
+                  clientId: widget.clientId,
+                  clientName: clientName,
+                ),
                 if (_marketingPosts.isNotEmpty)
                   MarkerLayer(markers: _buildMarketingMarkers()),
                 // User Location Marker

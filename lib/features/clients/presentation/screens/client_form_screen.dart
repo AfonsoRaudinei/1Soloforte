@@ -5,6 +5,7 @@ import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/clients/domain/client_model.dart';
 import 'package:soloforte_app/features/clients/presentation/clients_controller.dart';
+import 'package:soloforte_app/features/clients/data/clients_repository.dart';
 import 'package:soloforte_app/shared/widgets/avatar_picker.dart';
 import 'package:soloforte_app/shared/widgets/masked_text_input.dart';
 import 'package:soloforte_app/shared/widgets/city_autocomplete.dart';
@@ -34,6 +35,14 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
   String? _selectedState;
   final String _selectedType = 'producer';
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.clientId != null) {
+      _loadClient(widget.clientId!);
+    }
+  }
 
   @override
   void dispose() {
@@ -257,6 +266,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final isEditing = widget.clientId != null;
       final client = Client(
         id: widget.clientId ?? const Uuid().v4(),
         name: _nameController.text,
@@ -273,7 +283,13 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
         notes: _notesController.text,
       );
 
-      await ref.read(clientsControllerProvider.notifier).addClient(client);
+      final controller = ref.read(clientsControllerProvider.notifier);
+      if (isEditing) {
+        await controller.updateClient(client);
+      } else {
+        await controller.addClient(client);
+      }
+      ref.invalidate(clientsControllerProvider);
 
       if (mounted) {
         context.pop();
@@ -293,5 +309,23 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadClient(String clientId) async {
+    final repository = ref.read(clientsRepositoryProvider);
+    final client = await repository.getClientById(clientId);
+    if (!mounted || client == null) return;
+
+    setState(() {
+      _nameController.text = client.name;
+      _emailController.text = client.email;
+      _phoneController.text = client.phone;
+      _cpfCnpjController.text = client.cpfCnpj ?? '';
+      _addressController.text = client.address;
+      _cityController.text = client.city;
+      _stateController.text = client.state;
+      _selectedState = client.state;
+      _notesController.text = client.notes ?? '';
+    });
   }
 }

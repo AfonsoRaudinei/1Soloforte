@@ -1,88 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/clients/domain/client_model.dart';
+import 'package:soloforte_app/features/clients/presentation/clients_controller.dart';
 import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
 
-class MockClientDisplay {
-  final Client client;
-  final int areas;
-  final double ha;
-  MockClientDisplay(this.client, this.areas, this.ha);
-}
-
-class ClientListScreen extends StatefulWidget {
+class ClientListScreen extends ConsumerStatefulWidget {
   const ClientListScreen({super.key});
 
   @override
-  State<ClientListScreen> createState() => _ClientListScreenState();
+  ConsumerState<ClientListScreen> createState() => _ClientListScreenState();
 }
 
-class _ClientListScreenState extends State<ClientListScreen> {
+class _ClientListScreenState extends ConsumerState<ClientListScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'Todos'; // Todos, Ativos, Inativos
 
-  // Mock Data
-  final List<MockClientDisplay> _clients = [
-    MockClientDisplay(
-      Client(
-        id: '1',
-        name: 'João Silva',
-        email: 'joao.silva@email.com',
-        phone: '(11) 98765-4321',
-        cpfCnpj: '123.456.789-00',
-        address: 'Fazenda Boa Vista',
-        city: 'Piracicaba',
-        state: 'SP',
-        type: 'producer',
-        status: 'active',
-        lastActivity: DateTime.now().subtract(const Duration(days: 1)),
-        notes: '3 Fazendas | 180 ha',
-      ),
-      12,
-      180,
-    ),
-    MockClientDisplay(
-      Client(
-        id: '2',
-        name: 'Maria Santos',
-        email: 'maria@email.com',
-        phone: '(19) 99876-5432',
-        cpfCnpj: '987.654.321-00',
-        address: 'Ribeirão Preto, SP',
-        city: 'Ribeirão Preto',
-        state: 'SP',
-        type: 'producer',
-        status: 'active',
-        lastActivity: DateTime.now().subtract(const Duration(days: 3)),
-        notes: '1 Fazenda | 240 ha',
-      ),
-      8,
-      240,
-    ),
-    MockClientDisplay(
-      Client(
-        id: '3',
-        name: 'Pedro Oliveira',
-        email: 'pedro@email.com',
-        phone: '(16) 98888-9999',
-        cpfCnpj: '456.789.123-00',
-        address: 'Franca, SP',
-        city: 'Franca',
-        state: 'SP',
-        type: 'producer',
-        status: 'inactive',
-        lastActivity: DateTime.now().subtract(const Duration(days: 7)),
-        notes: '2 Fazendas | 95 ha',
-      ),
-      5,
-      95,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final clientsAsync = ref.watch(clientsControllerProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -98,7 +49,7 @@ class _ClientListScreenState extends State<ClientListScreen> {
         actions: [
           TextButton.icon(
             onPressed: () {
-              context.push('/dashboard/clients/new');
+              context.push('/map/clients/new');
             },
             icon: const Icon(Icons.add, color: AppColors.primary),
             label: Text(
@@ -160,35 +111,65 @@ class _ClientListScreenState extends State<ClientListScreen> {
 
           // List
           Expanded(
-            child: _clients.isEmpty
-                ? EmptyStateWidget(
+            child: clientsAsync.when(
+              data: (clients) {
+                final filteredClients = _applyFilters(clients);
+                if (filteredClients.isEmpty) {
+                  return EmptyStateWidget(
                     title: 'Nenhum produtor encontrado',
                     message:
                         'Tente ajustar os filtros ou cadastre um novo produtor.',
                     icon: Icons.person_off_outlined,
                     actionLabel: 'Cadastrar Produtor',
-                    onAction: () => context.push('/dashboard/clients/new'),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _clients.length + 1, // +1 for "Load more"
-                    separatorBuilder: (c, i) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      if (index == _clients.length) {
-                        return Center(
-                          child: TextButton(
-                            onPressed: () {},
-                            child: const Text('Carregar mais...'),
-                          ),
-                        );
-                      }
-                      return _buildProducerCard(_clients[index]);
-                    },
-                  ),
+                    onAction: () => context.push('/map/clients/new'),
+                  );
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredClients.length + 1, // +1 for "Load more"
+                  separatorBuilder: (c, i) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    if (index == filteredClients.length) {
+                      return Center(
+                        child: TextButton(
+                          onPressed: () {},
+                          child: const Text('Carregar mais...'),
+                        ),
+                      );
+                    }
+                    return _buildProducerCard(filteredClients[index]);
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Text('Erro ao carregar clientes: $error'),
+              ),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  List<Client> _applyFilters(List<Client> clients) {
+    var filtered = clients;
+    final query = _searchController.text.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      filtered = filtered.where((client) {
+        return client.name.toLowerCase().contains(query) ||
+            client.city.toLowerCase().contains(query) ||
+            client.phone.contains(query);
+      }).toList();
+    }
+
+    if (_selectedFilter == 'Ativos') {
+      filtered = filtered.where((c) => c.status == 'active').toList();
+    } else if (_selectedFilter == 'Inativos') {
+      filtered = filtered.where((c) => c.status == 'inactive').toList();
+    }
+
+    return filtered;
   }
 
   Widget _buildFilterChip(String label) {
@@ -212,8 +193,7 @@ class _ClientListScreenState extends State<ClientListScreen> {
     );
   }
 
-  Widget _buildProducerCard(MockClientDisplay item) {
-    final client = item.client;
+  Widget _buildProducerCard(Client client) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
@@ -244,7 +224,7 @@ class _ClientListScreenState extends State<ClientListScreen> {
             ),
           ),
           Text(
-            '📊 ${item.areas} Áreas monitoradas',
+            '📊 ${client.totalAreas} Áreas monitoradas',
             style: AppTypography.bodySmall,
           ),
 
@@ -259,7 +239,7 @@ class _ClientListScreenState extends State<ClientListScreen> {
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () {
-                context.push('/dashboard/clients/${client.id}');
+                context.push('/map/clients/${client.id}');
               },
               child: const Text('Ver Detalhes'),
             ),

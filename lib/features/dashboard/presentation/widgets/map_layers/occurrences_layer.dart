@@ -6,7 +6,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
 
 class OccurrencesLayer extends ConsumerWidget {
-  const OccurrencesLayer({super.key});
+  final String? clientId;
+  final String? clientName;
+
+  const OccurrencesLayer({super.key, this.clientId, this.clientName});
 
   IconData _getOccurrenceIcon(String type) {
     switch (type) {
@@ -30,10 +33,17 @@ class OccurrencesLayer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final occurrencesAsync = ref.watch(occurrenceControllerProvider);
+    final shouldFilter = clientId != null;
 
     return occurrencesAsync.when(
-      data: (occurrences) => MarkerLayer(
-        markers: occurrences.map((occ) {
+      data: (occurrences) {
+        var filteredOccurrences = occurrences;
+        if (shouldFilter) {
+          filteredOccurrences =
+              occurrences.where((occ) => occ.clientId == clientId).toList();
+        }
+        return MarkerLayer(
+          markers: filteredOccurrences.map((occ) {
           return Marker(
             point: LatLng(occ.latitude, occ.longitude),
             width: 40,
@@ -60,8 +70,9 @@ class OccurrencesLayer extends ConsumerWidget {
               ),
             ),
           );
-        }).toList(),
-      ),
+          }).toList(),
+        );
+      },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
     );

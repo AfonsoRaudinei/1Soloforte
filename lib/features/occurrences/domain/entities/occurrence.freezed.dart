@@ -23,6 +23,8 @@ mixin _$Occurrence {
   String get type => throw _privateConstructorUsedError;
   double get severity => throw _privateConstructorUsedError;
   String get areaName => throw _privateConstructorUsedError;
+  String? get areaId => throw _privateConstructorUsedError;
+  String? get clientId => throw _privateConstructorUsedError;
   DateTime get date => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   List<String> get images => throw _privateConstructorUsedError;
@@ -62,6 +64,8 @@ abstract class $OccurrenceCopyWith<$Res> {
     String type,
     double severity,
     String areaName,
+    String? areaId,
+    String? clientId,
     DateTime date,
     String status,
     List<String> images,
@@ -101,6 +105,8 @@ class _$OccurrenceCopyWithImpl<$Res, $Val extends Occurrence>
     Object? type = null,
     Object? severity = null,
     Object? areaName = null,
+    Object? areaId = freezed,
+    Object? clientId = freezed,
     Object? date = null,
     Object? status = null,
     Object? images = null,
@@ -143,6 +149,14 @@ class _$OccurrenceCopyWithImpl<$Res, $Val extends Occurrence>
                 ? _value.areaName
                 : areaName // ignore: cast_nullable_to_non_nullable
                       as String,
+            areaId: freezed == areaId
+                ? _value.areaId
+                : areaId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            clientId: freezed == clientId
+                ? _value.clientId
+                : clientId // ignore: cast_nullable_to_non_nullable
+                      as String?,
             date: null == date
                 ? _value.date
                 : date // ignore: cast_nullable_to_non_nullable
@@ -225,6 +239,8 @@ abstract class _$$OccurrenceImplCopyWith<$Res>
     String type,
     double severity,
     String areaName,
+    String? areaId,
+    String? clientId,
     DateTime date,
     String status,
     List<String> images,
@@ -263,6 +279,8 @@ class __$$OccurrenceImplCopyWithImpl<$Res>
     Object? type = null,
     Object? severity = null,
     Object? areaName = null,
+    Object? areaId = freezed,
+    Object? clientId = freezed,
     Object? date = null,
     Object? status = null,
     Object? images = null,
@@ -305,6 +323,14 @@ class __$$OccurrenceImplCopyWithImpl<$Res>
             ? _value.areaName
             : areaName // ignore: cast_nullable_to_non_nullable
                   as String,
+        areaId: freezed == areaId
+            ? _value.areaId
+            : areaId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        clientId: freezed == clientId
+            ? _value.clientId
+            : clientId // ignore: cast_nullable_to_non_nullable
+                  as String?,
         date: null == date
             ? _value.date
             : date // ignore: cast_nullable_to_non_nullable
@@ -380,6 +406,8 @@ class _$OccurrenceImpl implements _Occurrence {
     required this.type,
     required this.severity,
     required this.areaName,
+    this.areaId,
+    this.clientId,
     required this.date,
     required this.status,
     required final List<String> images,
@@ -413,6 +441,10 @@ class _$OccurrenceImpl implements _Occurrence {
   final double severity;
   @override
   final String areaName;
+  @override
+  final String? areaId;
+  @override
+  final String? clientId;
   @override
   final DateTime date;
   @override
@@ -486,7 +518,7 @@ class _$OccurrenceImpl implements _Occurrence {
 
   @override
   String toString() {
-    return 'Occurrence(id: $id, title: $title, description: $description, type: $type, severity: $severity, areaName: $areaName, date: $date, status: $status, images: $images, latitude: $latitude, longitude: $longitude, timeline: $timeline, assignedTo: $assignedTo, recommendations: $recommendations, phenologicalStage: $phenologicalStage, categorySeverities: $categorySeverities, categoryImages: $categoryImages, technicalRecommendation: $technicalRecommendation, technicalResponsible: $technicalResponsible, temporalType: $temporalType, hasSoilSample: $hasSoilSample)';
+    return 'Occurrence(id: $id, title: $title, description: $description, type: $type, severity: $severity, areaName: $areaName, areaId: $areaId, clientId: $clientId, date: $date, status: $status, images: $images, latitude: $latitude, longitude: $longitude, timeline: $timeline, assignedTo: $assignedTo, recommendations: $recommendations, phenologicalStage: $phenologicalStage, categorySeverities: $categorySeverities, categoryImages: $categoryImages, technicalRecommendation: $technicalRecommendation, technicalResponsible: $technicalResponsible, temporalType: $temporalType, hasSoilSample: $hasSoilSample)';
   }
 
   @override
@@ -503,6 +535,9 @@ class _$OccurrenceImpl implements _Occurrence {
                 other.severity == severity) &&
             (identical(other.areaName, areaName) ||
                 other.areaName == areaName) &&
+            (identical(other.areaId, areaId) || other.areaId == areaId) &&
+            (identical(other.clientId, clientId) ||
+                other.clientId == clientId) &&
             (identical(other.date, date) || other.date == date) &&
             (identical(other.status, status) || other.status == status) &&
             const DeepCollectionEquality().equals(other._images, _images) &&
@@ -549,6 +584,8 @@ class _$OccurrenceImpl implements _Occurrence {
     type,
     severity,
     areaName,
+    areaId,
+    clientId,
     date,
     status,
     const DeepCollectionEquality().hash(_images),
@@ -583,6 +620,8 @@ abstract class _Occurrence implements Occurrence {
     required final String type,
     required final double severity,
     required final String areaName,
+    final String? areaId,
+    final String? clientId,
     required final DateTime date,
     required final String status,
     required final List<String> images,
@@ -612,6 +651,10 @@ abstract class _Occurrence implements Occurrence {
   double get severity;
   @override
   String get areaName;
+  @override
+  String? get areaId;
+  @override
+  String? get clientId;
   @override
   DateTime get date;
   @override

@@ -57,7 +57,7 @@ class _ClientListScreenEnhancedState
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           // TODO: Navegar para formulário
-          context.push('/dashboard/clients/new');
+          context.push('/map/clients/new');
         },
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add),
@@ -98,7 +98,7 @@ class _ClientListScreenEnhancedState
                           client: filteredClients[index],
                           onTap: () {
                             context.push(
-                              '/dashboard/clients/${filteredClients[index].id}',
+                              '/map/clients/${filteredClients[index].id}',
                             );
                           },
                         );
@@ -234,7 +234,7 @@ class _ClientListScreenEnhancedState
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
-                context.push('/dashboard/clients/new');
+                context.push('/map/clients/new');
               },
               icon: const Icon(Icons.add),
               label: const Text('Adicionar Cliente'),

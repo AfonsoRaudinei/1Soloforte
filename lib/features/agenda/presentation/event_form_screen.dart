@@ -7,13 +7,20 @@ import 'package:intl/intl.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
+import 'package:soloforte_app/features/clients/data/clients_repository.dart';
 import 'package:uuid/uuid.dart';
 
 class EventFormScreen extends ConsumerStatefulWidget {
   final DateTime? initialDate;
   final Event? event;
+  final String? clientId;
 
-  const EventFormScreen({super.key, this.initialDate, this.event});
+  const EventFormScreen({
+    super.key,
+    this.initialDate,
+    this.event,
+    this.clientId,
+  });
 
   @override
   ConsumerState<EventFormScreen> createState() => _EventFormScreenState();
@@ -33,6 +40,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   String? _selectedProducer;
   String? _selectedArea;
   String? _reminderOption = '1 hora antes';
+  String? _lockedClientId;
+  String? _lockedClientName;
 
   bool _activateReminder = false;
   bool _googleCalendar = false;
@@ -58,6 +67,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     super.initState();
     _titleController = TextEditingController();
     _descriptionController = TextEditingController();
+    _lockedClientId = widget.clientId;
 
     if (widget.event != null) {
       final e = widget.event!;
@@ -67,6 +77,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       _titleController.text = e.title;
       _descriptionController.text = e.description;
       _selectedType = e.type;
+      _selectedProducer = e.clientName;
 
       // Try to match location to area list, if not found, it waits as null or we could add it
       if (!_areasMock.contains(e.location)) {
@@ -74,13 +85,19 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       }
       _selectedArea = e.location;
 
-      // Infer producer from title if possible or leave blank as we don't have producer field in Event yet
-      // For now leave _selectedProducer null or default
+      if (_selectedProducer != null &&
+          !_producersMock.contains(_selectedProducer)) {
+        _producersMock.add(_selectedProducer!);
+      }
     } else {
       final baseDate = widget.initialDate ?? DateTime.now();
       _startDate = baseDate;
       _startTime = TimeOfDay(hour: DateTime.now().hour + 1, minute: 0);
       _endTime = TimeOfDay(hour: DateTime.now().hour + 3, minute: 0);
+    }
+
+    if (_lockedClientId != null) {
+      _loadClientAssociation(_lockedClientId!);
     }
   }
 
@@ -89,6 +106,20 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadClientAssociation(String clientId) async {
+    final client = await ref.read(clientsRepositoryProvider).getClientById(
+          clientId,
+        );
+    if (!mounted || client == null) return;
+    setState(() {
+      _lockedClientName = client.name;
+      _selectedProducer = client.name;
+      if (!_producersMock.contains(client.name)) {
+        _producersMock.add(client.name);
+      }
+    });
   }
 
   Future<void> _selectDate() async {
@@ -154,6 +185,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     try {
       if (widget.event != null) {
         // Edit existing event
+        final lockedClientId = _lockedClientId ?? widget.event!.clientId;
+        final lockedClientName = _lockedClientName ??
+            widget.event!.clientName ??
+            _selectedProducer;
         final updatedEvent = widget.event!.copyWith(
           title: _titleController.text,
           description: _descriptionController.text,
@@ -161,6 +196,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           endTime: endDateTime,
           type: _selectedType,
           location: _selectedArea ?? 'Não definido',
+          clientId: lockedClientId,
+          clientName: lockedClientName,
           updatedAt: DateTime.now(),
         );
 
@@ -177,6 +214,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         }
       } else {
         // Create new event
+        final lockedClientId = _lockedClientId;
+        final lockedClientName = _lockedClientName ?? _selectedProducer;
         final newEvent = Event(
           id: const Uuid().v4(),
           title: _titleController.text,
@@ -185,6 +224,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           endTime: endDateTime,
           type: _selectedType,
           location: _selectedArea ?? 'Não definido',
+          clientId: lockedClientId,
+          clientName: lockedClientName,
           status: EventStatus.scheduled,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -275,13 +316,15 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             // Produtor/Cliente *
             _buildLabel('Produtor/Cliente *'),
             IgnorePointer(
-              ignoring: isInProgress,
+              ignoring: isInProgress || _lockedClientId != null,
               child: Opacity(
                 opacity: isInProgress ? 0.5 : 1.0,
                 child: DropdownButtonFormField<String>(
                   initialValue: _selectedProducer,
                   hint: const Text('Selecione...'),
-                  items: _producersMock
+                  items: (_lockedClientName != null
+                          ? [_lockedClientName!]
+                          : _producersMock)
                       .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                       .toList(),
                   onChanged: (v) => setState(() => _selectedProducer = v),

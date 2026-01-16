@@ -4,13 +4,15 @@ import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static const _databaseName = "soloforte.db";
-  static const _databaseVersion = 4; // Incremented version to 4
+  static const _databaseVersion = 6; // Incremented version to 6
 
   static const tableVisits = 'visits';
   static const tableAreas = 'areas';
   static const tableOccurrences = 'occurrences';
   static const tableTickets = 'tickets';
   static const tableMarketingPosts = 'marketing_posts';
+  static const tableClients = 'clients';
+  static const tableAgendaEvents = 'agenda_events';
 
   // Singleton pattern
   DatabaseHelper._privateConstructor();
@@ -47,6 +49,8 @@ class DatabaseHelper {
     await _createOccurrencesTable(db);
     await _createTicketsTable(db);
     await _createMarketingPostsTable(db);
+    await _createClientsTable(db);
+    await _createAgendaEventsTable(db);
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -67,6 +71,14 @@ class DatabaseHelper {
 
     if (oldVersion < 4) {
       await _createMarketingPostsTable(db);
+    }
+
+    if (oldVersion < 5) {
+      await _createClientsTable(db);
+    }
+
+    if (oldVersion < 6) {
+      await _createAgendaEventsTable(db);
     }
   }
 
@@ -123,6 +135,28 @@ class DatabaseHelper {
       CREATE TABLE $tableMarketingPosts (
         id TEXT PRIMARY KEY,
         created_at INTEGER NOT NULL,
+        json_data TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future _createClientsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableClients (
+        id TEXT PRIMARY KEY,
+        status TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        json_data TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future _createAgendaEventsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableAgendaEvents (
+        id TEXT PRIMARY KEY,
+        start_time INTEGER NOT NULL,
+        status TEXT NOT NULL,
         json_data TEXT NOT NULL
       )
     ''');

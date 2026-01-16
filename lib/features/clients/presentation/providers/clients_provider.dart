@@ -3,7 +3,7 @@ import '../../data/clients_repository.dart';
 import '../../domain/client_model.dart';
 
 final clientsRepositoryProvider = Provider<ClientsRepository>((ref) {
-  return MockClientsRepository();
+  return SqliteClientsRepository();
 });
 
 final clientsProvider = FutureProvider<List<Client>>((ref) async {

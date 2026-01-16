@@ -11,7 +11,9 @@ import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dar
 import 'package:soloforte_app/features/agenda/presentation/weekly_planning_screen.dart';
 
 class AgendaScreen extends ConsumerStatefulWidget {
-  const AgendaScreen({super.key});
+  final String? clientId;
+
+  const AgendaScreen({super.key, this.clientId});
 
   @override
   ConsumerState<AgendaScreen> createState() => _AgendaScreenState();
@@ -49,8 +51,19 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
             onPressed: () => _showFilterDialog(context),
           ),
           TextButton.icon(
-            onPressed: () =>
-                context.push('/dashboard/calendar/new', extra: _selectedDay),
+            onPressed: () {
+              if (widget.clientId != null) {
+                context.push(
+                  '/dashboard/calendar/new',
+                  extra: {
+                    'initialDate': _selectedDay,
+                    'clientId': widget.clientId,
+                  },
+                );
+                return;
+              }
+              context.push('/dashboard/calendar/new', extra: _selectedDay);
+            },
             icon: const Icon(Icons.add, size: 20),
             label: const Text('Nova'),
             style: TextButton.styleFrom(foregroundColor: AppColors.primary),
@@ -59,7 +72,12 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
       ),
       body: eventsState.when(
         data: (allEvents) {
-          final dailyEvents = allEvents
+          final scopedEvents = widget.clientId == null
+              ? allEvents
+              : allEvents
+                  .where((event) => event.clientId == widget.clientId)
+                  .toList();
+          final dailyEvents = scopedEvents
               .where((e) => isSameDay(e.startTime, _selectedDay))
               .toList();
           dailyEvents.sort((a, b) => a.startTime.compareTo(b.startTime));
@@ -143,7 +161,7 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                         );
                       },
                     ),
-                    eventLoader: (day) => allEvents
+                    eventLoader: (day) => scopedEvents
                         .where((e) => isSameDay(e.startTime, day))
                         .toList(),
                   ),
@@ -512,6 +530,16 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                   ),
               TextButton(
                 onPressed: () {
+                  if (widget.clientId != null) {
+                    context.push(
+                      '/dashboard/calendar/detail',
+                      extra: {
+                        'event': event,
+                        'returnToClientId': widget.clientId,
+                      },
+                    );
+                    return;
+                  }
                   context.push('/dashboard/calendar/detail', extra: event);
                 },
                 child: const Text('Ver Detalhes'),

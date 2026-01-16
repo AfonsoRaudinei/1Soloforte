@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/clients/presentation/client_detail_controller.dart';
-// Note: Keeping existing imports if they are useful, but likely will replace widget usages.
 import 'package:soloforte_app/features/clients/presentation/widgets/client_history_timeline.dart';
 import 'package:soloforte_app/features/clients/domain/client_history_model.dart';
 
@@ -20,46 +19,7 @@ class ClientDetailScreen extends ConsumerStatefulWidget {
 class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
   String _selectedFilter = 'all';
 
-  // Mock Data (Moved to property for filtering)
-  final List<ClientHistory> _allHistory = [
-    ClientHistory(
-      id: '1',
-      clientId: 'c1',
-      actionType: 'visit',
-      description: 'Visita Técnica: Monitoramento de Pragas (Broca)',
-      timestamp: DateTime.now().subtract(const Duration(hours: 4)),
-      metadata: {'Técnico': 'João', 'Talhão': 'T-10', 'Fazenda': 'Boa Vista'},
-    ),
-    ClientHistory(
-      id: '2',
-      clientId: 'c1',
-      actionType: 'occurrence',
-      description: 'Nova Ocorrência: Ferrugem Asiática Detectada',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      metadata: {'Severidade': 'Alta', 'Talhão': 'T-03'},
-    ),
-    ClientHistory(
-      id: '3',
-      clientId: 'c1',
-      actionType: 'whatsapp',
-      description: 'Chat Iniciado: Dúvida sobre aplicação',
-      timestamp: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    ClientHistory(
-      id: '4',
-      clientId: 'c1',
-      actionType: 'report',
-      description: 'Relatório Mensal de Produtividade (PDF)',
-      timestamp: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-    ClientHistory(
-      id: '5',
-      clientId: 'c1',
-      actionType: 'image',
-      description: 'Foto enviada pelo produtor (Folha da Soja)',
-      timestamp: DateTime.now().subtract(const Duration(days: 6)),
-    ),
-  ];
+  final List<ClientHistory> _allHistory = [];
 
   List<ClientHistory> get _filteredHistory {
     if (_selectedFilter == 'all') return _allHistory;
@@ -92,8 +52,6 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // For now, we mock the data loading since providers layout might differ,
-    // or we can try to use the existing provider if it works.
     final clientAsync = ref.watch(clientByIdProvider(widget.clientId));
 
     return Scaffold(
@@ -104,7 +62,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
           TextButton.icon(
             onPressed: () {
               // Edit action
-              context.push('/dashboard/clients/${widget.clientId}/edit');
+              context.push('/map/clients/${widget.clientId}/edit');
             },
             icon: const Icon(Icons.edit, size: 18),
             label: const Text('Editar'),
@@ -153,9 +111,9 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Produtor desde 2020',
+                        client.notes ?? '',
                         style: AppTypography.bodySmall,
-                      ), // Mock date
+                      ),
                     ],
                   ),
                 ),
@@ -168,7 +126,7 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                     children: [
                       _buildInfoRow('📧 Email', client.email),
                       _buildInfoRow('📱 Celular', client.phone),
-                      _buildInfoRow('📱 Fixo', '(XX) XXXX-XXXX'), // Mock
+                      _buildInfoRow('📱 Fixo', ''),
                       _buildInfoRow(
                         '📍 Endereço',
                         '${client.address}, ${client.city} - ${client.state}',
@@ -185,19 +143,10 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                   title: 'Fazendas (${client.farmIds.length})',
                   child: Column(
                     children: [
-                      // Mock Farms List
-                      _buildFarmItem(
-                        'Fazenda Boa Vista',
-                        '120 ha | 8 talhões',
-                        'Piracicaba, SP',
-                      ),
-                      const Divider(),
-                      _buildFarmItem(
-                        'Fazenda Santa Maria',
-                        '45 ha | 3 talhões',
-                        'Limeira, SP',
-                      ),
-                      // Add real logic to iterate farms if available
+                      if (client.farmIds.isNotEmpty)
+                        ...client.farmIds.map(
+                          (farmId) => _buildFarmItem(farmId, '', ''),
+                        ),
                     ],
                   ),
                 ),
@@ -208,11 +157,17 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                   title: 'Estatísticas',
                   child: Column(
                     children: [
-                      _buildStatRow('Total de Área', '180 ha'),
-                      _buildStatRow('Talhões', '12'),
-                      _buildStatRow('Ocorrências', '23'),
-                      _buildStatRow('Relatórios', '8'),
-                      _buildStatRow('Última visita', 'Ontem'),
+                      _buildStatRow(
+                        'Total de Área',
+                        '${client.totalHectares.toStringAsFixed(0)} ha',
+                      ),
+                      _buildStatRow('Talhões', '${client.totalAreas}'),
+                      _buildStatRow('Ocorrências', '0'),
+                      _buildStatRow('Relatórios', '0'),
+                      _buildStatRow(
+                        'Última visita',
+                        _formatLastActivity(client.lastActivity),
+                      ),
                     ],
                   ),
                 ),
@@ -268,7 +223,16 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
                     Expanded(child: _buildActionBtn(Icons.email, 'Email')),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _buildActionBtn(Icons.file_copy, 'Relatórios'),
+                      child: _buildActionBtn(
+                        Icons.file_copy,
+                        'Relatórios',
+                        onPressed: () {
+                          context.push(
+                            '/map/calendar',
+                            extra: {'clientId': widget.clientId},
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -373,15 +337,24 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
               ],
             ),
           ),
-          TextButton(onPressed: () {}, child: const Text('Ver no Mapa')),
+          TextButton(
+            onPressed: () {
+              context.push('/map', extra: {'clientId': widget.clientId});
+            },
+            child: const Text('Ver no Mapa'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActionBtn(IconData icon, String label) {
+  Widget _buildActionBtn(
+    IconData icon,
+    String label, {
+    VoidCallback? onPressed,
+  }) {
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: onPressed ?? () {},
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: OutlinedButton.styleFrom(
@@ -389,6 +362,15 @@ class _ClientDetailScreenState extends ConsumerState<ClientDetailScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
+  }
+
+  String _formatLastActivity(DateTime? date) {
+    if (date == null) return '-';
+    final diff = DateTime.now().difference(date).inDays;
+    if (diff == 0) return 'Hoje';
+    if (diff == 1) return 'Ontem';
+    if (diff < 7) return '$diff dias';
+    return 'Semana';
   }
 
   Widget _buildFilterChip(String label, String value) {

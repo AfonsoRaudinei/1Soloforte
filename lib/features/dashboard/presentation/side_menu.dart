@@ -141,9 +141,22 @@ class SideMenu extends ConsumerWidget {
                     child: Divider(height: 1),
                   ),
 
-                  // 3. Configurações
-                  _buildSectionHeader('CONFIGURAÇÕES'),
+                  _buildSectionHeader('CONSULTORIA'),
+                  _DrawerItem(
+                    icon: Icons.description_outlined,
+                    label: 'Documentação',
+                    isSelected:
+                        location == '/consultoria/comunicacao/documentacao',
+                    onTap: () =>
+                        context.go('/consultoria/comunicacao/documentacao'),
+                  ),
 
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Divider(height: 1),
+                  ),
+
+                  _buildSectionHeader('CONFIGURAÇÕES'),
                   _DrawerItem(
                     icon: Icons.settings_outlined,
                     label: 'Configurações',

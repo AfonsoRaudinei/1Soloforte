@@ -7,7 +7,10 @@ import 'package:soloforte_app/features/map/application/drawing_controller.dart';
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
 
 class AreasLayer extends ConsumerWidget {
-  const AreasLayer({super.key});
+  final String? clientId;
+  final String? clientName;
+
+  const AreasLayer({super.key, this.clientId, this.clientName});
 
   Color _getAreaColor(String status) {
     switch (status) {
@@ -28,10 +31,15 @@ class AreasLayer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final areasAsync = ref.watch(areasControllerProvider);
     final drawingState = ref.watch(drawingControllerProvider);
+    final shouldFilter = clientId != null;
 
     // Newly drawn/imported areas (Session) (Exclude editing)
     final sessionAreas = drawingState.savedAreas
-        .where((area) => area.id != drawingState.editingAreaId)
+        .where(
+          (area) =>
+              area.id != drawingState.editingAreaId &&
+              (!shouldFilter || area.clientId == clientId),
+        )
         .toList();
     final sessionIds = sessionAreas.map((a) => a.id).toSet();
 
@@ -42,6 +50,10 @@ class AreasLayer extends ConsumerWidget {
               area.id != drawingState.editingAreaId &&
               !sessionIds.contains(area.id),
         )
+        .where((area) {
+          if (!shouldFilter) return true;
+          return area.clientId == clientId;
+        })
         .toList();
 
     return PolygonLayer(

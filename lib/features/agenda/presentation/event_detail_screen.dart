@@ -11,8 +11,13 @@ import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dar
 
 class EventDetailScreen extends ConsumerStatefulWidget {
   final Event event;
+  final String? returnToClientId;
 
-  const EventDetailScreen({super.key, required this.event});
+  const EventDetailScreen({
+    super.key,
+    required this.event,
+    this.returnToClientId,
+  });
 
   @override
   ConsumerState<EventDetailScreen> createState() => _EventDetailScreenState();
@@ -40,13 +45,29 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back), // [←]
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (widget.returnToClientId != null) {
+              context.go('/map/clients/${widget.returnToClientId}');
+              return;
+            }
+            context.pop();
+          },
         ),
         title: Text(_event.title),
         actions: [
           TextButton.icon(
             // [✏️ Editar]
             onPressed: () {
+              if (widget.returnToClientId != null) {
+                context.push(
+                  '/dashboard/calendar/new',
+                  extra: {
+                    'event': _event,
+                    'clientId': widget.returnToClientId,
+                  },
+                );
+                return;
+              }
               context.push('/dashboard/calendar/new', extra: _event);
             },
             icon: const Icon(Icons.edit, size: 16),
@@ -100,7 +121,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                   ),
                   _buildInfoLine(
                     Icons.person,
-                    'João Silva (Mock)',
+                    _event.clientName ?? 'João Silva (Mock)',
                   ), // Producer not in Event model yet, mocking
                   _buildInfoLine(Icons.location_on, _event.location),
                   _buildInfoLine(Icons.home, 'Fazenda Boa Vista (Mock)'),

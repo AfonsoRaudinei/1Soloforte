@@ -24,7 +24,7 @@ final filteredAgendaProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef FilteredAgendaRef = AutoDisposeProviderRef<AsyncValue<List<Event>>>;
-String _$agendaControllerHash() => r'd72d9eb40541e95d1265518e459aabcf0517bde7';
+String _$agendaControllerHash() => r'd3fdca7e7e72253a8b2b10855d2c87d5df3a7828';
 
 /// See also [AgendaController].
 @ProviderFor(AgendaController)

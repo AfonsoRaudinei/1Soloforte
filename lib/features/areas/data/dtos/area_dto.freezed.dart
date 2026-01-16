@@ -24,6 +24,7 @@ mixin _$AreaDto {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   double get hectares => throw _privateConstructorUsedError;
+  String? get clientId => throw _privateConstructorUsedError;
   String get clienteNome => throw _privateConstructorUsedError;
   String get fazendaNome => throw _privateConstructorUsedError;
   String get status =>
@@ -53,6 +54,7 @@ abstract class $AreaDtoCopyWith<$Res> {
     String id,
     String name,
     double hectares,
+    String? clientId,
     String clienteNome,
     String fazendaNome,
     String status,
@@ -83,6 +85,7 @@ class _$AreaDtoCopyWithImpl<$Res, $Val extends AreaDto>
     Object? id = null,
     Object? name = null,
     Object? hectares = null,
+    Object? clientId = freezed,
     Object? clienteNome = null,
     Object? fazendaNome = null,
     Object? status = null,
@@ -106,6 +109,10 @@ class _$AreaDtoCopyWithImpl<$Res, $Val extends AreaDto>
                 ? _value.hectares
                 : hectares // ignore: cast_nullable_to_non_nullable
                       as double,
+            clientId: freezed == clientId
+                ? _value.clientId
+                : clientId // ignore: cast_nullable_to_non_nullable
+                      as String?,
             clienteNome: null == clienteNome
                 ? _value.clienteNome
                 : clienteNome // ignore: cast_nullable_to_non_nullable
@@ -156,6 +163,7 @@ abstract class _$$AreaDtoImplCopyWith<$Res> implements $AreaDtoCopyWith<$Res> {
     String id,
     String name,
     double hectares,
+    String? clientId,
     String clienteNome,
     String fazendaNome,
     String status,
@@ -185,6 +193,7 @@ class __$$AreaDtoImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? hectares = null,
+    Object? clientId = freezed,
     Object? clienteNome = null,
     Object? fazendaNome = null,
     Object? status = null,
@@ -208,6 +217,10 @@ class __$$AreaDtoImplCopyWithImpl<$Res>
             ? _value.hectares
             : hectares // ignore: cast_nullable_to_non_nullable
                   as double,
+        clientId: freezed == clientId
+            ? _value.clientId
+            : clientId // ignore: cast_nullable_to_non_nullable
+                  as String?,
         clienteNome: null == clienteNome
             ? _value.clienteNome
             : clienteNome // ignore: cast_nullable_to_non_nullable
@@ -252,6 +265,7 @@ class _$AreaDtoImpl extends _AreaDto {
     required this.id,
     required this.name,
     required this.hectares,
+    this.clientId,
     required this.clienteNome,
     required this.fazendaNome,
     this.status = 'active',
@@ -273,6 +287,8 @@ class _$AreaDtoImpl extends _AreaDto {
   final String name;
   @override
   final double hectares;
+  @override
+  final String? clientId;
   @override
   final String clienteNome;
   @override
@@ -303,7 +319,7 @@ class _$AreaDtoImpl extends _AreaDto {
 
   @override
   String toString() {
-    return 'AreaDto(id: $id, name: $name, hectares: $hectares, clienteNome: $clienteNome, fazendaNome: $fazendaNome, status: $status, coordinates: $coordinates, culture: $culture, safra: $safra, ndviAverage: $ndviAverage, lastUpdate: $lastUpdate)';
+    return 'AreaDto(id: $id, name: $name, hectares: $hectares, clientId: $clientId, clienteNome: $clienteNome, fazendaNome: $fazendaNome, status: $status, coordinates: $coordinates, culture: $culture, safra: $safra, ndviAverage: $ndviAverage, lastUpdate: $lastUpdate)';
   }
 
   @override
@@ -315,6 +331,8 @@ class _$AreaDtoImpl extends _AreaDto {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.hectares, hectares) ||
                 other.hectares == hectares) &&
+            (identical(other.clientId, clientId) ||
+                other.clientId == clientId) &&
             (identical(other.clienteNome, clienteNome) ||
                 other.clienteNome == clienteNome) &&
             (identical(other.fazendaNome, fazendaNome) ||
@@ -339,6 +357,7 @@ class _$AreaDtoImpl extends _AreaDto {
     id,
     name,
     hectares,
+    clientId,
     clienteNome,
     fazendaNome,
     status,
@@ -368,6 +387,7 @@ abstract class _AreaDto extends AreaDto {
     required final String id,
     required final String name,
     required final double hectares,
+    final String? clientId,
     required final String clienteNome,
     required final String fazendaNome,
     final String status,
@@ -388,6 +408,8 @@ abstract class _AreaDto extends AreaDto {
   String get name;
   @override
   double get hectares;
+  @override
+  String? get clientId;
   @override
   String get clienteNome;
   @override

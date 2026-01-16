@@ -11,6 +11,8 @@ class Occurrence with _$Occurrence {
     required String type,
     required double severity,
     required String areaName,
+    String? areaId,
+    String? clientId,
     required DateTime date,
     required String status,
     required List<String> images,

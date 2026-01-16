@@ -66,6 +66,7 @@ import '../features/privacy/presentation/privacy_policy_screen.dart';
 import '../features/support/presentation/help_center_screen.dart';
 import '../features/settings/presentation/customer_support_screen.dart';
 import '../features/settings/presentation/terms_of_use_screen.dart';
+import '../features/consultancy/communication/presentation/screens/system_documentation_screen.dart';
 
 // Keys
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -127,8 +128,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/map',
             builder: (context, state) {
-              final location = state.extra as LatLng?;
-              return HomeScreen(initialLocation: location);
+              final extra = state.extra;
+              LatLng? location;
+              String? clientId;
+              if (extra is LatLng) {
+                location = extra;
+              } else if (extra is Map<String, dynamic>) {
+                location = extra['location'] as LatLng?;
+                clientId = extra['clientId'] as String?;
+              }
+              return HomeScreen(initialLocation: location, clientId: clientId);
             },
           ),
           // Sub-routes for /map
@@ -146,7 +155,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/map/calendar',
-            builder: (context, state) => const AgendaScreen(),
+            builder: (context, state) {
+              final extra = state.extra;
+              String? clientId;
+              if (extra is Map<String, dynamic>) {
+                clientId = extra['clientId'] as String?;
+              }
+              return AgendaScreen(clientId: clientId);
+            },
           ),
           GoRoute(
             path: '/map/ndvi',
@@ -394,7 +410,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/map/calendar/detail',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          final event = state.extra as Event;
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            final event = extra['event'] as Event;
+            final returnToClientId = extra['returnToClientId'] as String?;
+            return EventDetailScreen(
+              event: event,
+              returnToClientId: returnToClientId,
+            );
+          }
+          final event = extra as Event;
           return EventDetailScreen(event: event);
         },
       ),
@@ -402,7 +427,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/map/calendar/new',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          final initialDate = state.extra as DateTime?;
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            final initialDate = extra['initialDate'] as DateTime?;
+            final clientId = extra['clientId'] as String?;
+            return EventFormScreen(
+              initialDate: initialDate,
+              clientId: clientId,
+            );
+          }
+          final initialDate = extra as DateTime?;
           return EventFormScreen(initialDate: initialDate);
         },
       ),
@@ -453,6 +487,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
           final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            final event = extra['event'] as Event?;
+            final initialDate = extra['initialDate'] as DateTime?;
+            final clientId = extra['clientId'] as String?;
+            return EventFormScreen(
+              event: event,
+              initialDate: initialDate,
+              clientId: clientId,
+            );
+          }
           if (extra is Event) {
             return EventFormScreen(event: extra);
           }
@@ -464,9 +508,43 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/dashboard/calendar/detail',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
-          final event = state.extra as Event;
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            final event = extra['event'] as Event;
+            final returnToClientId = extra['returnToClientId'] as String?;
+            return EventDetailScreen(
+              event: event,
+              returnToClientId: returnToClientId,
+            );
+          }
+          final event = extra as Event;
           return EventDetailScreen(event: event);
         },
+      ),
+      // Fix for Clients routes using /dashboard prefix
+      GoRoute(
+        path: '/dashboard/clients',
+        redirect: (context, state) => '/map/clients',
+      ),
+      GoRoute(
+        path: '/dashboard/clients/new',
+        redirect: (context, state) => '/map/clients/new',
+      ),
+      GoRoute(
+        path: '/dashboard/clients/:id',
+        redirect: (context, state) =>
+            '/map/clients/${state.pathParameters['id']}',
+      ),
+      GoRoute(
+        path: '/dashboard/clients/:id/edit',
+        redirect: (context, state) =>
+            '/map/clients/${state.pathParameters['id']}/edit',
+      ),
+      // Documentation Route
+      GoRoute(
+        path: '/consultoria/comunicacao/documentacao',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SystemDocumentationScreen(),
       ),
     ],
   );
