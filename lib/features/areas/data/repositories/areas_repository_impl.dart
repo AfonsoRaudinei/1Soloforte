@@ -13,6 +13,9 @@ class AreasRepositoryImpl implements AreasRepository {
 
   @override
   Future<void> saveArea(Area area) async {
+    if (area.clientId.isEmpty) {
+      throw StateError('clientId obrigatório para salvar área.');
+    }
     await _dataSource.saveArea(AreaDto.fromDomain(area));
   }
 

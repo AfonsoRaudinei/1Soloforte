@@ -123,7 +123,6 @@ class _SavedAreasListSheetState extends ConsumerState<SavedAreasListSheet> {
                   icon: Icon(
                     _isSelectionMode ? Icons.close : Icons.compare_arrows,
                   ),
-                  tooltip: _isSelectionMode ? 'Cancelar' : 'Comparar Áreas',
                 ),
               ],
             ),

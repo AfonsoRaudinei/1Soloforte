@@ -24,7 +24,7 @@ mixin _$Occurrence {
   double get severity => throw _privateConstructorUsedError;
   String get areaName => throw _privateConstructorUsedError;
   String? get areaId => throw _privateConstructorUsedError;
-  String? get clientId => throw _privateConstructorUsedError;
+  String get clientId => throw _privateConstructorUsedError;
   DateTime get date => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   List<String> get images => throw _privateConstructorUsedError;
@@ -65,7 +65,7 @@ abstract class $OccurrenceCopyWith<$Res> {
     double severity,
     String areaName,
     String? areaId,
-    String? clientId,
+    String clientId,
     DateTime date,
     String status,
     List<String> images,
@@ -106,7 +106,7 @@ class _$OccurrenceCopyWithImpl<$Res, $Val extends Occurrence>
     Object? severity = null,
     Object? areaName = null,
     Object? areaId = freezed,
-    Object? clientId = freezed,
+    Object? clientId = null,
     Object? date = null,
     Object? status = null,
     Object? images = null,
@@ -153,10 +153,10 @@ class _$OccurrenceCopyWithImpl<$Res, $Val extends Occurrence>
                 ? _value.areaId
                 : areaId // ignore: cast_nullable_to_non_nullable
                       as String?,
-            clientId: freezed == clientId
+            clientId: null == clientId
                 ? _value.clientId
                 : clientId // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as String,
             date: null == date
                 ? _value.date
                 : date // ignore: cast_nullable_to_non_nullable
@@ -240,7 +240,7 @@ abstract class _$$OccurrenceImplCopyWith<$Res>
     double severity,
     String areaName,
     String? areaId,
-    String? clientId,
+    String clientId,
     DateTime date,
     String status,
     List<String> images,
@@ -280,7 +280,7 @@ class __$$OccurrenceImplCopyWithImpl<$Res>
     Object? severity = null,
     Object? areaName = null,
     Object? areaId = freezed,
-    Object? clientId = freezed,
+    Object? clientId = null,
     Object? date = null,
     Object? status = null,
     Object? images = null,
@@ -327,10 +327,10 @@ class __$$OccurrenceImplCopyWithImpl<$Res>
             ? _value.areaId
             : areaId // ignore: cast_nullable_to_non_nullable
                   as String?,
-        clientId: freezed == clientId
+        clientId: null == clientId
             ? _value.clientId
             : clientId // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as String,
         date: null == date
             ? _value.date
             : date // ignore: cast_nullable_to_non_nullable
@@ -407,7 +407,7 @@ class _$OccurrenceImpl implements _Occurrence {
     required this.severity,
     required this.areaName,
     this.areaId,
-    this.clientId,
+    required this.clientId,
     required this.date,
     required this.status,
     required final List<String> images,
@@ -444,7 +444,7 @@ class _$OccurrenceImpl implements _Occurrence {
   @override
   final String? areaId;
   @override
-  final String? clientId;
+  final String clientId;
   @override
   final DateTime date;
   @override
@@ -621,7 +621,7 @@ abstract class _Occurrence implements Occurrence {
     required final double severity,
     required final String areaName,
     final String? areaId,
-    final String? clientId,
+    required final String clientId,
     required final DateTime date,
     required final String status,
     required final List<String> images,
@@ -654,7 +654,7 @@ abstract class _Occurrence implements Occurrence {
   @override
   String? get areaId;
   @override
-  String? get clientId;
+  String get clientId;
   @override
   DateTime get date;
   @override

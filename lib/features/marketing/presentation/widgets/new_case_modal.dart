@@ -19,7 +19,7 @@ class NewCaseSuccessModal extends StatefulWidget {
 class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
   // Form State
   String _selectedType = 'antes-depois';
-  String _selectedSize = 'medio';
+  String _selectedSize = 'prata';
   String _unit = 'sc/ha';
   String? _imagePath;
 
@@ -66,9 +66,11 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
       return;
     }
 
+    // O tipo 'type' deve ser exatamente 'antes-depois' ou 'resultado'
+    // para diferenciar visualmente no mapa
     final caseData = {
-      'type': _selectedType,
-      'size': _selectedSize,
+      'type': _selectedType, // 'antes-depois' ou 'resultado'
+      'size': _selectedSize, // 'bronze', 'prata', ou 'ouro'
       'producer': _producerController.text,
       'location': _locationController.text,
       'product': _productController.text,
@@ -95,6 +97,11 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
 
   @override
   Widget build(BuildContext context) {
+    // Subtítulo dinâmico baseado na aba ativa
+    final String subtitle = _selectedType == 'antes-depois'
+        ? 'Antes e Depois'
+        : 'Resultado';
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -113,9 +120,8 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
         ),
         child: Column(
           children: [
-            // Header
+            // Header com Tabs Integradas
             Container(
-              padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [kSfDark, kSfDarkDeep],
@@ -127,34 +133,57 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
                   topRight: Radius.circular(20),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '(#1E3A2F)',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 11,
-                          fontFamily: 'monospace',
+                  // Título e botão fechar
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 16, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Novo Case de Sucesso',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              subtitle,
+                              style: TextStyle(
+                                color: kSfGreen,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Novo Case de Sucesso',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+                  // Tabs no Header
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildHeaderTab('Antes e Depois', 'antes-depois'),
+                        _buildHeaderTab('Resultado', 'resultado'),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -165,8 +194,8 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  // Type
-                  _buildLabel('Type', required: true),
+                  // Investment Level
+                  _buildLabel('Nível de investimento em marketing'),
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
@@ -175,26 +204,9 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
                     ),
                     child: Row(
                       children: [
-                        _buildToggleOption('Antes e Depois', 'antes-depois'),
-                        _buildToggleOption('Resultado', 'resultado'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Card Size
-                  _buildLabel('Card Size'),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: kGray100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        _buildSegmentOption('Pequeno', 'basico'),
-                        _buildSegmentOption('Médio', 'medio'),
-                        _buildSegmentOption('Grande', 'premium'),
+                        _buildSegmentOption('Bronze', 'bronze'),
+                        _buildSegmentOption('Prata', 'prata'),
+                        _buildSegmentOption('Ouro', 'ouro'),
                       ],
                     ),
                   ),
@@ -517,32 +529,27 @@ class _NewCaseSuccessModalState extends State<NewCaseSuccessModal> {
     );
   }
 
-  Widget _buildToggleOption(String label, String value) {
+  /// Tab estilizada para o header do modal (fundo escuro)
+  Widget _buildHeaderTab(String label, String value) {
     final isActive = _selectedType == value;
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _selectedType = value),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 2,
-                    ),
-                  ]
-                : [],
+            color: isActive
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isActive ? kGray900 : Colors.grey[600],
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+              color: isActive ? Colors.white : Colors.white60,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              fontSize: 14,
             ),
           ),
         ),

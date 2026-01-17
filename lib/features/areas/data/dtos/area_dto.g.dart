@@ -11,7 +11,7 @@ _$AreaDtoImpl _$$AreaDtoImplFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       name: json['name'] as String,
       hectares: (json['hectares'] as num).toDouble(),
-      clientId: json['clientId'] as String?,
+      clientId: json['clientId'] as String? ?? '',
       clienteNome: json['clienteNome'] as String,
       fazendaNome: json['fazendaNome'] as String,
       status: json['status'] as String? ?? 'active',

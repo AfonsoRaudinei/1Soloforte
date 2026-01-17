@@ -16,7 +16,7 @@ _$OccurrenceDtoImpl _$$OccurrenceDtoImplFromJson(
   severity: (json['severity'] as num).toDouble(),
   areaName: json['areaName'] as String,
   areaId: json['areaId'] as String?,
-  clientId: json['clientId'] as String?,
+  clientId: json['clientId'] as String? ?? '',
   date: DateTime.parse(json['date'] as String),
   status: json['status'] as String,
   images: (json['images'] as List<dynamic>).map((e) => e as String).toList(),

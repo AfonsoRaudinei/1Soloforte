@@ -7,7 +7,10 @@ import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/constants/map_zoom_constants.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
-import 'dart:io';
+// Conditional import for dart:io (not available on Web)
+import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_pin_marker_io.dart'
+    if (dart.library.html) 'package:soloforte_app/features/marketing/presentation/widgets/marketing_pin_marker_web.dart'
+    as platform_image;
 import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
 
@@ -27,9 +30,9 @@ import 'widgets/online_status_badge.dart';
 import 'package:soloforte_app/features/weather/presentation/widgets/weather_radar.dart';
 import 'package:soloforte_app/features/marketing/presentation/providers/marketing_selection_provider.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/new_case_modal.dart';
-import 'package:soloforte_app/features/marketing/presentation/widgets/side_by_side_eval_modal.dart';
 import 'package:soloforte_app/features/marketing/data/marketing_repository.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_map_post.dart';
+import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_pin_marker.dart';
 
 import 'widgets/map_layers/areas_layer.dart';
 import 'widgets/map_layers/occurrences_layer.dart';
@@ -91,6 +94,8 @@ class _NdviEvolutionChart extends StatelessWidget {
     );
   }
 }
+
+// Note: _MarketingMarkerSize removed - now using MarkerSizeConfig from MarketingPinMarker widget
 
 class _NdviEvolutionPainter extends CustomPainter {
   final List<_NdviPoint> points;
@@ -162,20 +167,30 @@ Widget _buildMarketingImage(String path, {BoxFit fit = BoxFit.cover}) {
   if (path.isEmpty) {
     return _buildMarketingImageFallback();
   }
-  if (path.startsWith('http') ||
-      path.startsWith('https') ||
-      path.startsWith('data:') ||
-      path.startsWith('blob:')) {
+  // Network URLs (http/https)
+  if (path.startsWith('http://') || path.startsWith('https://')) {
     return Image.network(
       path,
       fit: fit,
       errorBuilder: (_, __, ___) => _buildMarketingImageFallback(),
     );
   }
-  return Image.file(
-    File(path),
+  // Blob or data URLs (common on Web from file picker)
+  if (path.startsWith('data:') || path.startsWith('blob:')) {
+    return Image.network(
+      path,
+      fit: fit,
+      errorBuilder: (_, __, ___) => _buildMarketingImageFallback(),
+    );
+  }
+  // Local file path - use platform-specific implementation
+  // On Web, this will show fallback; on Mobile, uses Image.file
+  return platform_image.buildLocalImage(
+    path: path,
+    width: double.infinity,
+    height: double.infinity,
     fit: fit,
-    errorBuilder: (_, __, ___) => _buildMarketingImageFallback(),
+    errorBuilder: () => _buildMarketingImageFallback(),
   );
 }
 
@@ -258,10 +273,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (focusPoint != null) {
       _hasAppliedClientFocus = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _mapController.move(
-          focusPoint!,
-          _mapController.camera.zoom,
-        );
+        _mapController.move(focusPoint!, _mapController.camera.zoom);
       });
       return;
     }
@@ -431,10 +443,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ),
                     ],
                   ),
-                AreasLayer(
-                  clientId: widget.clientId,
-                  clientName: clientName,
-                ),
+                AreasLayer(clientId: widget.clientId, clientName: clientName),
                 OccurrencesLayer(
                   clientId: widget.clientId,
                   clientName: clientName,
@@ -723,126 +732,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   // =====================================================
   // MARKETING OPTIONS MODAL
   // =====================================================
-  // =====================================================
-  // MARKETING OPTIONS MODAL
-  // =====================================================
+  /// Abre diretamente o modal unificado de criação de case de marketing.
+  /// O modal já contém abas internas para "Antes e Depois" e "Resultado".
   void _showMarketingOptions(LatLng point) {
-    showModalBottomSheet(
+    // Abre diretamente o modal unificado (sem menu intermediário)
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      barrierColor: Colors.black54,
+      builder: (_) => NewCaseSuccessModal(
+        latitude: point.latitude,
+        longitude: point.longitude,
       ),
-      builder: (BuildContext ctx) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'O que você deseja criar?',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4ADE80).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.star_outline,
-                    color: Color(0xFF4ADE80),
-                    size: 28,
-                  ),
-                ),
-                title: const Text(
-                  'Novo Case de Sucesso',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: const Text('Mostre resultados incríveis'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  // Abrir modal de Case já com o ponto
-                  showDialog(
-                    context: context,
-                    barrierColor: Colors.black54,
-                    builder: (_) => NewCaseSuccessModal(
-                      latitude: point.latitude,
-                      longitude: point.longitude,
-                    ),
-                  ).then((result) {
-                    if (result != null) {
-                      _saveMarketingPostFromResult(result);
-                    }
-                    ref
-                        .read(dashboardControllerProvider.notifier)
-                        .cancelPinSelection();
-                  });
-                },
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.compare_arrows,
-                    color: Colors.blue,
-                    size: 28,
-                  ),
-                ),
-                title: const Text(
-                  'Avaliação Lado a Lado',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: const Text('Comparativo A vs B em campo'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  // Abrir modal de Side-by-Side já com o ponto
-                  showDialog(
-                    context: context,
-                    barrierColor: Colors.black54,
-                    builder: (_) => SideBySideEvalModal(
-                      latitude: point.latitude,
-                      longitude: point.longitude,
-                    ),
-                  ).then((result) {
-                    if (result != null) {
-                      _saveMarketingPostFromResult(result);
-                    }
-                    ref
-                        .read(dashboardControllerProvider.notifier)
-                        .cancelPinSelection();
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    ).then((_) {
-      // Se fechar o bottom sheet sem selecionar nada, manter o pin?
-      // User request diz "Sem atalhos confusos". Se fecha, talvez devêssemos limpar?
-      // Mas o pin está lá. Vamos manter o pin caso ele tenha clicado fora pra pensar.
-      // Se ele quiser cancelar, clica no "X" do indicador de modo ou da seleção.
-      // Mas na regra de occurrence ele "cancelPinSelection" se fechar?
-      // No occurrence ele abre o form, se voltar do form ele cancela.
-      // Aqui, se ele cancelar o menu de opções, faz sentido cancelar a seleção?
-      // Melhor não, deixa ele clicar no X explícito ou tentar de novo.
+    ).then((result) {
+      if (result != null) {
+        _saveMarketingPostFromResult(result);
+      }
+      ref.read(dashboardControllerProvider.notifier).cancelPinSelection();
     });
   }
 
@@ -855,7 +760,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Future<void> _saveMarketingPostFromResult(Map<String, dynamic> result) async {
-    final type = result['type'] == 'side_by_side' ? 'side_by_side' : 'case';
+    // Preservar o tipo exato: 'antes-depois' ou 'resultado' (abas do modal unificado)
+    // Isso permite diferenciação visual no mapa
+    final type = result['type'] as String? ?? 'antes-depois';
     final photoPath = result['image'] as String?;
     final photos = photoPath == null
         ? <MarketingPhoto>[]
@@ -865,11 +772,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       latitude: (result['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (result['longitude'] as num?)?.toDouble() ?? 0,
-      type: type,
+      type: type, // Preserva 'antes-depois' ou 'resultado'
       title: result['title'] as String?,
       client: result['producer'] as String?,
       area: result['location'] as String?,
       notes: result['description'] as String?,
+      investmentLevel: result['size'] as String?,
+      product: result['product'] as String?,
+      productivity: result['productivity'] as String?,
       photos: photos,
       createdAt: DateTime.now(),
     );
@@ -893,55 +803,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   List<Marker> _buildMarketingMarkers() {
     return _marketingPosts.map((post) {
+      // Use the MarkerSizeConfig from the new widget for consistent sizing
+      // MarkerSizeConfig.forLevel already normalizes the investment level internally
+      final sizeConfig = MarkerSizeConfig.forLevel(
+        post.investmentLevel ?? 'prata',
+      );
+
       return Marker(
         point: LatLng(post.latitude, post.longitude),
-        width: 56,
-        height: 56,
-        child: GestureDetector(
+        width: sizeConfig.totalWidth,
+        height: sizeConfig.totalHeight,
+        child: MarketingPinMarker(
+          post: post,
+          // Default to normal zoom config - future: pass actual zoom level
+          zoomConfig: const MarkerZoomConfig(),
           onTap: () => _showMarketingDetails(post),
-          child: _buildMarketingMarker(post),
         ),
       );
     }).toList();
   }
 
-  Widget _buildMarketingMarker(MarketingMapPost post) {
-    final cover = post.coverPhoto;
-    if (cover == null) {
-      return Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 6,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.location_on,
-          color: AppColors.primary,
-          size: 28,
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3)),
-        ],
-      ),
-      child: ClipOval(
-        child: _buildMarketingImage(cover.path, fit: BoxFit.cover),
-      ),
-    );
-  }
+  // NOTE: _marketingMarkerSize and _buildMarketingMarker methods removed.
+  // Their logic is now encapsulated in MarketingPinMarker widget
+  // which provides proper z-index hierarchy and zoom support.
 
   void _showMarketingDetails(MarketingMapPost post) {
     showModalBottomSheet<void>(
@@ -1269,6 +1153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           perimeterKm: GeometryUtils.calculatePerimeterKm(area.coordinates),
           center: GeometryUtils.calculateCentroid(area.coordinates),
           createdAt: DateTime.now(),
+          clientId: area.clientId,
         );
 
         drawingController.startEditingArea(geoArea);
@@ -2399,9 +2284,7 @@ class _MarketingPostDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeLabel = post.type == 'side_by_side'
-        ? 'Avaliação Lado a Lado'
-        : 'Case de Sucesso';
+    final typeLabel = post.type == 'resultado' ? 'Resultado' : 'Antes e Depois';
     final cover = post.coverPhoto;
 
     return Container(

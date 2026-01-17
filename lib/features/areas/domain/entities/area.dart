@@ -9,7 +9,7 @@ class Area with _$Area {
     required String id,
     required String name,
     required double hectares,
-    String? clientId,
+    required String clientId,
     required String clienteNome,
     required String fazendaNome,
     @Default('active') String status,

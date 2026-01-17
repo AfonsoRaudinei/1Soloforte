@@ -17,6 +17,9 @@ class AreasLocalDataSourceImpl implements AreasLocalDataSource {
   @override
   Future<void> saveArea(AreaDto area) async {
     if (kIsWeb) return;
+    if (area.clientId.isEmpty) {
+      throw StateError('clientId obrigatório para salvar área.');
+    }
     final db = await _dbHelper.database;
     await db.insert('areas', {
       'id': area.id,
@@ -77,6 +80,7 @@ class AreasLocalDataSourceImpl implements AreasLocalDataSource {
         id: '1',
         name: 'Talhão Norte',
         hectares: 45.5,
+        clientId: 'client_1',
         clienteNome: 'João Silva',
         fazendaNome: 'Fazenda Esperança',
         status: 'active',
@@ -95,6 +99,7 @@ class AreasLocalDataSourceImpl implements AreasLocalDataSource {
         id: '2',
         name: 'Talhão Sul',
         hectares: 32.8,
+        clientId: 'client_1',
         clienteNome: 'João Silva',
         fazendaNome: 'Fazenda Esperança',
         status: 'monitoring',
@@ -113,6 +118,7 @@ class AreasLocalDataSourceImpl implements AreasLocalDataSource {
         id: '3',
         name: 'Área Experimental',
         hectares: 12.3,
+        clientId: 'client_2',
         clienteNome: 'Maria Santos',
         fazendaNome: 'Fazenda Vista Alegre',
         status: 'active',

@@ -101,6 +101,14 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
             SettingsNavigableRow(
+              icon: Icons.campaign_outlined,
+              iconGradient: _greenGradient,
+              title: 'Marketing',
+              subtitle: 'Planos comerciais e regras',
+              onTap: () => context.push('/map/settings/marketing-plans'),
+            ),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
+            SettingsNavigableRow(
               icon: Icons.newspaper_outlined,
               iconGradient: _orangeGradient,
               title: 'Notícias',

@@ -29,6 +29,7 @@ class NewOccurrenceScreen extends ConsumerStatefulWidget {
   final double? initialLongitude;
   // Recurrence: creates new occurrence from existing, copying only technical data
   final Occurrence? recurrentFrom;
+  final String? clientId;
 
   const NewOccurrenceScreen({
     super.key,
@@ -41,6 +42,7 @@ class NewOccurrenceScreen extends ConsumerStatefulWidget {
     this.initialLatitude,
     this.initialLongitude,
     this.recurrentFrom,
+    this.clientId,
   });
 
   @override
@@ -92,6 +94,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
   // Legacy/Helper
   String _selectedArea = 'Talhão Norte';
   bool _isLoading = false;
+  String? _clientId;
 
   double? _latitude;
   double? _longitude;
@@ -109,6 +112,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
     super.initState();
     if (widget.initialOccurrence != null) {
       final occ = widget.initialOccurrence!;
+      _clientId = occ.clientId;
       _titleController.text = occ.title;
       _descriptionController.text = occ.description;
       // Map legacy type if needed, but rely on new categories
@@ -134,6 +138,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
     } else if (widget.recurrentFrom != null) {
       // RECURRENCE: Copy only technical data, NOT images/location/status/date/timeline
       final src = widget.recurrentFrom!;
+      _clientId = src.clientId;
 
       // Technical data to copy
       _phenologicalStage = src.phenologicalStage;
@@ -149,6 +154,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
       // Get current location for new occurrence
       _getCurrentLocation();
     } else {
+      _clientId = widget.clientId;
       // Pre-fill from arguments if available
       if (widget.initialTitle != null) {
         _titleController.text = widget.initialTitle!;
@@ -686,7 +692,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
               SizedBox(height: AppSpacing.lg),
 
               // Observações Gerais
@@ -750,7 +756,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
                 ),
                 value: _hasSoilSample,
                 onChanged: (val) => setState(() => _hasSoilSample = val),
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 contentPadding: EdgeInsets.zero,
               ),
               SizedBox(height: AppSpacing.lg),
@@ -836,6 +842,15 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_clientId == null || _clientId!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione um cliente para registrar a ocorrência.'),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -925,6 +940,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
               ) // Max severity
             : 0.0,
         areaName: _selectedArea,
+        clientId: _clientId!,
         date: widget.initialOccurrence?.date ?? DateTime.now(),
         status: widget.initialOccurrence?.status ?? 'active',
         images: finalImages,

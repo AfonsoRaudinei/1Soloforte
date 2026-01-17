@@ -33,7 +33,6 @@ class MapSideControls extends StatelessWidget {
           // Marketing
           _buildControlButton(
             icon: Icons.campaign_outlined,
-            tooltip: 'Marketing',
             onTap: onMarketingTap,
             color: AppColors.secondary, // Secondary color as per request
           ),
@@ -42,7 +41,6 @@ class MapSideControls extends StatelessWidget {
           // Weather
           _buildControlButton(
             icon: Icons.cloud_outlined,
-            tooltip: 'Clima',
             onTap: onWeatherTap,
             color: AppColors.secondary,
           ),
@@ -51,7 +49,6 @@ class MapSideControls extends StatelessWidget {
           // Occurrences
           _buildControlButton(
             icon: Icons.warning_amber_rounded,
-            tooltip: 'Ocorrências',
             onTap: onOccurrencesTap,
             color: AppColors.secondary,
           ),
@@ -66,19 +63,9 @@ class MapSideControls extends StatelessWidget {
 
           const SizedBox(height: 24), // Spacer between tools and zoom
           // Zoom Controls
-          _buildControlButton(
-            icon: Icons.add,
-            tooltip: 'Zoom In',
-            onTap: onZoomIn,
-            mini: true,
-          ),
+          _buildControlButton(icon: Icons.add, onTap: onZoomIn, mini: true),
           const SizedBox(height: 8),
-          _buildControlButton(
-            icon: Icons.remove,
-            tooltip: 'Zoom Out',
-            onTap: onZoomOut,
-            mini: true,
-          ),
+          _buildControlButton(icon: Icons.remove, onTap: onZoomOut, mini: true),
         ],
       ),
     );
@@ -154,34 +141,30 @@ class MapSideControls extends StatelessWidget {
   Widget _buildControlButton({
     required IconData icon,
     VoidCallback? onTap,
-    String? tooltip,
     Color color = AppColors.gray800,
     bool mini = false,
   }) {
     final size = mini ? 36.0 : 44.0; // 44dp minimum touch target
-    return Tooltip(
-      message: tooltip ?? '',
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Icon(icon, color: Colors.white, size: mini ? 20 : 24),
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Icon(icon, color: Colors.white, size: mini ? 20 : 24),
         ),
       ),
     );

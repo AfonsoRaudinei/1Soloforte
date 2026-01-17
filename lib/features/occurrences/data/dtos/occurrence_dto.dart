@@ -16,7 +16,7 @@ class OccurrenceDto with _$OccurrenceDto {
     required double severity,
     required String areaName,
     String? areaId,
-    String? clientId,
+    @JsonKey(defaultValue: '') required String clientId,
     required DateTime date,
     required String status,
     required List<String> images,

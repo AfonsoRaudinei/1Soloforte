@@ -22,11 +22,14 @@ class MarketingMapPost {
   final String id;
   final double latitude;
   final double longitude;
-  final String type; // 'case' ou 'side_by_side'
+  final String type; // 'antes-depois' ou 'resultado'
   final String? title;
   final String? client;
   final String? area;
   final String? notes;
+  final String? investmentLevel;
+  final String? product;
+  final String? productivity;
   final List<MarketingPhoto> photos;
   final DateTime createdAt;
 
@@ -40,6 +43,9 @@ class MarketingMapPost {
     this.client,
     this.area,
     this.notes,
+    this.investmentLevel,
+    this.product,
+    this.productivity,
     this.photos = const [],
   });
 
@@ -58,6 +64,9 @@ class MarketingMapPost {
     String? client,
     String? area,
     String? notes,
+    String? investmentLevel,
+    String? product,
+    String? productivity,
     List<MarketingPhoto>? photos,
     DateTime? createdAt,
   }) {
@@ -70,6 +79,9 @@ class MarketingMapPost {
       client: client ?? this.client,
       area: area ?? this.area,
       notes: notes ?? this.notes,
+      investmentLevel: investmentLevel ?? this.investmentLevel,
+      product: product ?? this.product,
+      productivity: productivity ?? this.productivity,
       photos: photos ?? this.photos,
       createdAt: createdAt ?? this.createdAt,
     );

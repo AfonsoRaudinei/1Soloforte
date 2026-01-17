@@ -12,7 +12,7 @@ class Occurrence with _$Occurrence {
     required double severity,
     required String areaName,
     String? areaId,
-    String? clientId,
+    required String clientId,
     required DateTime date,
     required String status,
     required List<String> images,

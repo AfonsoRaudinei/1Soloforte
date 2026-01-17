@@ -200,6 +200,9 @@ class DrawingController extends Notifier<DrawingState> {
     int? colorValue,
     bool isDashed = false,
   }) {
+    if (clientId == null || clientId.isEmpty) {
+      return;
+    }
     if (state.activeTool == 'polygon' && state.currentPoints.length < 3) {
       return;
     }
@@ -329,6 +332,9 @@ class DrawingController extends Notifier<DrawingState> {
   }
 
   void importArea(GeoArea area) {
+    if (area.clientId == null || area.clientId!.isEmpty) {
+      return;
+    }
     state = state.copyWith(savedAreas: [...state.savedAreas, area]);
   }
 

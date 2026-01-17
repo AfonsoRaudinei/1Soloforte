@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'providers/settings_provider.dart';
+import 'package:soloforte_app/features/settings/data/marketing_plans_repository.dart';
 import 'package:soloforte_app/features/settings/domain/entities/app_settings.dart';
+import 'package:soloforte_app/features/settings/domain/entities/marketing_plan.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 
@@ -430,6 +432,278 @@ class IntegrationsSettingsScreen extends ConsumerWidget {
         activeThumbColor: AppColors.primary,
       ),
     );
+  }
+}
+
+class MarketingPlansSettingsScreen extends ConsumerStatefulWidget {
+  const MarketingPlansSettingsScreen({super.key});
+
+  @override
+  ConsumerState<MarketingPlansSettingsScreen> createState() =>
+      _MarketingPlansSettingsScreenState();
+}
+
+class _MarketingPlansSettingsScreenState
+    extends ConsumerState<MarketingPlansSettingsScreen> {
+  final MarketingPlansRepository _repository = MarketingPlansRepository();
+  final Map<MarketingPlanLevel, _PlanDraft> _drafts = {};
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlans();
+  }
+
+  @override
+  void dispose() {
+    for (final draft in _drafts.values) {
+      draft.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _loadPlans() async {
+    try {
+      final plans = await _repository.getPlans();
+      for (final plan in plans) {
+        _drafts[plan.level] = _PlanDraft.fromPlan(plan);
+      }
+      _loading = false;
+      _error = null;
+    } catch (e) {
+      _loading = false;
+      _error = e.toString();
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _savePlans() async {
+    final plans = MarketingPlanLevel.values
+        .map((level) => _drafts[level]!.toPlan(level))
+        .toList();
+    await _repository.savePlans(plans);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Planos de marketing atualizados.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _BaseSettingsPage(
+      title: 'Marketing',
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Text('Erro: $_error'))
+              : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Text(
+                      'Planos de Marketing',
+                      style: AppTypography.h4.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Area administrativa. Valores internos, sem impacto no mapa.',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPlanCard(MarketingPlanLevel.bronze),
+                    const SizedBox(height: 16),
+                    _buildPlanCard(MarketingPlanLevel.prata),
+                    const SizedBox(height: 16),
+                    _buildPlanCard(MarketingPlanLevel.ouro),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _savePlans,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Salvar alteracoes',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Nao e possivel criar novos niveis.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+    );
+  }
+
+  Widget _buildPlanCard(MarketingPlanLevel level) {
+    final draft = _drafts[level]!;
+    final label = _levelLabel(level);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              Switch(
+                value: draft.isActive,
+                onChanged: (value) => setState(() {
+                  draft.isActive = value;
+                }),
+              ),
+              Text(
+                draft.isActive ? 'Ativo' : 'Inativo',
+                style: AppTypography.bodySmall.copyWith(
+                  color: draft.isActive ? Colors.green : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Descricao comercial',
+            style: AppTypography.bodySmall.copyWith(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: draft.descriptionController,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              hintText: 'Ex: Destaque basico no mapa',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Valor de referencia',
+            style: AppTypography.bodySmall.copyWith(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: draft.valueController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              hintText: '0.00',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Unidade de cobranca',
+            style: AppTypography.bodySmall.copyWith(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 6),
+          DropdownButtonFormField<MarketingBillingUnit>(
+            initialValue: draft.billingUnit,
+            items: const [
+              DropdownMenuItem(
+                value: MarketingBillingUnit.perPublication,
+                child: Text('Por publicacao'),
+              ),
+              DropdownMenuItem(
+                value: MarketingBillingUnit.perPeriod,
+                child: Text('Por periodo'),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() => draft.billingUnit = value);
+            },
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _levelLabel(MarketingPlanLevel level) {
+    switch (level) {
+      case MarketingPlanLevel.bronze:
+        return 'Bronze';
+      case MarketingPlanLevel.prata:
+        return 'Prata';
+      case MarketingPlanLevel.ouro:
+        return 'Ouro';
+    }
+  }
+}
+
+class _PlanDraft {
+  final TextEditingController descriptionController;
+  final TextEditingController valueController;
+  MarketingBillingUnit billingUnit;
+  bool isActive;
+
+  _PlanDraft({
+    required this.descriptionController,
+    required this.valueController,
+    required this.billingUnit,
+    required this.isActive,
+  });
+
+  factory _PlanDraft.fromPlan(MarketingPlan plan) {
+    return _PlanDraft(
+      descriptionController: TextEditingController(text: plan.description),
+      valueController: TextEditingController(
+        text: plan.price.toStringAsFixed(2),
+      ),
+      billingUnit: plan.unit,
+      isActive: plan.isActive,
+    );
+  }
+
+  MarketingPlan toPlan(MarketingPlanLevel level) {
+    final parsed = double.tryParse(
+          valueController.text.replaceAll(',', '.'),
+        ) ??
+        0;
+    return MarketingPlan(
+      level: level,
+      description: descriptionController.text.trim(),
+      price: parsed,
+      unit: billingUnit,
+      isActive: isActive,
+    );
+  }
+
+  void dispose() {
+    descriptionController.dispose();
+    valueController.dispose();
   }
 }
 

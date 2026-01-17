@@ -14,7 +14,6 @@ import 'package:soloforte_app/features/map/presentation/widgets/save_area_bottom
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
 import 'package:soloforte_app/features/occurrences/presentation/new_occurrence_screen.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/new_case_modal.dart';
-import 'package:soloforte_app/features/marketing/presentation/widgets/side_by_side_eval_modal.dart';
 import 'package:soloforte_app/core/services/analytics_service.dart';
 import 'widgets/drawing_toolbar.dart';
 import 'widgets/area_details_sheet.dart';
@@ -636,26 +635,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           // Real-time Area Measurement Overlay (Drawing Mode)
           const DrawingMeasurementOverlay(),
 
-          // Marketing CTA (When pin is set)
-          if (dashboardState.activeMode == MapMode.marketing &&
-              dashboardState.tempPin != null)
-            Positioned(
-              bottom: 150,
-              left: 16,
-              right: 16,
-              child: Center(
-                child: FloatingActionButton.extended(
-                  heroTag: 'marketing_cta',
-                  onPressed: () =>
-                      _openMarketingOptions(context, dashboardController),
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  icon: const Icon(Icons.add_task),
-                  label: const Text('+ Novo Case'),
-                ),
-              ),
-            ),
-
           // VERTICAL CONTROLS
           if (!drawingState.isDrawing)
             Positioned(
@@ -850,7 +829,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (dashState.activeMode == MapMode.marketing) {
       dashController.setTempPin(point);
       _mapController.move(point, _mapController.camera.zoom);
-      // Do NOT open form immediately. User must click CTA.
+
+      // Abre diretamente o modal de marketing após o toque no mapa
+      _openMarketingOptions(context, dashController);
       return;
     }
 
@@ -986,108 +967,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 
+  /// Abre diretamente o modal unificado de criação de case de marketing.
+  /// O modal já contém abas internas para "Antes e Depois" e "Resultado".
   void _openMarketingOptions(
     BuildContext context,
     DashboardController controller,
-  ) {
+  ) async {
     final pin = ref.read(dashboardControllerProvider).tempPin; // Safety check
     if (pin == null) return;
 
-    showModalBottomSheet(
+    // Abre diretamente o modal unificado (sem menu intermediário)
+    final result = await showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('O que você deseja criar?', style: AppTypography.h3),
-            const SizedBox(height: 24),
-            _buildOptionTile(
-              icon: Icons.star,
-              color: Colors.amber,
-              title: 'Novo Case de Sucesso',
-              subtitle: 'Registre resultados de alta performance',
-              onTap: () async {
-                Navigator.pop(ctx);
-                final result = await showDialog(
-                  context: context,
-                  builder: (_) => NewCaseSuccessModal(
-                    latitude: pin.latitude,
-                    longitude: pin.longitude,
-                  ),
-                );
-                if (result != null) _finalizeMarketingFlow(controller);
-              },
-            ),
-            const Divider(height: 32),
-            _buildOptionTile(
-              icon: Icons.compare_arrows,
-              color: Colors.teal,
-              title: 'Avaliação Lado a Lado',
-              subtitle: 'Compare tratamento padrão vs. premium',
-              onTap: () async {
-                Navigator.pop(ctx);
-                final result = await showDialog(
-                  context: context,
-                  builder: (_) => SideBySideEvalModal(
-                    latitude: pin.latitude,
-                    longitude: pin.longitude,
-                  ),
-                );
-                if (result != null) _finalizeMarketingFlow(controller);
-              },
-            ),
-          ],
-        ),
-      ),
+      builder: (_) =>
+          NewCaseSuccessModal(latitude: pin.latitude, longitude: pin.longitude),
     );
-  }
 
-  Widget _buildOptionTile({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.bodyLarge.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(subtitle, style: AppTypography.caption),
-              ],
-            ),
-          ),
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-        ],
-      ),
-    );
+    if (result != null) {
+      _finalizeMarketingFlow(controller);
+    } else {
+      controller.setMode(MapMode.neutral);
+    }
   }
 
   void _finalizeMarketingFlow(DashboardController controller) {

@@ -24,7 +24,8 @@ mixin _$AreaDto {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   double get hectares => throw _privateConstructorUsedError;
-  String? get clientId => throw _privateConstructorUsedError;
+  @JsonKey(defaultValue: '')
+  String get clientId => throw _privateConstructorUsedError;
   String get clienteNome => throw _privateConstructorUsedError;
   String get fazendaNome => throw _privateConstructorUsedError;
   String get status =>
@@ -54,7 +55,7 @@ abstract class $AreaDtoCopyWith<$Res> {
     String id,
     String name,
     double hectares,
-    String? clientId,
+    @JsonKey(defaultValue: '') String clientId,
     String clienteNome,
     String fazendaNome,
     String status,
@@ -85,7 +86,7 @@ class _$AreaDtoCopyWithImpl<$Res, $Val extends AreaDto>
     Object? id = null,
     Object? name = null,
     Object? hectares = null,
-    Object? clientId = freezed,
+    Object? clientId = null,
     Object? clienteNome = null,
     Object? fazendaNome = null,
     Object? status = null,
@@ -109,10 +110,10 @@ class _$AreaDtoCopyWithImpl<$Res, $Val extends AreaDto>
                 ? _value.hectares
                 : hectares // ignore: cast_nullable_to_non_nullable
                       as double,
-            clientId: freezed == clientId
+            clientId: null == clientId
                 ? _value.clientId
                 : clientId // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as String,
             clienteNome: null == clienteNome
                 ? _value.clienteNome
                 : clienteNome // ignore: cast_nullable_to_non_nullable
@@ -163,7 +164,7 @@ abstract class _$$AreaDtoImplCopyWith<$Res> implements $AreaDtoCopyWith<$Res> {
     String id,
     String name,
     double hectares,
-    String? clientId,
+    @JsonKey(defaultValue: '') String clientId,
     String clienteNome,
     String fazendaNome,
     String status,
@@ -193,7 +194,7 @@ class __$$AreaDtoImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? hectares = null,
-    Object? clientId = freezed,
+    Object? clientId = null,
     Object? clienteNome = null,
     Object? fazendaNome = null,
     Object? status = null,
@@ -217,10 +218,10 @@ class __$$AreaDtoImplCopyWithImpl<$Res>
             ? _value.hectares
             : hectares // ignore: cast_nullable_to_non_nullable
                   as double,
-        clientId: freezed == clientId
+        clientId: null == clientId
             ? _value.clientId
             : clientId // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as String,
         clienteNome: null == clienteNome
             ? _value.clienteNome
             : clienteNome // ignore: cast_nullable_to_non_nullable
@@ -265,7 +266,7 @@ class _$AreaDtoImpl extends _AreaDto {
     required this.id,
     required this.name,
     required this.hectares,
-    this.clientId,
+    @JsonKey(defaultValue: '') required this.clientId,
     required this.clienteNome,
     required this.fazendaNome,
     this.status = 'active',
@@ -288,7 +289,8 @@ class _$AreaDtoImpl extends _AreaDto {
   @override
   final double hectares;
   @override
-  final String? clientId;
+  @JsonKey(defaultValue: '')
+  final String clientId;
   @override
   final String clienteNome;
   @override
@@ -387,7 +389,7 @@ abstract class _AreaDto extends AreaDto {
     required final String id,
     required final String name,
     required final double hectares,
-    final String? clientId,
+    @JsonKey(defaultValue: '') required final String clientId,
     required final String clienteNome,
     required final String fazendaNome,
     final String status,
@@ -409,7 +411,8 @@ abstract class _AreaDto extends AreaDto {
   @override
   double get hectares;
   @override
-  String? get clientId;
+  @JsonKey(defaultValue: '')
+  String get clientId;
   @override
   String get clienteNome;
   @override

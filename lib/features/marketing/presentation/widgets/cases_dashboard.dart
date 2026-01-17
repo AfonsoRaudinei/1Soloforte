@@ -28,78 +28,11 @@ class CasesDashboard extends ConsumerWidget {
               ),
               ElevatedButton.icon(
                 onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                    ),
-                    builder: (BuildContext context) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 24.0,
-                          horizontal: 16.0,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'O que você deseja criar?',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            ListTile(
-                              leading: const Icon(
-                                Icons.star_outline,
-                                color: Color(0xFF4ADE80),
-                                size: 30,
-                              ),
-                              title: const Text('Novo Case de Sucesso'),
-                              subtitle: const Text(
-                                'Mostre resultados incríveis',
-                              ),
-                              onTap: () {
-                                Navigator.pop(context); // Close sheet
-                                ref
-                                    .read(marketingSelectionProvider.notifier)
-                                    .state = const MarketingSelectionState(
-                                  isSelecting: true,
-                                  reportType: 'case',
-                                );
-                                context.go('/map');
-                              },
-                            ),
-                            const Divider(),
-                            ListTile(
-                              leading: const Icon(
-                                Icons.compare_arrows,
-                                color: Colors.blue,
-                                size: 30,
-                              ),
-                              title: const Text('Avaliação Lado a Lado'),
-                              subtitle: const Text(
-                                'Comparativo A vs B em campo',
-                              ),
-                              onTap: () {
-                                Navigator.pop(context); // Close sheet
-                                ref
-                                    .read(marketingSelectionProvider.notifier)
-                                    .state = const MarketingSelectionState(
-                                  isSelecting: true,
-                                  reportType: 'side_by_side',
-                                );
-                                context.go('/map');
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
+                  // Ativa o modo marketing e direciona ao mapa
+                  // O modal unificado será aberto após o usuário posicionar o pin
+                  ref.read(marketingSelectionProvider.notifier).state =
+                      const MarketingSelectionState(isSelecting: true);
+                  context.go('/map');
                 },
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Novo Case'),
@@ -185,7 +118,7 @@ class CasesDashboard extends ConsumerWidget {
         'savings': 'R\$ 22.000',
         'views': '1.234',
         'shares': '89',
-        'size': 'premium',
+        'size': 'ouro',
       },
       {
         'producer': 'Fazenda Vista Verde',
@@ -195,7 +128,7 @@ class CasesDashboard extends ConsumerWidget {
         'savings': 'R\$ 28.000',
         'views': '2.100',
         'shares': '124',
-        'size': 'medio',
+        'size': 'prata',
       },
     ];
 
@@ -287,16 +220,16 @@ class _CaseCard extends StatelessWidget {
     final size = data['size'] as String;
     Color badgeParams = const Color(0xFFCD7F32);
     Color badgeText = const Color(0xFF7A4A1A);
-    String badgeLabel = 'Básico';
+    String badgeLabel = 'Bronze';
 
-    if (size == 'premium') {
+    if (size == 'premium' || size == 'ouro') {
       badgeParams = const Color(0xFFD4AF37);
       badgeText = const Color(0xFF8B6914);
-      badgeLabel = 'Premium';
-    } else if (size == 'medio') {
+      badgeLabel = 'Ouro';
+    } else if (size == 'medio' || size == 'prata') {
       badgeParams = const Color(0xFFA8A9AD);
       badgeText = const Color(0xFF5A5A5A);
-      badgeLabel = 'Médio';
+      badgeLabel = 'Prata';
     }
 
     return Container(

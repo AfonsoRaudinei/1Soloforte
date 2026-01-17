@@ -20,7 +20,7 @@ mixin _$Area {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   double get hectares => throw _privateConstructorUsedError;
-  String? get clientId => throw _privateConstructorUsedError;
+  String get clientId => throw _privateConstructorUsedError;
   String get clienteNome => throw _privateConstructorUsedError;
   String get fazendaNome => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
@@ -45,7 +45,7 @@ abstract class $AreaCopyWith<$Res> {
     String id,
     String name,
     double hectares,
-    String? clientId,
+    String clientId,
     String clienteNome,
     String fazendaNome,
     String status,
@@ -75,7 +75,7 @@ class _$AreaCopyWithImpl<$Res, $Val extends Area>
     Object? id = null,
     Object? name = null,
     Object? hectares = null,
-    Object? clientId = freezed,
+    Object? clientId = null,
     Object? clienteNome = null,
     Object? fazendaNome = null,
     Object? status = null,
@@ -99,10 +99,10 @@ class _$AreaCopyWithImpl<$Res, $Val extends Area>
                 ? _value.hectares
                 : hectares // ignore: cast_nullable_to_non_nullable
                       as double,
-            clientId: freezed == clientId
+            clientId: null == clientId
                 ? _value.clientId
                 : clientId // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as String,
             clienteNome: null == clienteNome
                 ? _value.clienteNome
                 : clienteNome // ignore: cast_nullable_to_non_nullable
@@ -153,7 +153,7 @@ abstract class _$$AreaImplCopyWith<$Res> implements $AreaCopyWith<$Res> {
     String id,
     String name,
     double hectares,
-    String? clientId,
+    String clientId,
     String clienteNome,
     String fazendaNome,
     String status,
@@ -180,7 +180,7 @@ class __$$AreaImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? hectares = null,
-    Object? clientId = freezed,
+    Object? clientId = null,
     Object? clienteNome = null,
     Object? fazendaNome = null,
     Object? status = null,
@@ -204,10 +204,10 @@ class __$$AreaImplCopyWithImpl<$Res>
             ? _value.hectares
             : hectares // ignore: cast_nullable_to_non_nullable
                   as double,
-        clientId: freezed == clientId
+        clientId: null == clientId
             ? _value.clientId
             : clientId // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as String,
         clienteNome: null == clienteNome
             ? _value.clienteNome
             : clienteNome // ignore: cast_nullable_to_non_nullable
@@ -252,7 +252,7 @@ class _$AreaImpl implements _Area {
     required this.id,
     required this.name,
     required this.hectares,
-    this.clientId,
+    required this.clientId,
     required this.clienteNome,
     required this.fazendaNome,
     this.status = 'active',
@@ -270,7 +270,7 @@ class _$AreaImpl implements _Area {
   @override
   final double hectares;
   @override
-  final String? clientId;
+  final String clientId;
   @override
   final String clienteNome;
   @override
@@ -360,7 +360,7 @@ abstract class _Area implements Area {
     required final String id,
     required final String name,
     required final double hectares,
-    final String? clientId,
+    required final String clientId,
     required final String clienteNome,
     required final String fazendaNome,
     final String status,
@@ -378,7 +378,7 @@ abstract class _Area implements Area {
   @override
   double get hectares;
   @override
-  String? get clientId;
+  String get clientId;
   @override
   String get clienteNome;
   @override

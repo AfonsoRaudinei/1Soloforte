@@ -104,35 +104,32 @@ class _DrawingToolsMenuState extends ConsumerState<DrawingToolsMenu>
         // Main Button (Styled like MapSideControls)
         Material(
           color: Colors.transparent,
-          child: Tooltip(
-            message: 'Ferramentas de Desenho',
-            child: InkWell(
-              onTap: _toggleMenu,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _isExpanded
-                      ? AppColors.textPrimary
-                      : AppColors.secondary,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: AnimatedRotation(
-                  turns: _isExpanded ? 0.125 : 0, // 45 deg rotation
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    _isExpanded ? Icons.add : Icons.edit_outlined,
-                    color: Colors.white,
-                    size: 24,
+          child: InkWell(
+            onTap: _toggleMenu,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _isExpanded
+                    ? AppColors.textPrimary
+                    : AppColors.secondary,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
+                ],
+              ),
+              child: AnimatedRotation(
+                turns: _isExpanded ? 0.125 : 0, // 45 deg rotation
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  _isExpanded ? Icons.add : Icons.edit_outlined,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
             ),

@@ -37,6 +37,9 @@ class OccurrenceRepositoryImpl implements OccurrenceRepository {
   @override
   Future<void> createOccurrence(Occurrence occurrence) async {
     try {
+      if (occurrence.clientId.isEmpty) {
+        throw StateError('clientId obrigatório para criar ocorrência.');
+      }
       LoggerService.i('Creating occurrence: ${occurrence.id}');
       await _dataSource.saveOccurrence(OccurrenceDto.fromDomain(occurrence));
     } catch (e, s) {
@@ -48,6 +51,9 @@ class OccurrenceRepositoryImpl implements OccurrenceRepository {
   @override
   Future<void> updateOccurrence(Occurrence occurrence) async {
     try {
+      if (occurrence.clientId.isEmpty) {
+        throw StateError('clientId obrigatório para atualizar ocorrência.');
+      }
       LoggerService.i('Updating occurrence: ${occurrence.id}');
       await _dataSource.saveOccurrence(OccurrenceDto.fromDomain(occurrence));
     } catch (e, s) {

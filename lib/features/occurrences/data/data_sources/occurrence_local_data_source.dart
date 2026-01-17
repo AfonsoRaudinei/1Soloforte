@@ -17,6 +17,9 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
   @override
   Future<void> saveOccurrence(OccurrenceDto occurrence) async {
     if (kIsWeb) return; // Do nothing on web
+    if (occurrence.clientId.isEmpty) {
+      throw StateError('clientId obrigatório para salvar ocorrência.');
+    }
     final db = await _dbHelper.database;
     await db.insert('occurrences', {
       'id': occurrence.id,
@@ -30,18 +33,12 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
 
   @override
   Future<List<OccurrenceDto>> getOccurrences() async {
-    if (kIsWeb) return _getMocks(); // Return mocks on web
+    if (kIsWeb) return [];
 
     final db = await _dbHelper.database;
     final maps = await db.query('occurrences', orderBy: 'date DESC');
 
-    if (maps.isEmpty) {
-      final mocks = _getMocks();
-      for (var item in mocks) {
-        await saveOccurrence(item);
-      }
-      return mocks;
-    }
+    if (maps.isEmpty) return [];
 
     return maps.map((e) {
       final jsonStr = e['json_data'] as String;
@@ -52,12 +49,7 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
 
   @override
   Future<OccurrenceDto?> getOccurrenceById(String id) async {
-    if (kIsWeb) {
-      return _getMocks().firstWhere(
-        (e) => e.id == id,
-        orElse: () => _getMocks().first,
-      );
-    }
+    if (kIsWeb) return null;
     final db = await _dbHelper.database;
     final maps = await db.query(
       'occurrences',
@@ -88,6 +80,7 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
         type: 'pest',
         severity: 0.85,
         areaName: 'Talhão Norte',
+        clientId: '',
         date: DateTime.now().subtract(const Duration(hours: 2)),
         status: 'active',
         images: [
@@ -113,6 +106,7 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
         type: 'disease',
         severity: 0.60,
         areaName: 'Lavoura Sul',
+        clientId: '',
         date: DateTime.now().subtract(const Duration(days: 1)),
         status: 'monitoring',
         images: [
@@ -128,6 +122,7 @@ class OccurrenceLocalDataSourceImpl implements OccurrenceLocalDataSource {
         type: 'deficiency',
         severity: 0.40,
         areaName: 'Área Teste',
+        clientId: '',
         date: DateTime.now().subtract(const Duration(days: 3)),
         status: 'resolved',
         images: [

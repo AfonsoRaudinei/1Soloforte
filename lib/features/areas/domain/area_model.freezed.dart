@@ -24,6 +24,8 @@ mixin _$Area {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   double get hectares => throw _privateConstructorUsedError;
+  @JsonKey(defaultValue: '')
+  String get clientId => throw _privateConstructorUsedError;
   String get clienteNome => throw _privateConstructorUsedError;
   String get fazendaNome => throw _privateConstructorUsedError;
   String get status =>
@@ -52,6 +54,7 @@ abstract class $AreaCopyWith<$Res> {
     String id,
     String name,
     double hectares,
+    @JsonKey(defaultValue: '') String clientId,
     String clienteNome,
     String fazendaNome,
     String status,
@@ -81,6 +84,7 @@ class _$AreaCopyWithImpl<$Res, $Val extends Area>
     Object? id = null,
     Object? name = null,
     Object? hectares = null,
+    Object? clientId = null,
     Object? clienteNome = null,
     Object? fazendaNome = null,
     Object? status = null,
@@ -104,6 +108,10 @@ class _$AreaCopyWithImpl<$Res, $Val extends Area>
                 ? _value.hectares
                 : hectares // ignore: cast_nullable_to_non_nullable
                       as double,
+            clientId: null == clientId
+                ? _value.clientId
+                : clientId // ignore: cast_nullable_to_non_nullable
+                      as String,
             clienteNome: null == clienteNome
                 ? _value.clienteNome
                 : clienteNome // ignore: cast_nullable_to_non_nullable
@@ -154,6 +162,7 @@ abstract class _$$AreaImplCopyWith<$Res> implements $AreaCopyWith<$Res> {
     String id,
     String name,
     double hectares,
+    @JsonKey(defaultValue: '') String clientId,
     String clienteNome,
     String fazendaNome,
     String status,
@@ -180,6 +189,7 @@ class __$$AreaImplCopyWithImpl<$Res>
     Object? id = null,
     Object? name = null,
     Object? hectares = null,
+    Object? clientId = null,
     Object? clienteNome = null,
     Object? fazendaNome = null,
     Object? status = null,
@@ -203,6 +213,10 @@ class __$$AreaImplCopyWithImpl<$Res>
             ? _value.hectares
             : hectares // ignore: cast_nullable_to_non_nullable
                   as double,
+        clientId: null == clientId
+            ? _value.clientId
+            : clientId // ignore: cast_nullable_to_non_nullable
+                  as String,
         clienteNome: null == clienteNome
             ? _value.clienteNome
             : clienteNome // ignore: cast_nullable_to_non_nullable
@@ -247,6 +261,7 @@ class _$AreaImpl implements _Area {
     required this.id,
     required this.name,
     required this.hectares,
+    @JsonKey(defaultValue: '') required this.clientId,
     required this.clienteNome,
     required this.fazendaNome,
     this.status = 'active',
@@ -266,6 +281,9 @@ class _$AreaImpl implements _Area {
   final String name;
   @override
   final double hectares;
+  @override
+  @JsonKey(defaultValue: '')
+  final String clientId;
   @override
   final String clienteNome;
   @override
@@ -295,7 +313,7 @@ class _$AreaImpl implements _Area {
 
   @override
   String toString() {
-    return 'Area(id: $id, name: $name, hectares: $hectares, clienteNome: $clienteNome, fazendaNome: $fazendaNome, status: $status, coordinates: $coordinates, culture: $culture, safra: $safra, ndviAverage: $ndviAverage, lastUpdate: $lastUpdate)';
+    return 'Area(id: $id, name: $name, hectares: $hectares, clientId: $clientId, clienteNome: $clienteNome, fazendaNome: $fazendaNome, status: $status, coordinates: $coordinates, culture: $culture, safra: $safra, ndviAverage: $ndviAverage, lastUpdate: $lastUpdate)';
   }
 
   @override
@@ -307,6 +325,8 @@ class _$AreaImpl implements _Area {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.hectares, hectares) ||
                 other.hectares == hectares) &&
+            (identical(other.clientId, clientId) ||
+                other.clientId == clientId) &&
             (identical(other.clienteNome, clienteNome) ||
                 other.clienteNome == clienteNome) &&
             (identical(other.fazendaNome, fazendaNome) ||
@@ -331,6 +351,7 @@ class _$AreaImpl implements _Area {
     id,
     name,
     hectares,
+    clientId,
     clienteNome,
     fazendaNome,
     status,
@@ -360,6 +381,7 @@ abstract class _Area implements Area {
     required final String id,
     required final String name,
     required final double hectares,
+    @JsonKey(defaultValue: '') required final String clientId,
     required final String clienteNome,
     required final String fazendaNome,
     final String status,
@@ -378,6 +400,9 @@ abstract class _Area implements Area {
   String get name;
   @override
   double get hectares;
+  @override
+  @JsonKey(defaultValue: '')
+  String get clientId;
   @override
   String get clienteNome;
   @override

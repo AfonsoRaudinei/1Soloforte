@@ -28,7 +28,8 @@ mixin _$OccurrenceDto {
   double get severity => throw _privateConstructorUsedError;
   String get areaName => throw _privateConstructorUsedError;
   String? get areaId => throw _privateConstructorUsedError;
-  String? get clientId => throw _privateConstructorUsedError;
+  @JsonKey(defaultValue: '')
+  String get clientId => throw _privateConstructorUsedError;
   DateTime get date => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   List<String> get images => throw _privateConstructorUsedError;
@@ -72,7 +73,7 @@ abstract class $OccurrenceDtoCopyWith<$Res> {
     double severity,
     String areaName,
     String? areaId,
-    String? clientId,
+    @JsonKey(defaultValue: '') String clientId,
     DateTime date,
     String status,
     List<String> images,
@@ -113,7 +114,7 @@ class _$OccurrenceDtoCopyWithImpl<$Res, $Val extends OccurrenceDto>
     Object? severity = null,
     Object? areaName = null,
     Object? areaId = freezed,
-    Object? clientId = freezed,
+    Object? clientId = null,
     Object? date = null,
     Object? status = null,
     Object? images = null,
@@ -160,10 +161,10 @@ class _$OccurrenceDtoCopyWithImpl<$Res, $Val extends OccurrenceDto>
                 ? _value.areaId
                 : areaId // ignore: cast_nullable_to_non_nullable
                       as String?,
-            clientId: freezed == clientId
+            clientId: null == clientId
                 ? _value.clientId
                 : clientId // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as String,
             date: null == date
                 ? _value.date
                 : date // ignore: cast_nullable_to_non_nullable
@@ -247,7 +248,7 @@ abstract class _$$OccurrenceDtoImplCopyWith<$Res>
     double severity,
     String areaName,
     String? areaId,
-    String? clientId,
+    @JsonKey(defaultValue: '') String clientId,
     DateTime date,
     String status,
     List<String> images,
@@ -287,7 +288,7 @@ class __$$OccurrenceDtoImplCopyWithImpl<$Res>
     Object? severity = null,
     Object? areaName = null,
     Object? areaId = freezed,
-    Object? clientId = freezed,
+    Object? clientId = null,
     Object? date = null,
     Object? status = null,
     Object? images = null,
@@ -334,10 +335,10 @@ class __$$OccurrenceDtoImplCopyWithImpl<$Res>
             ? _value.areaId
             : areaId // ignore: cast_nullable_to_non_nullable
                   as String?,
-        clientId: freezed == clientId
+        clientId: null == clientId
             ? _value.clientId
             : clientId // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as String,
         date: null == date
             ? _value.date
             : date // ignore: cast_nullable_to_non_nullable
@@ -414,7 +415,7 @@ class _$OccurrenceDtoImpl extends _OccurrenceDto {
     required this.severity,
     required this.areaName,
     this.areaId,
-    this.clientId,
+    @JsonKey(defaultValue: '') required this.clientId,
     required this.date,
     required this.status,
     required final List<String> images,
@@ -455,7 +456,8 @@ class _$OccurrenceDtoImpl extends _OccurrenceDto {
   @override
   final String? areaId;
   @override
-  final String? clientId;
+  @JsonKey(defaultValue: '')
+  final String clientId;
   @override
   final DateTime date;
   @override
@@ -638,7 +640,7 @@ abstract class _OccurrenceDto extends OccurrenceDto {
     required final double severity,
     required final String areaName,
     final String? areaId,
-    final String? clientId,
+    @JsonKey(defaultValue: '') required final String clientId,
     required final DateTime date,
     required final String status,
     required final List<String> images,
@@ -675,7 +677,8 @@ abstract class _OccurrenceDto extends OccurrenceDto {
   @override
   String? get areaId;
   @override
-  String? get clientId;
+  @JsonKey(defaultValue: '')
+  String get clientId;
   @override
   DateTime get date;
   @override

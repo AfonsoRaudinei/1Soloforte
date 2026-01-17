@@ -205,6 +205,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const IntegrationsSettingsScreen(),
           ),
           GoRoute(
+            path: 'marketing-plans',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const MarketingPlansSettingsScreen(),
+          ),
+          GoRoute(
             path: 'news',
             parentNavigatorKey: _rootNavigatorKey,
             builder: (context, state) => const NewsScreen(),
@@ -374,6 +379,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             initialLatitude: extras?['latitude'],
             initialLongitude: extras?['longitude'],
             recurrentFrom: extras?['recurrentFrom'] as Occurrence?,
+            clientId: extras?['clientId'] as String?,
           );
         },
       ),

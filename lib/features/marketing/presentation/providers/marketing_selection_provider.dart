@@ -2,17 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MarketingSelectionState {
   final bool isSelecting;
-  final String reportType; // 'case' or 'side_by_side'
 
-  const MarketingSelectionState({
-    this.isSelecting = false,
-    this.reportType = 'case',
-  });
+  const MarketingSelectionState({this.isSelecting = false});
 
-  MarketingSelectionState copyWith({bool? isSelecting, String? reportType}) {
+  MarketingSelectionState copyWith({bool? isSelecting}) {
     return MarketingSelectionState(
       isSelecting: isSelecting ?? this.isSelecting,
-      reportType: reportType ?? this.reportType,
     );
   }
 }

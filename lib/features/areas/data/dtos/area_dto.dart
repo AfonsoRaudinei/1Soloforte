@@ -31,7 +31,7 @@ class AreaDto with _$AreaDto {
     required String id,
     required String name,
     required double hectares,
-    String? clientId,
+    @JsonKey(defaultValue: '') required String clientId,
     required String clienteNome,
     required String fazendaNome,
     @Default('active') String status,

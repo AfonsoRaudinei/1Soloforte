@@ -112,7 +112,6 @@ class DrawingToolbar extends ConsumerWidget {
               children: [
                 // A. Tool Selector (Menu)
                 PopupMenuButton<String>(
-                  tooltip: 'Selecionar Ferramenta',
                   offset: const Offset(0, -120),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -156,7 +155,6 @@ class DrawingToolbar extends ConsumerWidget {
 
                 // D. Undo
                 IconButton(
-                  tooltip: 'Desfazer',
                   onPressed: state.history.isNotEmpty
                       ? () {
                           HapticFeedback.lightImpact();
@@ -170,7 +168,6 @@ class DrawingToolbar extends ConsumerWidget {
 
                 // E. Cancel/Close
                 IconButton(
-                  tooltip: 'Cancelar',
                   onPressed: () {
                     HapticFeedback.mediumImpact();
                     controller.stopDrawing();

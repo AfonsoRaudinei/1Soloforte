@@ -137,6 +137,9 @@ class InMemoryMarketingRepository implements MarketingRepositoryBase {
       'client': post.client,
       'area': post.area,
       'notes': post.notes,
+      'investmentLevel': post.investmentLevel,
+      'product': post.product,
+      'productivity': post.productivity,
       'createdAt': post.createdAt.toIso8601String(),
       'photos': post.photos
           .map(
@@ -183,6 +186,9 @@ class InMemoryMarketingRepository implements MarketingRepositoryBase {
         client: data['client'] as String?,
         area: data['area'] as String?,
         notes: data['notes'] as String?,
+        investmentLevel: data['investmentLevel'] as String?,
+        product: data['product'] as String?,
+        productivity: data['productivity'] as String?,
         photos: photos,
         createdAt: DateTime.parse(
           data['createdAt'] as String? ?? DateTime.now().toIso8601String(),
@@ -296,6 +302,9 @@ class PersistentMarketingRepository implements MarketingRepositoryBase {
       'client': post.client,
       'area': post.area,
       'notes': post.notes,
+      'investmentLevel': post.investmentLevel,
+      'product': post.product,
+      'productivity': post.productivity,
       'createdAt': post.createdAt.toIso8601String(),
       'photos': post.photos
           .map(
@@ -354,6 +363,9 @@ class PersistentMarketingRepository implements MarketingRepositoryBase {
         client: data['client'] as String?,
         area: data['area'] as String?,
         notes: data['notes'] as String?,
+        investmentLevel: data['investmentLevel'] as String?,
+        product: data['product'] as String?,
+        productivity: data['productivity'] as String?,
         photos: photos,
         createdAt: DateTime.parse(
           data['createdAt'] as String? ?? DateTime.now().toIso8601String(),
