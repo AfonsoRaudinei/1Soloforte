@@ -18,10 +18,9 @@ class MarketingRepository implements MarketingRepositoryBase {
   // Rollback flag: set false to restore in-memory behavior immediately.
   static bool usePersistentMarketingRepository = true;
 
-  final MarketingRepositoryBase _delegate =
-      usePersistentMarketingRepository
-          ? PersistentMarketingRepository()
-          : InMemoryMarketingRepository();
+  final MarketingRepositoryBase _delegate = usePersistentMarketingRepository
+      ? PersistentMarketingRepository()
+      : InMemoryMarketingRepository();
 
   @override
   Future<void> savePost(Post post) => _delegate.savePost(post);
@@ -207,10 +206,7 @@ class PersistentMarketingRepository implements MarketingRepositoryBase {
   @override
   Future<void> savePost(Post post) async {
     final db = await _dbHelper.database;
-    final jsonData = jsonEncode({
-      'kind': 'post',
-      ...post.toJson(),
-    });
+    final jsonData = jsonEncode({'kind': 'post', ...post.toJson()});
     await db.insert(
       DatabaseHelper.tableMarketingPosts,
       {
@@ -249,18 +245,111 @@ class PersistentMarketingRepository implements MarketingRepositoryBase {
   @override
   Future<List<MarketingMapPost>> getMapPosts() async {
     final db = await _dbHelper.database;
-    final rows = await db.query(
+
+    // 1. Fetch Legacy Posts
+    final legacyRows = await db.query(
       DatabaseHelper.tableMarketingPosts,
       orderBy: 'created_at DESC',
     );
-    final posts = rows
+    final legacyPosts = legacyRows
         .map((row) => _mapPostFromRow(row))
         .whereType<MarketingMapPost>()
         .toList();
-    _mapPosts
-      ..clear()
-      ..addAll(posts);
+
+    // 2. Fetch New Publications (Adapter)
+    try {
+      final newRows = await db.query(
+        DatabaseHelper.tableMarketingPublications,
+        orderBy: 'created_at DESC',
+      );
+
+      final newPosts = newRows
+          .map((row) => _convertNewPublicationRowToMapPost(row))
+          .whereType<MarketingMapPost>()
+          .toList();
+
+      // Merge: New items first + Legacy items
+      _mapPosts
+        ..clear()
+        ..addAll(newPosts)
+        ..addAll(legacyPosts);
+    } catch (e) {
+      // Fallback safe: if table doesn't exist or error, just return legacy
+      print('Error fetching new publications in legacy adapter: $e');
+      _mapPosts
+        ..clear()
+        ..addAll(legacyPosts);
+    }
+
     return List<MarketingMapPost>.from(_mapPosts);
+  }
+
+  /// ADAPTER: Converte row da nova tabela marketing_publications para o modelo legado MarketingMapPost
+  /// Isso permite que o Dashboard exiba novos posts sem refatoração profunda
+  MarketingMapPost? _convertNewPublicationRowToMapPost(
+    Map<String, dynamic> row,
+  ) {
+    final jsonStr = row['json_data'] as String?;
+    if (jsonStr == null) return null;
+
+    try {
+      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
+
+      // Parse Photos
+      final photos = (data['photos'] as List<dynamic>? ?? [])
+          .map(
+            (p) => MarketingPhoto(
+              path: p['path'] as String? ?? '',
+              caption: p['caption'] as String? ?? '',
+              isCover: p['isCover'] as bool? ?? false,
+            ),
+          )
+          .toList();
+
+      // Ensure at least one photo if comparisons exist
+      if (photos.isEmpty && data['comparisons'] != null) {
+        final comps = data['comparisons'] as List<dynamic>;
+        for (final comp in comps) {
+          final compPhotos = comp['photos'] as List<dynamic>? ?? [];
+          for (final p in compPhotos) {
+            photos.add(
+              MarketingPhoto(
+                path: p['path'] as String? ?? '',
+                caption: p['caption'] as String? ?? '',
+                isCover: p['isCover'] as bool? ?? false,
+              ),
+            );
+          }
+        }
+      }
+
+      // Map Type
+      String type = 'case';
+      if (data['type'] == 'antesDepois' || data['type'] == 'antes_depois') {
+        type = 'antes-depois';
+      } else if (data['type'] == 'resultado') {
+        type = 'resultado';
+      }
+
+      return MarketingMapPost(
+        id: data['id'] as String,
+        latitude: (data['latitude'] as num).toDouble(),
+        longitude: (data['longitude'] as num).toDouble(),
+        type: type,
+        title: data['title'] as String?,
+        client: data['clientName'] as String?, // Map clientName -> client
+        area: data['areaName'] as String?, // Map areaName -> area
+        notes: data['notes'] as String?,
+        investmentLevel: data['investmentLevel'] as String?,
+        product: data['product'] as String?,
+        productivity:
+            null, // Field not direct match, could parse from highlight
+        photos: photos,
+        createdAt: DateTime.tryParse(data['createdAt'] ?? '') ?? DateTime.now(),
+      ).ensureCover();
+    } catch (e) {
+      return null;
+    }
   }
 
   @override

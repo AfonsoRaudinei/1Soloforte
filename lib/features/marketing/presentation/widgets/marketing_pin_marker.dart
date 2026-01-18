@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_map_post.dart';
+import 'package:soloforte_app/features/marketing/domain/marketing_publication.dart';
 
 // Conditional import for dart:io (not available on Web)
 import 'marketing_pin_marker_io.dart'
@@ -169,8 +170,11 @@ class MarkerSizeConfig {
 /// - No overflow issues
 /// - NO CircleAvatar, NO BoxShape.circle, NO ClipOval
 class MarketingPinMarker extends StatelessWidget {
-  /// The marketing post data to display.
-  final MarketingMapPost post;
+  /// The new standard data source.
+  final MarketingPublication? publication;
+
+  /// The legacy data source (kept for compatibility with Dashboard).
+  final MarketingMapPost? legacyPost;
 
   /// Configuration for zoom-based visual adjustments.
   final MarkerZoomConfig zoomConfig;
@@ -178,16 +182,57 @@ class MarketingPinMarker extends StatelessWidget {
   /// Optional callback when marker is tapped.
   final VoidCallback? onTap;
 
+  /// Canonical Constructor using MarketingPublication
   const MarketingPinMarker({
     super.key,
-    required this.post,
+    required this.publication,
+    this.legacyPost,
     this.zoomConfig = const MarkerZoomConfig(),
     this.onTap,
   });
 
+  /// Legacy Constructor (Dashboard Compatibility)
+  /// DEPRECATED: Migrate Dashboard to use MarketingPublication
+  // ignore: non_constant_identifier_names
+  factory MarketingPinMarker.fromLegacy({
+    required MarketingMapPost post,
+    MarkerZoomConfig zoomConfig = const MarkerZoomConfig(),
+    VoidCallback? onTap,
+  }) {
+    return MarketingPinMarker(
+      publication: null,
+      legacyPost: post,
+      zoomConfig: zoomConfig,
+      onTap: onTap,
+    );
+  }
+
+  // --- Data Accessors ---
+
+  String get _investmentLevel =>
+      publication?.investmentLevel ?? legacyPost?.investmentLevel ?? 'prata';
+
+  String? get _productivity =>
+      publication?.highlightValue?.toString() ?? legacyPost?.productivity;
+
+  String? get _product => publication?.product ?? legacyPost?.product;
+
+  dynamic get _coverPhoto {
+    if (publication != null) return publication!.coverPhoto;
+    return legacyPost?.coverPhoto;
+  }
+
+  String get _coverPhotoPath {
+    final photo = _coverPhoto;
+    if (photo == null) return '';
+    // Handle both MarketingPhoto (legacy) and PublicationPhoto (new)
+    // Both have .path property
+    return photo.path;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final level = _normalizeInvestmentLevel(post.investmentLevel);
+    final level = _normalizeInvestmentLevel(_investmentLevel);
     final config = MarkerSizeConfig.forLevel(level);
 
     // For simplified mode at extreme zoom-out, show minimal rectangular marker
@@ -214,8 +259,8 @@ class MarketingPinMarker extends StatelessWidget {
     final shadow = _getCardShadow(level);
 
     // Content data with safe defaults
-    final productivity = (post.productivity ?? '').trim();
-    final product = (post.product ?? '').trim();
+    final productivity = (_productivity ?? '').trim();
+    final product = (_product ?? '').trim();
     final line1 = productivity.isEmpty ? 'Resultado' : productivity;
     final line2 = product.isEmpty ? '' : product;
 
@@ -341,7 +386,8 @@ class MarketingPinMarker extends StatelessWidget {
   /// Builds the cover image widget with rectangular bounds.
   /// Uses platform-specific implementation to handle Web vs Mobile.
   Widget _buildCoverImage(double size) {
-    final cover = post.coverPhoto;
+    // Dynamic type: can be MarketingPhoto or PublicationPhoto
+    final cover = _coverPhoto;
 
     if (cover == null) {
       return Container(
@@ -356,7 +402,7 @@ class MarketingPinMarker extends StatelessWidget {
       );
     }
 
-    final path = cover.path;
+    final path = _coverPhotoPath;
 
     // Network images (http/https)
     if (path.startsWith('http://') || path.startsWith('https://')) {

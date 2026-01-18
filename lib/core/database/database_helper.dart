@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static const _databaseName = "soloforte.db";
-  static const _databaseVersion = 7; // Incremented version to 7
+  static const _databaseVersion = 8; // Incremented version to 8
 
   static const tableVisits = 'visits';
   static const tableAreas = 'areas';
@@ -12,6 +12,7 @@ class DatabaseHelper {
   static const tableTickets = 'tickets';
   static const tableMarketingPosts = 'marketing_posts';
   static const tableMarketingPlans = 'marketing_plans';
+  static const tableMarketingPublications = 'marketing_publications';
   static const tableClients = 'clients';
   static const tableAgendaEvents = 'agenda_events';
 
@@ -51,6 +52,7 @@ class DatabaseHelper {
     await _createTicketsTable(db);
     await _createMarketingPostsTable(db);
     await _createMarketingPlansTable(db);
+    await _createMarketingPublicationsTable(db);
     await _createClientsTable(db);
     await _createAgendaEventsTable(db);
   }
@@ -85,6 +87,10 @@ class DatabaseHelper {
 
     if (oldVersion < 7) {
       await _createMarketingPlansTable(db);
+    }
+
+    if (oldVersion < 8) {
+      await _createMarketingPublicationsTable(db);
     }
   }
 
@@ -175,6 +181,16 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         start_time INTEGER NOT NULL,
         status TEXT NOT NULL,
+        json_data TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future _createMarketingPublicationsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableMarketingPublications (
+        id TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL,
         json_data TEXT NOT NULL
       )
     ''');

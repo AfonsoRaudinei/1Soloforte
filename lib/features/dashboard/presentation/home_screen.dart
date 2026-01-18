@@ -29,10 +29,13 @@ import 'package:soloforte_app/features/visits/presentation/widgets/active_visit_
 import 'widgets/online_status_badge.dart';
 import 'package:soloforte_app/features/weather/presentation/widgets/weather_radar.dart';
 import 'package:soloforte_app/features/marketing/presentation/providers/marketing_selection_provider.dart';
-import 'package:soloforte_app/features/marketing/presentation/widgets/new_case_modal.dart';
+// DEPRECATED: Modal antigo removido, usar rota /map/marketing/edit
+// import 'package:soloforte_app/features/marketing/presentation/widgets/new_case_modal.dart';
 import 'package:soloforte_app/features/marketing/data/marketing_repository.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_map_post.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_pin_marker.dart';
+import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_cluster_marker.dart';
+import 'package:soloforte_app/features/marketing/services/pin_visibility_service.dart';
 
 import 'widgets/map_layers/areas_layer.dart';
 import 'widgets/map_layers/occurrences_layer.dart';
@@ -730,25 +733,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   // Deprecated/Removed: _buildBottomAppBar & helpers
 
   // =====================================================
-  // MARKETING OPTIONS MODAL
+  // MARKETING - NAVEGAÇÃO PARA ROTA (FONTE DA VERDADE)
   // =====================================================
-  /// Abre diretamente o modal unificado de criação de case de marketing.
-  /// O modal já contém abas internas para "Antes e Depois" e "Resultado".
+  /// Navega para a tela de edição de publicação (ROTA FONTE DA VERDADE)
+  /// A rota /map/marketing/edit é usada para criar e editar publicações
   void _showMarketingOptions(LatLng point) {
-    // Abre diretamente o modal unificado (sem menu intermediário)
-    showDialog(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (_) => NewCaseSuccessModal(
-        latitude: point.latitude,
-        longitude: point.longitude,
-      ),
-    ).then((result) {
-      if (result != null) {
-        _saveMarketingPostFromResult(result);
-      }
-      ref.read(dashboardControllerProvider.notifier).cancelPinSelection();
-    });
+    // Navega para a rota de edição (nova publicação)
+    context
+        .push(
+          '/map/marketing/edit',
+          extra: {'latitude': point.latitude, 'longitude': point.longitude},
+        )
+        .then((_) {
+          ref.read(dashboardControllerProvider.notifier).cancelPinSelection();
+          _loadMarketingPosts(); // Recarrega pins após retornar
+        });
   }
 
   Future<void> _loadMarketingPosts() async {
@@ -759,68 +758,129 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     });
   }
 
-  Future<void> _saveMarketingPostFromResult(Map<String, dynamic> result) async {
-    // Preservar o tipo exato: 'antes-depois' ou 'resultado' (abas do modal unificado)
-    // Isso permite diferenciação visual no mapa
-    final type = result['type'] as String? ?? 'antes-depois';
-    final photoPath = result['image'] as String?;
-    final photos = photoPath == null
-        ? <MarketingPhoto>[]
-        : [MarketingPhoto(path: photoPath, isCover: true)];
+  // =====================================================
+  // SISTEMA DE VISIBILIDADE INTELIGENTE DE PINS
+  // =====================================================
+  // Regras profissionais (padrão top 0.1%):
+  // 1️⃣ Zoom thresholds (obrigatório)
+  // 2️⃣ Raio máximo de visualização (anti-espionagem agrícola)
+  // 3️⃣ Contexto de fazenda/cliente
+  // 4️⃣ Clustering inteligente
 
-    final post = MarketingMapPost(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      latitude: (result['latitude'] as num?)?.toDouble() ?? 0,
-      longitude: (result['longitude'] as num?)?.toDouble() ?? 0,
-      type: type, // Preserva 'antes-depois' ou 'resultado'
-      title: result['title'] as String?,
-      client: result['producer'] as String?,
-      area: result['location'] as String?,
-      notes: result['description'] as String?,
-      investmentLevel: result['size'] as String?,
-      product: result['product'] as String?,
-      productivity: result['productivity'] as String?,
-      photos: photos,
-      createdAt: DateTime.now(),
-    );
-
-    await _marketingRepository.saveMapPost(post);
-    if (!mounted) return;
-    setState(() {
-      _marketingPosts = [..._marketingPosts, post.ensureCover()];
-    });
-  }
-
-  Future<void> _updateMarketingPost(MarketingMapPost post) async {
-    await _marketingRepository.saveMapPost(post);
-    if (!mounted) return;
-    setState(() {
-      _marketingPosts = _marketingPosts
-          .map((item) => item.id == post.id ? post.ensureCover() : item)
-          .toList();
-    });
-  }
+  static const PinVisibilityService _pinVisibilityService =
+      PinVisibilityService();
 
   List<Marker> _buildMarketingMarkers() {
-    return _marketingPosts.map((post) {
-      // Use the MarkerSizeConfig from the new widget for consistent sizing
-      // MarkerSizeConfig.forLevel already normalizes the investment level internally
+    // Obter zoom atual e centro do mapa
+    final currentZoom = _mapController.camera.zoom;
+    final mapCenter = _mapController.camera.center;
+
+    // 1️⃣ REGRA DE ZOOM MÍNIMO - Não mostrar nada em zoom regional
+    if (currentZoom < PinVisibilityConfig.zoomMinCluster) {
+      return []; // Zoom < 10: visão regional → nenhum pin
+    }
+
+    // Obter contexto de cliente/fazenda ativa (se houver)
+    final clientId = widget.clientId;
+
+    // Filtrar e agrupar pins com sistema de visibilidade
+    final result = _pinVisibilityService.filterAndClusterPins(
+      allPins: _marketingPosts,
+      currentZoom: currentZoom,
+      mapCenter: mapCenter,
+      activeClientId: clientId,
+      activeFarmCenter: null, // TODO: pegar do talhão selecionado se houver
+    );
+
+    final markers = <Marker>[];
+
+    // 2️⃣ ADICIONAR PINS INDIVIDUAIS (zoom alto)
+    for (final post in result.visiblePins) {
       final sizeConfig = MarkerSizeConfig.forLevel(
         post.investmentLevel ?? 'prata',
       );
 
-      return Marker(
-        point: LatLng(post.latitude, post.longitude),
-        width: sizeConfig.totalWidth,
-        height: sizeConfig.totalHeight,
-        child: MarketingPinMarker(
-          post: post,
-          // Default to normal zoom config - future: pass actual zoom level
-          zoomConfig: const MarkerZoomConfig(),
-          onTap: () => _showMarketingDetails(post),
+      // Determinar configuração de zoom para o marker
+      final zoomLevel = _pinVisibilityService.getMarkerZoomLevel(currentZoom);
+      final zoomConfig = _getMarkerZoomConfig(zoomLevel);
+
+      markers.add(
+        Marker(
+          point: LatLng(post.latitude, post.longitude),
+          width: zoomLevel == MarkerZoomLevel.simplified
+              ? 90
+              : sizeConfig.totalWidth,
+          height: zoomLevel == MarkerZoomLevel.simplified
+              ? 32
+              : sizeConfig.totalHeight,
+          child: zoomLevel == MarkerZoomLevel.simplified
+              ? SimplifiedMarketingMarker(
+                  onTap: () => _showMarketingDetails(post),
+                  color: _getMarkerColor(post.investmentLevel),
+                )
+              : MarketingPinMarker.fromLegacy(
+                  post: post,
+                  zoomConfig: zoomConfig,
+                  onTap: () => _showMarketingDetails(post),
+                ),
         ),
       );
-    }).toList();
+    }
+
+    // 3️⃣ ADICIONAR CLUSTERS (zoom médio)
+    for (final cluster in result.clusters) {
+      markers.add(
+        Marker(
+          point: cluster.center,
+          width: 80,
+          height: 60,
+          child: MarketingClusterMarker(
+            cluster: cluster,
+            zoom: currentZoom,
+            onTap: () => _handleClusterTap(cluster),
+          ),
+        ),
+      );
+    }
+
+    return markers;
+  }
+
+  /// Retorna a configuração de zoom para o marker
+  MarkerZoomConfig _getMarkerZoomConfig(MarkerZoomLevel level) {
+    switch (level) {
+      case MarkerZoomLevel.full:
+        return MarkerZoomConfig.normal;
+      case MarkerZoomLevel.simplified:
+        return MarkerZoomConfig.zoomedOut;
+      case MarkerZoomLevel.extreme:
+        return MarkerZoomConfig.extremeZoomOut;
+      case MarkerZoomLevel.hidden:
+        return MarkerZoomConfig.extremeZoomOut;
+    }
+  }
+
+  /// Retorna a cor do marker baseada no nível de investimento
+  Color _getMarkerColor(String? level) {
+    switch (level) {
+      case 'ouro':
+      case 'premium':
+        return const Color(0xFFD4AF37); // Ouro
+      case 'prata':
+      case 'medio':
+        return const Color(0xFFB0B0B0); // Prata
+      default:
+        return const Color(0xFFCD7F32); // Bronze
+    }
+  }
+
+  /// Manipula clique em um cluster - dá zoom para explodir
+  void _handleClusterTap(PinCluster cluster) {
+    // Dar zoom no cluster para explodir
+    _mapController.move(
+      cluster.center,
+      PinVisibilityConfig.zoomMinIndividual + 0.5,
+    );
   }
 
   // NOTE: _marketingMarkerSize and _buildMarketingMarker methods removed.
@@ -828,45 +888,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   // which provides proper z-index hierarchy and zoom support.
 
   void _showMarketingDetails(MarketingMapPost post) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => _MarketingPostDetailSheet(
-        post: post,
-        onViewPhotos: () async {
-          Navigator.pop(ctx);
-          final updated = await _openMarketingGallery(post);
-          if (updated != null) {
-            _updateMarketingPost(updated);
-          }
-        },
-        onEdit: () async {
-          Navigator.pop(ctx);
-          final updated = await _openMarketingEditor(post);
-          if (updated != null) {
-            _updateMarketingPost(updated);
-          }
-        },
-      ),
-    );
+    // ✅ CORREÇÃO: Navegar para a rota de edição (FONTE DA VERDADE)
+    // Ao clicar no pin, abre a tela completa de edição
+    context.push('/map/marketing/edit?id=${post.id}').then((_) {
+      _loadMarketingPosts(); // Recarrega pins após retornar
+    });
   }
 
-  Future<MarketingMapPost?> _openMarketingGallery(MarketingMapPost post) {
-    return showDialog<MarketingMapPost>(
-      context: context,
-      barrierColor: Colors.black,
-      builder: (ctx) => _MarketingGalleryScreen(post: post),
-    );
-  }
-
-  Future<MarketingMapPost?> _openMarketingEditor(MarketingMapPost post) {
-    return showDialog<MarketingMapPost>(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (ctx) => _MarketingEditScreen(post: post),
-    );
-  }
+  // DEPRECATED: Métodos obsoletos mantidos temporariamente para retrocompatibilidade
+  // Serão removidos na próxima versão
 
   // =====================================================
   // DRAWING OPTIONS MODAL
@@ -979,6 +1009,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   // =====================================================
+  // =====================================================
   // INDICADOR DE MODO ATIVO
   // Exibe o modo atual quando não está em navegação livre
   // =====================================================
@@ -986,16 +1017,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     MapMode activeMode,
     DashboardController dashboardCtrl,
   ) {
+    // 1️⃣ VISUAL ESPECÍFICO PARA MODO PUBLICAÇÃO (MARKETING)
+    // Badge discreto no canto superior esquerdo
+    if (activeMode == MapMode.marketing) {
+      return Positioned(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E3A2F), // Cor identidade
+            borderRadius: BorderRadius.circular(
+              8,
+            ), // Bordas arredondadas suaves
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: const Text(
+            'Publicação',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 2️⃣ VISUAL PARA OUTROS MODOS (Banners centralizados)
     String message;
     Color bgColor;
     IconData icon;
 
-    // Determinar visual baseado no modo ativo
-    if (activeMode == MapMode.marketing) {
-      message = '📍 Modo: Marketing - Selecione o Local';
-      bgColor = const Color(0xFF1E3A2F);
-      icon = Icons.campaign;
-    } else if (activeMode == MapMode.occurrence) {
+    if (activeMode == MapMode.occurrence) {
       message = '📍 Modo: Ocorrência - Toque no mapa';
       bgColor = AppColors.warning;
       icon = Icons.bug_report;

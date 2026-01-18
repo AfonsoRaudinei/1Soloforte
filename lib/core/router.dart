@@ -51,8 +51,9 @@ import '../features/settings/presentation/settings_subpages.dart';
 import '../features/feedback/presentation/feedback_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/scan_result_screen.dart';
 import 'package:soloforte_app/features/scanner/domain/scan_result_model.dart';
-import 'package:soloforte_app/features/marketing/presentation/marketing_screen.dart';
-import 'package:soloforte_app/features/marketing/presentation/feed_screen.dart';
+// import 'package:soloforte_app/features/marketing/presentation/marketing_screen.dart';
+// import 'package:soloforte_app/features/marketing/presentation/feed_screen.dart';
+import 'package:soloforte_app/features/marketing/presentation/screens/publication_editor_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/scan_history_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/pest_library_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/scanner_home_screen.dart';
@@ -172,9 +173,23 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/map/weather',
             builder: (context, state) => const WeatherScreen(),
           ),
+          /*
           GoRoute(
             path: '/map/marketing',
             builder: (context, state) => const MarketingScreen(),
+          ),
+          */
+          // Marketing Publication Editor (ROTA FONTE DA VERDADE)
+          GoRoute(
+            path: '/map/marketing/edit',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return PublicationEditorScreen(
+                publicationId: state.uri.queryParameters['id'],
+                initialLatitude: extra?['latitude'] as double?,
+                initialLongitude: extra?['longitude'] as double?,
+              );
+            },
           ),
         ],
       ),
@@ -271,11 +286,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SupportHomeScreen(),
       ),
+      /*
       GoRoute(
         path: '/map/feed',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const FeedScreen(),
       ),
+      */
       GoRoute(
         path: '/map/link-hub',
         parentNavigatorKey: _rootNavigatorKey,
