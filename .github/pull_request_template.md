@@ -1,49 +1,41 @@
-Regra de Governanca – Pull Requests Estruturais (GitHub)
+## Descrição
+<!-- Descreva as mudanças deste PR -->
 
-A partir da baseline docs-baseline-1.0, todo Pull Request que altere estrutura, contrato ou relacionamento entre modulos do SoloForte DEVE:
+## Tipo de Mudança
+- [ ] 🐛 Bug fix
+- [ ] ✨ Nova feature
+- [ ] 🎨 Refatoração
+- [ ] 📝 Documentação
+- [ ] 🧪 Testes
+- [ ] 🔧 Configuração/infraestrutura
 
-Atualizar o arquivo:
-/docs/CONTRATO_CLIENTE_AGENDA_MAPA_OCORRENCIAS.md
+## 🛡️ Arquitetura (OBRIGATÓRIO)
 
-Atualizar o:
-/docs/INDICE_PROJETO.md (se a estrutura documentada mudar)
+- [ ] Nenhuma tela dentro do `ShellRoute` possui `AppBar` estrutural
+- [ ] Modais com `AppBar` possuem `// ci: allow-appbar`
+- [ ] Rodei `dart scripts/audit_shell_route.dart` localmente e passou
+- [ ] Li a [Regra Canônica do ShellRoute](docs/arquitetura/regra_shellroute.md)
 
-Declarar explicitamente a alteracao no corpo do PR (secao "Validacao de Contrato").
+## ✅ Checklist Geral
 
-Pull Requests que nao cumprirem esta regra serao reprovados, mesmo que:
-- o codigo compile
-- os testes passem
-- a funcionalidade "pareca funcionar"
+- [ ] O código compila sem erros
+- [ ] Testei localmente (browser/emulador)
+- [ ] Nenhum console.log/print de debug foi deixado
+- [ ] Comentários desnecessários foram removidos
+- [ ] O código segue os padrões do projeto
 
-Esta regra e validada manualmente pelos reviewers.
+## 📸 Screenshots (se aplicável)
+<!-- Adicione capturas de tela das mudanças visuais -->
 
-Mudanca estrutural (exige update do contrato)
-Exemplos diretos do SoloForte
-- Tornar clientId obrigatorio ou opcional
-- Alterar vinculo Cliente <-> Agenda / Mapa / Ocorrencias
-- Mudar regra de modo global vs. modo cliente
-- Criar novo modulo que dependa de Cliente
-- Remover ou adicionar campo estrutural em:
-  - Cliente
-  - Ocorrencia
-  - Area / entidade geografica
-- Alterar quem e "dono" dos dados (ex: mapa persistindo algo)
+## 🧪 Como Testar
+<!-- Passos para testar suas mudanças -->
+1. 
+2. 
+3. 
 
-Regra pratica
-Se muda o significado do sistema, e estrutural.
+## 📋 Notas Adicionais
+<!-- Qualquer informação adicional relevante -->
 
-Mudanca nao estrutural (nao exige contrato)
-Exemplos do SoloForte
-- Ajuste de layout
-- Mudanca de cor, texto ou espaco
-- Correcao de bug visual
-- Refatoracao interna sem mudar regra
-- Otimizacao de performance
-- Renomear variavel interna sem impacto semantico
+---
 
-Regra pratica
-Se muda so como o sistema faz, nao o que ele e, nao e estrutural.
-
-Frase-mestra
-Codigo muda facil. Contrato muda caro.
-Por isso, toda mudanca estrutural deixa rastro documental.
+**🚨 ATENÇÃO:** PRs que falharem no CI de auditoria (`dart scripts/audit_shell_route.dart`) serão automaticamente rejeitados.

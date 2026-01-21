@@ -1,0 +1,31 @@
+name: 🛡️ Architecture Audit
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  audit-shellroute:
+    name: Audit ShellRoute Policy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🎯 Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: 🛡️ Run ShellRoute Audit
+        run: dart scripts/audit_shell_route.dart
+        
+      - name: ❌ Fail if violations found
+        if: failure()
+        run: |
+          echo "::error::ShellRoute policy violations detected!"
+          echo "::error::Read docs/arquitetura/regra_shellroute.md for details"
+          exit 1
