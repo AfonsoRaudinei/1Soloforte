@@ -9,6 +9,9 @@ class WeeklyReportData {
   final int teamCheckins;
   final String weatherSummary;
   final List<String> nextActions;
+  final bool applicationsAvailable;
+  final bool weatherSummaryAvailable;
+  final bool nextActionsAvailable;
 
   WeeklyReportData({
     required this.activities,
@@ -17,6 +20,9 @@ class WeeklyReportData {
     required this.teamCheckins,
     required this.weatherSummary,
     required this.nextActions,
+    this.applicationsAvailable = true,
+    this.weatherSummaryAvailable = true,
+    this.nextActionsAvailable = true,
   });
 }
 
@@ -25,7 +31,7 @@ class NdviAnalysisData {
   final List<AreaComparison> areaComparisons;
   final Uint8List? attentionZoneImageBytes; // Image bytes
   final List<NdviHeatmapPoint>? heatmapPoints; // List of parsed points
-  final double correlationWithWeather; // -1.0 to 1.0
+  final double? correlationWithWeather; // -1.0 to 1.0
 
   NdviAnalysisData({
     required this.temporalEvolution,
@@ -46,7 +52,7 @@ class NdviDataPoint {
 class AreaComparison {
   final String areaName;
   final double currentNdvi;
-  final double growth; // percentage
+  final double? growth; // percentage
 
   AreaComparison({
     required this.areaName,
@@ -64,6 +70,10 @@ class CropSummaryData {
   final double costPerHectare; // R$
   final List<String> problemsFaces;
   final List<String> lessonsLearned;
+  final bool plantedAreaAvailable;
+  final bool estimatedProductivityAvailable;
+  final bool realProductivityAvailable;
+  final bool costPerHectareAvailable;
 
   CropSummaryData({
     required this.plantedArea,
@@ -73,6 +83,10 @@ class CropSummaryData {
     required this.costPerHectare,
     required this.problemsFaces,
     required this.lessonsLearned,
+    this.plantedAreaAvailable = true,
+    this.estimatedProductivityAvailable = true,
+    this.realProductivityAvailable = true,
+    this.costPerHectareAvailable = true,
   });
 }
 

@@ -63,15 +63,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundSecondary,
-      appBar: AppBar(
-        title: const Text('Feedback'),
-        backgroundColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-      ),
-      body: _enviado ? _buildSuccessView() : _buildContent(),
-    );
+    return _enviado ? _buildSuccessView() : _buildContent();
   }
 
   Widget _buildContent() {

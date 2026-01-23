@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soloforte_app/features/reports/domain/report_models.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class CustomReportLayoutNotifier extends ChangeNotifier {
   static const String _storageKey = 'custom_report_layout';
@@ -65,7 +66,11 @@ class CustomReportLayoutNotifier extends ChangeNotifier {
           );
         }).toList();
       } catch (e) {
-        print('Error loading custom report layout: $e');
+        LoggerService.e(
+          'Error loading custom report layout',
+          error: e,
+          tag: 'REPORTS',
+        );
         _sections = _defaultSections;
       }
     } else {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class SocialShareService {
   /// Compartilha imagens e texto usando o Share nativo (WhatsApp, Instagram Feed, etc.)
@@ -32,7 +33,7 @@ class SocialShareService {
         await launchUrl(webUrl, mode: LaunchMode.externalApplication);
       }
     } catch (e) {
-      debugPrint('Erro ao abrir Twitter: $e');
+      LoggerService.e('Erro ao abrir Twitter', error: e, tag: 'MARKETING');
     }
   }
 

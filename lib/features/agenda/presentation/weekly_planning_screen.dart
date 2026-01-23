@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
 import 'package:soloforte_app/features/agenda/presentation/event_form_screen.dart';
@@ -17,47 +16,10 @@ class WeeklyPlanningScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eventsAsync = ref.watch(filteredAgendaProvider);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF2F4F7), // slightly more neutral
-      appBar: AppBar(
-        title: const Text('Planejamento Semanal'),
-        centerTitle: true,
-        backgroundColor: Colors.white.withValues(alpha: 0.8),
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        flexibleSpace: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(color: Colors.transparent),
-          ),
-        ),
-        titleTextStyle: AppTypography.h4.copyWith(
-          color: const Color(0xFF1D1D1F),
-          fontWeight: FontWeight.w600,
-        ),
-        iconTheme: const IconThemeData(color: Color(0xFF1D1D1F)),
-        actions: [
-          if (kEnablePlanningEdit)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: IconButton(
-                icon: const Icon(Icons.add_circle_outline_rounded),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const EventFormScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-        ],
-      ),
-      body: eventsAsync.when(
-        data: (events) => _buildContent(context, events),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Erro: $err')),
-      ),
+    return eventsAsync.when(
+      data: (events) => _buildContent(context, events),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Erro: $err')),
     );
   }
 

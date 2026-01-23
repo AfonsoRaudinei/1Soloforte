@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -100,7 +101,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         });
       }
     } catch (e) {
-      debugPrint('Camera initialization error: $e');
+      LoggerService.e('Camera initialization error', error: e, tag: 'SCANNER');
     }
   }
 
@@ -127,6 +128,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     final zoomLevel = zoom.clamp(_minAvailableZoom, _maxAvailableZoom);
     await _controller!.setZoomLevel(zoomLevel);
+    if (!mounted) return;
 
     setState(() {
       _currentZoomLevel = zoomLevel;
@@ -152,6 +154,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
 
     await _controller!.setFlashMode(newMode);
+    if (!mounted) return;
     setState(() {
       _currentFlashMode = newMode;
     });
@@ -257,6 +260,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               if (scale > 5.0) scale = 5.0; // Arbitrary UI limit
 
               await _controller!.setZoomLevel(scale);
+              if (!mounted) return;
               setState(() {
                 _currentZoomLevel = scale;
               });

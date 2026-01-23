@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/clients/application/client_history_service.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class ClientQuickActions extends ConsumerWidget {
   final String phone;
@@ -97,7 +98,11 @@ class ClientQuickActions extends ConsumerWidget {
             .read(clientHistoryServiceProvider)
             .recordCall(clientId: clientId, phone: phone);
       } catch (e) {
-        debugPrint('Erro ao registrar ligação no histórico: $e');
+        LoggerService.e(
+          'Erro ao registrar ligação no histórico',
+          error: e,
+          tag: 'CLIENT',
+        );
       }
 
       onCallComplete?.call();
@@ -123,7 +128,11 @@ class ClientQuickActions extends ConsumerWidget {
             .read(clientHistoryServiceProvider)
             .recordWhatsApp(clientId: clientId, phone: phone);
       } catch (e) {
-        debugPrint('Erro ao registrar WhatsApp no histórico: $e');
+        LoggerService.e(
+          'Erro ao registrar WhatsApp no histórico',
+          error: e,
+          tag: 'CLIENT',
+        );
       }
 
       onWhatsAppComplete?.call();
@@ -148,7 +157,11 @@ class ClientQuickActions extends ConsumerWidget {
             .read(clientHistoryServiceProvider)
             .recordEmail(clientId: clientId, email: email);
       } catch (e) {
-        debugPrint('Erro ao registrar email no histórico: $e');
+        LoggerService.e(
+          'Erro ao registrar email no histórico',
+          error: e,
+          tag: 'CLIENT',
+        );
       }
 
       onEmailComplete?.call();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class CityAutocomplete extends StatefulWidget {
   final TextEditingController controller;
@@ -81,7 +82,7 @@ class _CityAutocompleteState extends State<CityAutocomplete> {
         });
       }
     } catch (e) {
-      debugPrint('Erro ao buscar cidades: $e');
+      LoggerService.e('Erro ao buscar cidades', error: e, tag: 'UI');
       setState(() {
         _isLoading = false;
         _suggestions = [];

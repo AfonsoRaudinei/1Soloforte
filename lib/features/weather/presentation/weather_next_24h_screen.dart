@@ -11,90 +11,84 @@ class WeatherNext24hScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Previsão Horária'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + AppSpacing.md,
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+        bottom: AppSpacing.md,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '← Scroll horizontal →',
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '← Scroll horizontal →',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: AppSpacing.sm),
 
-            // Hourly List Scroll
-            SizedBox(
-              height: 120,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: forecast.hourly.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 16),
-                itemBuilder: (context, index) {
-                  final item = forecast.hourly[index];
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        DateFormat('HH:mm').format(item.time),
-                        style: AppTypography.bodySmall,
+          // Hourly List Scroll
+          SizedBox(
+            height: 120,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: forecast.hourly.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 16),
+              itemBuilder: (context, index) {
+                final item = forecast.hourly[index];
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      DateFormat('HH:mm').format(item.time),
+                      style: AppTypography.bodySmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Icon(
+                      _getIconForCondition(item.condition),
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${item.temp.round()}°',
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 8),
-                      // Icon based on condition (mock logic or real if available)
-                      Icon(
-                        _getIconForCondition(item.condition),
-                        color: Colors.orange, // Dynamic color normally
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${item.temp.round()}°',
-                        style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '${item.precipitation}mm',
-                        style: AppTypography.caption,
-                      ),
-                    ],
-                  );
-                },
+                    ),
+                    Text(
+                      '${item.precipitation}mm',
+                      style: AppTypography.caption,
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const Divider(height: 32),
+
+          // Temperature Chart Box
+          _buildChartBox(
+            title: '📊 GRÁFICO TEMPERATURA',
+            child: SizedBox(
+              height: 150,
+              child: Center(
+                child: Text(
+                  'Chart Placeholder: ${forecast.hourly.map((e) => e.temp).join(", ")}',
+                ),
               ),
             ),
-            const Divider(height: 32),
+          ),
+          const SizedBox(height: 16),
 
-            // Temperature Chart Box
-            _buildChartBox(
-              title: '📊 GRÁFICO TEMPERATURA',
-              child: SizedBox(
-                height: 150,
-                child: Center(
-                  child: Text(
-                    'Chart Placeholder: ${forecast.hourly.map((e) => e.temp).join(", ")}',
-                  ),
-                ), // Charts need a library or custom painter. Using placeholder for now to match structure.
-              ),
+          // Precipitation Chart Box
+          _buildChartBox(
+            title: '🌧️ GRÁFICO PRECIPITAÇÃO',
+            child: SizedBox(
+              height: 150,
+              child: Center(child: Text('Precipitation Chart Placeholder')),
             ),
-            const SizedBox(height: 16),
-
-            // Precipitation Chart Box
-            _buildChartBox(
-              title: '🌧️ GRÁFICO PRECIPITAÇÃO',
-              child: SizedBox(
-                height: 150,
-                child: Center(child: Text('Precipitation Chart Placeholder')),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

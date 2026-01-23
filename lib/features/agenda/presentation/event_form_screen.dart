@@ -109,9 +109,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   }
 
   Future<void> _loadClientAssociation(String clientId) async {
-    final client = await ref.read(clientsRepositoryProvider).getClientById(
-          clientId,
-        );
+    final client = await ref
+        .read(clientsRepositoryProvider)
+        .getClientById(clientId);
     if (!mounted || client == null) return;
     setState(() {
       _lockedClientName = client.name;
@@ -186,9 +186,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       if (widget.event != null) {
         // Edit existing event
         final lockedClientId = _lockedClientId ?? widget.event!.clientId;
-        final lockedClientName = _lockedClientName ??
-            widget.event!.clientName ??
-            _selectedProducer;
+        final lockedClientName =
+            _lockedClientName ?? widget.event!.clientName ?? _selectedProducer;
         final updatedEvent = widget.event!.copyWith(
           title: _titleController.text,
           description: _descriptionController.text,
@@ -249,12 +248,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     }
   }
 
-  @override
   Widget build(BuildContext context) {
-    // ┌─────────────────────────────────┐
-    // │  [×]  Nova Atividade  [✓ Salvar]│
-    // ├─────────────────────────────────┤
-
     final durationHours =
         (_endTime.hour - _startTime.hour) +
         (_endTime.minute - _startTime.minute) / 60;
@@ -263,26 +257,20 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     final isInProgress = widget.event?.status == EventStatus.inProgress;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
-        ), // [×]
         title: Text(isEditing ? 'Editar Atividade' : 'Nova Atividade'),
-        actions: [
-          TextButton.icon(
-            // [✓ Salvar]
-            onPressed: _isLoading ? null : _saveEvent,
-            icon: const Icon(Icons.check, size: 18),
-            label: const Text('Salvar'),
-          ),
-        ],
+        leading: const BackButton(),
+        centerTitle: true,
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 16,
+            right: 16,
+            bottom: 16,
+          ),
           children: [
             // Tipo de Atividade *
             _buildLabel('Tipo de Atividade *'),
@@ -322,11 +310,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 child: DropdownButtonFormField<String>(
                   initialValue: _selectedProducer,
                   hint: const Text('Selecione...'),
-                  items: (_lockedClientName != null
-                          ? [_lockedClientName!]
-                          : _producersMock)
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                      .toList(),
+                  items:
+                      (_lockedClientName != null
+                              ? [_lockedClientName!]
+                              : _producersMock)
+                          .map(
+                            (p) => DropdownMenuItem(value: p, child: Text(p)),
+                          )
+                          .toList(),
                   onChanged: (v) => setState(() => _selectedProducer = v),
                   decoration: _inputDecoration(),
                 ),
@@ -440,7 +431,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             ),
             if (_activateReminder)
               Padding(
-                padding: const EdgeInsets.only(left: 12.0), // Indent slightly
+                padding: const EdgeInsets.only(left: 12.0),
                 child: DropdownButtonFormField<String>(
                   initialValue: _reminderOption,
                   items: _reminderOptions

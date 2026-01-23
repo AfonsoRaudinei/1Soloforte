@@ -80,122 +80,126 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
         )
         .length;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text('Suporte'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const HelpCenterScreen()),
+    return RefreshIndicator(
+      onRefresh: _loadTickets,
+      child: Column(
+        children: [
+          // Título
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 8,
+            ),
+            child: Row(
+              children: [
+                const Text(
+                  'Suporte',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.help_outline),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HelpCenterScreen()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Search
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Buscar conversas...',
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Filters
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                _buildFilterChip('Abertas ($openCount)', _filter == 'Abertas'),
+                const SizedBox(width: 8),
+                _buildFilterChip('Resolvidas', _filter == 'Resolvidas'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Main List
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                if (_filteredTickets.isEmpty && !_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(child: Text('Nenhuma conversa encontrada')),
+                  ),
+
+                ..._filteredTickets.map((t) => _buildConversationCard(t)),
+
+                if (_filter == 'Abertas' && _resolvedRecently.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    'Resolvidas Recentemente',
+                    style: AppTypography.h4.copyWith(color: Colors.grey),
+                  ),
+                  const Divider(),
+                  ..._resolvedRecently
+                      .take(3)
+                      .map((t) => _buildResolvedCard(t)),
+                ],
+              ],
+            ),
+          ),
+
+          // Bottom Button
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  await context.push('/dashboard/support/create');
+                  _loadTickets();
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Nova Conversa'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
             ),
           ),
         ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadTickets,
-        child: Column(
-          children: [
-            // Search
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          hintText: 'Buscar conversas...',
-                        ),
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Filters
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _buildFilterChip(
-                    'Abertas ($openCount)',
-                    _filter == 'Abertas',
-                  ),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Resolvidas', _filter == 'Resolvidas'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Main List
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  if (_filteredTickets.isEmpty && !_isLoading)
-                    const Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Center(child: Text('Nenhuma conversa encontrada')),
-                    ),
-
-                  ..._filteredTickets.map((t) => _buildConversationCard(t)),
-
-                  if (_filter == 'Abertas' && _resolvedRecently.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Text(
-                      'Resolvidas Recentemente',
-                      style: AppTypography.h4.copyWith(color: Colors.grey),
-                    ),
-                    const Divider(),
-                    ..._resolvedRecently
-                        .take(3)
-                        .map((t) => _buildResolvedCard(t)),
-                  ],
-                ],
-              ),
-            ),
-
-            // Bottom Button
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    await context.push('/dashboard/support/create');
-                    _loadTickets();
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Nova Conversa'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

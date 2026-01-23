@@ -113,9 +113,9 @@ class ReportDataService {
   }) async {
     if (areas.isEmpty) {
       return NdviAnalysisData(
-        temporalEvolution: [NdviDataPoint(DateTime.now(), 0.0)],
+        temporalEvolution: [],
         areaComparisons: [],
-        correlationWithWeather: 0.0,
+        correlationWithWeather: null,
       );
     }
 
@@ -136,41 +136,35 @@ class ReportDataService {
       // Parse stats into temporal data (simplified)
       if (stats['data'] != null) {
         final dataList = stats['data'] as List;
-        temporalData = dataList.map((item) {
-          final date =
-              DateTime.tryParse(item['interval']?['from'] ?? '') ?? now;
-          final value =
-              (item['outputs']?['ndvi']?['bands']?['B0']?['stats']?['mean'] ??
-                      0.0)
-                  as double;
-          return NdviDataPoint(date, value);
-        }).toList();
-      }
-
-      if (temporalData.isEmpty) {
-        temporalData = [NdviDataPoint(now, 0.0)];
+        temporalData =
+            dataList
+                .map((item) {
+                  final date = DateTime.tryParse(
+                    item['interval']?['from'] ?? '',
+                  );
+                  final value =
+                      item['outputs']?['ndvi']?['bands']?['B0']?['stats']
+                          ?['mean'];
+                  if (date == null || value is! num) {
+                    return null;
+                  }
+                  return NdviDataPoint(date, value.toDouble());
+                })
+                .whereType<NdviDataPoint>()
+                .toList();
       }
     } catch (e) {
       LoggerService.e('Error fetching Sentinel data', error: e, tag: 'REPORT');
-      temporalData = [NdviDataPoint(now, 0.0)];
+      temporalData = [];
     }
 
     // 2. Build Comparisons
     List<AreaComparison> comparisons = [];
-    for (var area in areas.take(5)) {
-      comparisons.add(
-        AreaComparison(
-          areaName: area.name,
-          currentNdvi: 0.6, // Placeholder
-          growth: 2.5, // Placeholder percentage
-        ),
-      );
-    }
 
     return NdviAnalysisData(
       temporalEvolution: temporalData,
       areaComparisons: comparisons,
-      correlationWithWeather: 0.3, // Placeholder
+      correlationWithWeather: null,
     );
   }
 

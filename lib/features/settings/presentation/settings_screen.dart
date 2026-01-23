@@ -526,45 +526,69 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildLogoutSection(BuildContext context, WidgetRef ref) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: () {
-          // Implement logout
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Sair do Aplicativo?'),
-              content: const Text('Você precisará fazer login novamente.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancelar'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    await ref.read(authServiceProvider).logout();
-                    if (context.mounted) {
-                      context.go('/login');
-                    }
-                  },
-                  child: const Text(
-                    'Sair',
-                    style: TextStyle(color: Colors.red),
+    return SettingsCardContainer(
+      children: [
+        InkWell(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Sair do Aplicativo?'),
+                content: const Text('Você precisará fazer login novamente.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await ref.read(authServiceProvider).logout();
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    },
+                    child: const Text(
+                      'Sair',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.logout,
+                    color: Colors.red.shade600,
+                    size: 22,
                   ),
                 ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Sair do App',
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: Colors.red.shade600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.textTertiary),
               ],
             ),
-          );
-        },
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.error,
-          side: const BorderSide(color: AppColors.error),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
         ),
-        child: const Text('Sair da Conta'),
-      ),
+      ],
     );
   }
 }

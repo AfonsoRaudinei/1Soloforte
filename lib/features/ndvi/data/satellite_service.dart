@@ -5,6 +5,7 @@ import 'package:image/image.dart' as img; // Import image package
 import 'package:soloforte_app/core/config/satellite_config.dart';
 // Updated import to domain entity
 import 'package:soloforte_app/features/ndvi/domain/ndvi_heatmap_point.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class SatelliteService {
   final Dio _dio = Dio();
@@ -61,7 +62,11 @@ class SatelliteService {
       }
       return null;
     } catch (e) {
-      print('Error fetching satellite data: $e');
+      LoggerService.e(
+        'Error fetching satellite data',
+        error: e,
+        tag: 'SatelliteService',
+      );
       return null;
     }
   }
@@ -132,7 +137,11 @@ class SatelliteService {
       }
       return null;
     } catch (e) {
-      print('Error fetching statistics: $e');
+      LoggerService.e(
+        'Error fetching statistics',
+        error: e,
+        tag: 'SatelliteService',
+      );
       return null;
     }
   }
@@ -162,7 +171,10 @@ class SatelliteService {
       // 1. Try safe manual parsing for Float32 precision
       return _parseTiffFloat32(tiffBytes, useEvi: useEvi);
     } catch (e) {
-      print('Manual TIFF parsing failed ($e), falling back to library...');
+      LoggerService.w(
+        'Manual TIFF parsing failed ($e), falling back to library...',
+        tag: 'SatelliteService',
+      );
       // 2. Fallback to Image library (might lose precision but better than crash)
       final image = img.decodeTiff(tiffBytes);
       if (image == null) return [];

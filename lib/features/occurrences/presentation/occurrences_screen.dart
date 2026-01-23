@@ -8,9 +8,8 @@ class OccurrencesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Gestão de Ocorrências')),
-      body: Center(
+    return SafeArea(
+      child: Center(
         child: Padding(
           padding: EdgeInsets.all(AppSpacing.xl),
           child: Column(

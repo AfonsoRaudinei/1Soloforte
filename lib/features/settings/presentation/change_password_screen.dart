@@ -72,120 +72,109 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
-      appBar: AppBar(
-        title: const Text(
-          'Alterar Senha',
-          style: TextStyle(color: Colors.black),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 24,
+          left: 24,
+          right: 24,
+          bottom: 24,
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 24),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(color: Colors.red.shade800),
-                    ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_errorMessage != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
                   ),
-
-                const Text(
-                  'Por segurança, você precisa informar sua senha atual antes de definir uma nova.',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-                const SizedBox(height: 24),
-
-                // Current Password
-                TextFormField(
-                  controller: _currentPasswordController,
-                  obscureText: true,
-                  decoration: _inputDecoration('Senha Atual'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Informe a senha atual';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // New Password
-                TextFormField(
-                  controller: _newPasswordController,
-                  obscureText: true,
-                  decoration: _inputDecoration('Nova Senha'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Informe a nova senha';
-                    }
-                    if (value.length < 6) {
-                      return 'A senha deve ter pelo menos 6 caracteres';
-                    }
-                    if (value == _currentPasswordController.text) {
-                      return 'A nova senha não pode ser igual à atual';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Confirm Password
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: _inputDecoration('Confirmar Nova Senha'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Confirme a nova senha';
-                    }
-                    if (value != _newPasswordController.text) {
-                      return 'As senhas não coincidem';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32),
-
-                // Submit Button
-                FilledButton(
-                  onPressed: _isLoading ? null : _submit,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(color: Colors.red.shade800),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Alterar Senha'),
                 ),
-              ],
-            ),
+
+              const Text(
+                'Por segurança, você precisa informar sua senha atual antes de definir uma nova.',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+
+              // Current Password
+              TextFormField(
+                controller: _currentPasswordController,
+                obscureText: true,
+                decoration: _inputDecoration('Senha Atual'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Informe a senha atual';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // New Password
+              TextFormField(
+                controller: _newPasswordController,
+                obscureText: true,
+                decoration: _inputDecoration('Nova Senha'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Informe a nova senha';
+                  }
+                  if (value.length < 6) {
+                    return 'A senha deve ter pelo menos 6 caracteres';
+                  }
+                  if (value == _currentPasswordController.text) {
+                    return 'A nova senha não pode ser igual à atual';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Confirm Password
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: _inputDecoration('Confirmar Nova Senha'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Confirme a nova senha';
+                  }
+                  if (value != _newPasswordController.text) {
+                    return 'As senhas não coincidem';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 32),
+
+              // Submit Button
+              FilledButton(
+                onPressed: _isLoading ? null : _submit,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Alterar Senha'),
+              ),
+            ],
           ),
         ),
       ),

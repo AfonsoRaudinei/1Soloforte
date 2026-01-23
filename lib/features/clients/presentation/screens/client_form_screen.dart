@@ -289,17 +289,16 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
       } else {
         await controller.addClient(client);
       }
+      if (!mounted) return;
       ref.invalidate(clientsControllerProvider);
 
-      if (mounted) {
-        context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Produtor salvo!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      context.pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Produtor salvo!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -36,8 +36,11 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
-      appBar: _buildAppBar(),
+      appBar: AppBar(
+        title: Text(widget.title),
+        leading: const BackButton(),
+        centerTitle: true,
+      ),
       body: Stack(
         children: [
           // PDF Viewer
@@ -71,6 +74,108 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
             ),
           ),
 
+          // Título e controles superiores
+          if (_showControls)
+            Positioned(
+              top: MediaQuery.of(context).padding.top,
+              left: 0,
+              right: 0,
+              child: Container(
+                color: Colors.black87,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (_totalPages > 0)
+                            Text(
+                              'Página $_currentPage de $_totalPages',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.search, color: Colors.white),
+                      onPressed: () {
+                        _pdfViewerKey.currentState?.openBookmarkView();
+                      },
+                      tooltip: 'Buscar',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.share, color: Colors.white),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Compartilhar PDF')),
+                        );
+                      },
+                      tooltip: 'Compartilhar',
+                    ),
+                    PopupMenuButton<String>(
+                      iconColor: Colors.white,
+                      onSelected: _handleMenuAction,
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'fit_width',
+                          child: Row(
+                            children: [
+                              Icon(Icons.fit_screen, size: 20),
+                              SizedBox(width: 12),
+                              Text('Ajustar à largura'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'fit_page',
+                          child: Row(
+                            children: [
+                              Icon(Icons.fullscreen, size: 20),
+                              SizedBox(width: 12),
+                              Text('Ajustar à página'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'rotate',
+                          child: Row(
+                            children: [
+                              Icon(Icons.rotate_right, size: 20),
+                              SizedBox(width: 12),
+                              Text('Rotacionar'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'print',
+                          child: Row(
+                            children: [
+                              Icon(Icons.print, size: 20),
+                              SizedBox(width: 12),
+                              Text('Imprimir'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           // Controles inferiores
           if (_showControls) _buildBottomControls(),
 
@@ -81,93 +186,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           if (_showControls) _buildZoomControls(),
         ],
       ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.black87,
-      foregroundColor: Colors.white,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.title,
-            style: const TextStyle(fontSize: 16),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (_totalPages > 0)
-            Text(
-              'Página $_currentPage de $_totalPages',
-              style: const TextStyle(fontSize: 12, color: Colors.white70),
-            ),
-        ],
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: () {
-            _pdfViewerKey.currentState?.openBookmarkView();
-          },
-          tooltip: 'Buscar',
-        ),
-        IconButton(
-          icon: const Icon(Icons.share),
-          onPressed: () {
-            // TODO: Implementar compartilhamento
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Compartilhar PDF')));
-          },
-          tooltip: 'Compartilhar',
-        ),
-        PopupMenuButton<String>(
-          onSelected: _handleMenuAction,
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'fit_width',
-              child: Row(
-                children: [
-                  Icon(Icons.fit_screen, size: 20),
-                  SizedBox(width: 12),
-                  Text('Ajustar à largura'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'fit_page',
-              child: Row(
-                children: [
-                  Icon(Icons.fullscreen, size: 20),
-                  SizedBox(width: 12),
-                  Text('Ajustar à página'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'rotate',
-              child: Row(
-                children: [
-                  Icon(Icons.rotate_right, size: 20),
-                  SizedBox(width: 12),
-                  Text('Rotacionar'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'print',
-              child: Row(
-                children: [
-                  Icon(Icons.print, size: 20),
-                  SizedBox(width: 12),
-                  Text('Imprimir'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 

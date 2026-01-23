@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/app_settings.dart';
 import 'package:flutter/material.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 abstract class ISettingsRemoteDataSource {
   Future<AppSettings?> getSettings(String userId);
@@ -91,7 +92,11 @@ class SettingsRemoteDataSource implements ISettingsRemoteDataSource {
         // We assume the stored JSON list has the correct active state.
       );
     } catch (e) {
-      debugPrint('Error fetching remote settings: $e');
+      LoggerService.e(
+        'Error fetching remote settings',
+        error: e,
+        tag: 'SETTINGS',
+      );
       return null;
     }
   }
@@ -177,7 +182,11 @@ class SettingsRemoteDataSource implements ISettingsRemoteDataSource {
         await _supabase.from('farm_settings').insert(farmPayload);
       }
     } catch (e) {
-      debugPrint('Error saving remote settings: $e');
+      LoggerService.e(
+        'Error saving remote settings',
+        error: e,
+        tag: 'SETTINGS',
+      );
       rethrow;
     }
   }

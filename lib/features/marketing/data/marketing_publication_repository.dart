@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
@@ -348,7 +349,11 @@ class MarketingPublicationRepository {
         status: data['status'] as String? ?? 'draft',
       );
     } catch (e) {
-      print('Error parsing MarketingPublication: $e');
+      LoggerService.e(
+        'Error parsing MarketingPublication',
+        error: e,
+        tag: 'MarketingPublicationRepository',
+      );
       return null;
     }
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/reports/application/report_sharing_service.dart';
 import 'package:soloforte_app/shared/widgets/app_card.dart';
@@ -40,18 +40,11 @@ class _SharedLinksScreenState extends ConsumerState<SharedLinksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Links Compartilhados'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _sharedLinks.isEmpty
-          ? _buildEmptyState()
-          : _buildLinksList(),
-    );
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _sharedLinks.isEmpty
+        ? _buildEmptyState()
+        : _buildLinksList();
   }
 
   Widget _buildEmptyState() {

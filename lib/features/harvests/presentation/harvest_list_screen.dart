@@ -43,58 +43,53 @@ class _HarvestListScreenState extends State<HarvestListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Gestão de Safra')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/dashboard/harvest/new'),
-        child: const Icon(Icons.add),
-      ),
-      body: _harvests.isEmpty
-          ? const Center(child: Text('Nenhum registro de safra encontrado.'))
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _harvests.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (context, index) {
-                final harvest = _harvests[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.orange.shade100,
-                    child: const Icon(Icons.agriculture, color: Colors.orange),
-                  ),
-                  title: Text(harvest.areaName),
-                  subtitle: Text(
-                    '${harvest.cropType} • ${harvest.status == 'active' ? 'Em andamento' : 'Colhido em ${DateFormat('dd/MM').format(harvest.harvestDate ?? DateTime.now())}'}',
-                  ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (harvest.totalProductionBags > 0)
-                        Text(
-                          '${harvest.totalProductionBags.toStringAsFixed(0)} sc',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      else
-                        const Text(
-                          '-- sc',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
-                          ),
-                        ),
+    return _harvests.isEmpty
+        ? const Center(child: Text('Nenhum registro de safra encontrado.'))
+        : ListView.separated(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            itemCount: _harvests.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, index) {
+              final harvest = _harvests[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.orange.shade100,
+                  child: const Icon(Icons.agriculture, color: Colors.orange),
+                ),
+                title: Text(harvest.areaName),
+                subtitle: Text(
+                  '${harvest.cropType} • ${harvest.status == 'active' ? 'Em andamento' : 'Colhido em ${DateFormat('dd/MM').format(harvest.harvestDate ?? DateTime.now())}'}',
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (harvest.totalProductionBags > 0)
                       Text(
-                        '${harvest.plantedAreaHa} ha',
-                        style: const TextStyle(
-                          fontSize: 12,
+                        '${harvest.totalProductionBags.toStringAsFixed(0)} sc',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      )
+                    else
+                      const Text(
+                        '-- sc',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
                           color: Colors.grey,
                         ),
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
-    );
+                    Text(
+                      '${harvest.plantedAreaHa} ha',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
   }
 }

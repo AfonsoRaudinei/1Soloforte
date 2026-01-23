@@ -37,9 +37,18 @@ class _HarvestFormScreenState extends State<HarvestFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar Safra')),
+      appBar: AppBar(
+        title: const Text('Registrar Safra'),
+        leading: const BackButton(),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 20,
+          left: 20,
+          right: 20,
+          bottom: 20,
+        ),
         child: Form(
           key: _formKey,
           child: Column(

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/weather/domain/weather_model.dart';
 import 'package:soloforte_app/features/weather_radar/presentation/weather_radar_screen.dart';
-import 'widgets/notification_settings_modal.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../application/weather_provider.dart';
 import 'weather_next_24h_screen.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'weather_next_7d_screen.dart';
 
 class WeatherScreen extends ConsumerStatefulWidget {
@@ -92,45 +91,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       }
     } catch (e) {
       if (mounted) setState(() => _location = 'ERRO AO OBTER LOCAL');
-      debugPrint('Location error: $e');
+      LoggerService.e('Location error', error: e, tag: 'WEATHER');
     }
-  }
-
-  Future<void> _showSearchDialog(BuildContext context) async {
-    final TextEditingController searchController = TextEditingController();
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Buscar Cidade'),
-        content: TextField(
-          controller: searchController,
-          decoration: const InputDecoration(
-            hintText: 'Digite o nome da cidade...',
-            prefixIcon: Icon(Icons.location_city),
-          ),
-          autofocus: true,
-          textInputAction: TextInputAction.search,
-          onSubmitted: (value) {
-            Navigator.pop(context);
-            _searchLocation(value);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCELAR'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _searchLocation(searchController.text);
-            },
-            child: const Text('BUSCAR'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _searchLocation(String query) async {
@@ -168,7 +130,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _location = 'ERRO NA BUSCA');
-        debugPrint('Search error: $e');
+        LoggerService.e('Search error', error: e, tag: 'WEATHER');
       }
     }
   }
@@ -188,26 +150,23 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       if (_location.contains('ERRO') ||
           _location.contains('NEGADA') ||
           _location.contains('DESATIVADO')) {
-        return Scaffold(
-          appBar: AppBar(title: const Text('Clima')),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.location_off, size: 48, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text(_location),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _initLocation,
-                  child: const Text('Tentar Novamente'),
-                ),
-              ],
-            ),
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.location_off, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(_location),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _initLocation,
+                child: const Text('Tentar Novamente'),
+              ),
+            ],
           ),
         );
       }
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Center(child: CircularProgressIndicator());
     }
 
     final weatherAsync = ref.watch(
@@ -215,194 +174,170 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     );
 
     return weatherAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, stack) => Scaffold(
-        appBar: AppBar(title: const Text('Clima')),
-        body: Center(child: Text('Erro: $err')),
-      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Erro: $err')),
       data: (forecast) {
-        return Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
+        return RefreshIndicator(
+          onRefresh: _refresh,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16.0,
+              left: 16.0,
+              right: 16.0,
+              bottom: 16.0,
             ),
-            title: const Text('Clima'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.location_on),
-                onPressed: () => _showSearchDialog(context),
-              ),
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (c) => const NotificationSettingsModal(),
-                  );
-                },
-              ),
-            ],
-          ),
-          body: RefreshIndicator(
-            onRefresh: _refresh,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        color: AppColors.primary,
-                        size: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _location,
+                      style: AppTypography.h3.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 8),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text('Atualizado há 5 min', style: AppTypography.caption),
+                const SizedBox(height: 24),
+
+                // Box 1: Condition & Temp
+                _buildAsciiBox(
+                  child: Column(
+                    children: [
+                      Icon(
+                        _getWeatherIcon(forecast.condition),
+                        size: 64,
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(height: 16),
                       Text(
-                        _location,
-                        style: AppTypography.h3.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        '${forecast.currentTemp.round()}°C',
+                        style: AppTypography.display1,
+                      ),
+                      Text(forecast.condition, style: AppTypography.h3),
+                      Text(
+                        'Sensação: ${forecast.feelsLike.round()}°C',
+                        style: AppTypography.bodyMedium,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text('Atualizado há 5 min', style: AppTypography.caption),
-                  const SizedBox(height: 24),
+                ),
+                const SizedBox(height: 24),
 
-                  // Box 1: Condition & Temp
-                  _buildAsciiBox(
-                    child: Column(
-                      children: [
-                        Icon(
-                          _getWeatherIcon(forecast.condition),
-                          size: 64,
-                          color: Colors.orange,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          '${forecast.currentTemp.round()}°C',
-                          style: AppTypography.display1,
-                        ),
-                        Text(forecast.condition, style: AppTypography.h3),
-                        Text(
-                          'Sensação: ${forecast.feelsLike.round()}°C',
-                          style: AppTypography.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Box 2: Details
-                  _buildAsciiBoxWithHeader(
-                    title: 'Detalhes',
-                    content: Column(
-                      children: [
-                        _buildDetailLine(
-                          Icons.air,
-                          'Vento: ${forecast.windSpeed} km/h ${forecast.windDirection}',
-                        ),
-                        _buildDetailLine(
-                          Icons.water_drop,
-                          'Umidade: ${forecast.humidity}%',
-                        ),
-                        _buildDetailLine(
-                          Icons.umbrella,
-                          'Chuva: ${forecast.precipitation} mm',
-                        ),
-                        _buildDetailLine(Icons.explore, 'Pressão: 1013 hPa'),
-                        _buildDetailLine(
-                          Icons.visibility,
-                          'Visibilidade: ${forecast.visibility} km',
-                        ),
-                        _buildDetailLine(
-                          Icons.cloud,
-                          'Nuvens: ${forecast.cloudCover}%',
-                        ),
-                        _buildDetailLine(
-                          Icons.wb_sunny,
-                          'UV: ${forecast.uvIndex.round()} (${_getUVLabel(forecast.uvIndex)})',
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Box 3: Alerts
-                  if (forecast.alerts.isNotEmpty)
-                    _buildAlertBox(forecast.alerts.first),
-
-                  const SizedBox(height: 32),
-
-                  // Buttons
-                  Row(
+                // Box 2: Details
+                _buildAsciiBoxWithHeader(
+                  title: 'Detalhes',
+                  content: Column(
                     children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    WeatherNext24hScreen(forecast: forecast),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.umbrella),
-                          label: const Text('Próximas 24h'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
+                      _buildDetailLine(
+                        Icons.air,
+                        'Vento: ${forecast.windSpeed} km/h ${forecast.windDirection}',
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    WeatherNext7dScreen(forecast: forecast),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.calendar_today),
-                          label: const Text('7 Dias'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
+                      _buildDetailLine(
+                        Icons.water_drop,
+                        'Umidade: ${forecast.humidity}%',
+                      ),
+                      _buildDetailLine(
+                        Icons.umbrella,
+                        'Chuva: ${forecast.precipitation} mm',
+                      ),
+                      _buildDetailLine(Icons.explore, 'Pressão: 1013 hPa'),
+                      _buildDetailLine(
+                        Icons.visibility,
+                        'Visibilidade: ${forecast.visibility} km',
+                      ),
+                      _buildDetailLine(
+                        Icons.cloud,
+                        'Nuvens: ${forecast.cloudCover}%',
+                      ),
+                      _buildDetailLine(
+                        Icons.wb_sunny,
+                        'UV: ${forecast.uvIndex.round()} (${_getUVLabel(forecast.uvIndex)})',
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const WeatherRadarScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.radar),
-                      label: const Text('Radar de Clima'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
+                ),
+                const SizedBox(height: 24),
+
+                // Box 3: Alerts
+                if (forecast.alerts.isNotEmpty)
+                  _buildAlertBox(forecast.alerts.first),
+
+                const SizedBox(height: 32),
+
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  WeatherNext24hScreen(forecast: forecast),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.umbrella),
+                        label: const Text('Próximas 24h'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  WeatherNext7dScreen(forecast: forecast),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.calendar_today),
+                        label: const Text('7 Dias'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const WeatherRadarScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.radar),
+                    label: const Text('Radar de Clima'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
 
@@ -71,246 +70,224 @@ class _NDVIDetailScreenState extends ConsumerState<NDVIDetailScreen> {
           ).format(ndviState.selectedDate!).toUpperCase()
         : '...';
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text('NDVI - ${widget.area.name}'),
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Area Selector
-            const Text(
-              'Selecionar Área',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Area Selector
+          const Text(
+            'Selecionar Área',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(4),
             ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade400),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${widget.area.name} - ${widget.area.areaHectares.toStringAsFixed(1)} ha',
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Image Box
-            // ╔═════════════════════════════╗
-            // ║ IMAGEM SATÉLITE NDVI        ║
-            // ...
-            _buildAsciiBox(
-              title: 'IMAGEM SATÉLITE NDVI',
-              child: AspectRatio(
-                aspectRatio: 1.0,
-                child: Stack(
-                  children: [
-                    // Using FlutterMap as the "Image" viewer for now to keep overlay logic
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: FlutterMap(
-                        mapController: _mapController,
-                        options: MapOptions(
-                          initialCenter: _getCenter(widget.area),
-                          initialZoom: 15.0, // Or auto-fit bounds
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate:
-                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            userAgentPackageName: 'com.soloforte.app',
-                          ),
-                          if (ndviState.currentImageBytes != null)
-                            OverlayImageLayer(
-                              overlayImages: [
-                                OverlayImage(
-                                  bounds: _getBounds(widget.area.points),
-                                  imageProvider: MemoryImage(
-                                    ndviState.currentImageBytes!,
-                                  ),
-                                  opacity: 0.8,
-                                ),
-                              ],
-                            ),
-                          PolygonLayer(
-                            polygons: [
-                              Polygon(
-                                points: widget.area.points,
-                                color: Colors.transparent,
-                                borderColor: Colors.white,
-                                borderStrokeWidth: 2,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Legend / Info Overlay inside box
-                    Positioned(
-                      bottom: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLegendRow(Colors.green, 'Saudável'),
-                            _buildLegendRow(Colors.yellow, 'Médio'),
-                            _buildLegendRow(Colors.red, 'Estresse'),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    if (ndviState.isImageLoading)
-                      Container(
-                        color: Colors.black12,
-                        child: const Center(child: CircularProgressIndicator()),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Scale
-            // Escala NDVI:
-            // [████████████]
-            Text(
-              'Escala NDVI:',
-              style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              height: 20,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Colors.red, Colors.yellow, Colors.green],
-                ),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '-1.0',
-                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                  '${widget.area.name} - ${widget.area.areaHectares.toStringAsFixed(1)} ha',
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Text('0.0', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                Text('0.3', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                Text('0.6', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                Text('1.0', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                const Icon(Icons.arrow_drop_down, color: Colors.grey),
               ],
             ),
+          ),
+          const SizedBox(height: 24),
 
-            const SizedBox(height: 24),
-
-            // Date Controls
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Data:', style: TextStyle(color: Colors.grey)),
-                    Text(selectedDateFormatted, style: AppTypography.h4),
-                  ],
-                ),
-                Row(
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        /* Prev */
-                      },
-                      icon: const Icon(Icons.arrow_back, size: 14),
-                      label: const Text('Anterior'),
-                      style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
+          // Image Box
+          _buildAsciiBox(
+            title: 'IMAGEM SATÉLITE NDVI',
+            child: AspectRatio(
+              aspectRatio: 1.0,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                        initialCenter: _getCenter(widget.area),
+                        initialZoom: 15.0,
                       ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.soloforte.app',
+                        ),
+                        if (ndviState.currentImageBytes != null)
+                          OverlayImageLayer(
+                            overlayImages: [
+                              OverlayImage(
+                                bounds: _getBounds(widget.area.points),
+                                imageProvider: MemoryImage(
+                                  ndviState.currentImageBytes!,
+                                ),
+                                opacity: 0.8,
+                              ),
+                            ],
+                          ),
+                        PolygonLayer(
+                          polygons: [
+                            Polygon(
+                              points: widget.area.points,
+                              color: Colors.transparent,
+                              borderColor: Colors.white,
+                              borderStrokeWidth: 2,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    OutlinedButton(
-                      onPressed: () {
-                        /* Next */
-                      },
-                      style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
+                  ),
+
+                  // Legend / Info Overlay inside box
+                  Positioned(
+                    bottom: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Próxima'),
-                          SizedBox(width: 4),
-                          Icon(Icons.arrow_forward, size: 14),
+                          _buildLegendRow(Colors.green, 'Saudável'),
+                          _buildLegendRow(Colors.yellow, 'Médio'),
+                          _buildLegendRow(Colors.red, 'Estresse'),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+
+                  if (ndviState.isImageLoading)
+                    Container(
+                      color: Colors.black12,
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                ],
+              ),
             ),
+          ),
 
-            const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-            // Statistics Box
-            // ┌─────────────────────────┐
-            // │ 📊 Estatísticas         │
-            // ...
-            _buildStatisticsBox(ndviState),
-
-            const SizedBox(height: 32),
-
-            // Actions
-            _buildActionButton(Icons.calendar_today, 'Ver Histórico', () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const NDVIHistoryScreen()),
-              );
-            }),
-            const SizedBox(height: 12),
-            _buildActionButton(Icons.compare_arrows, 'Comparar Áreas', () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => NDVIComparisonScreen(areas: [widget.area]),
-                ),
-              ); // Passing single area for now, user selects more there
-            }),
-            const SizedBox(height: 12),
-            _buildActionButton(
-              Icons.download,
-              'Baixar Relatório',
-              _exportReport,
+          // Scale
+          Text(
+            'Escala NDVI:',
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 20,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Colors.red, Colors.yellow, Colors.green],
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('-1.0', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              Text('0.0', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              Text('0.3', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              Text('0.6', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              Text('1.0', style: TextStyle(fontSize: 10, color: Colors.grey)),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Date Controls
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Data:', style: TextStyle(color: Colors.grey)),
+                  Text(selectedDateFormatted, style: AppTypography.h4),
+                ],
+              ),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      /* Prev */
+                    },
+                    icon: const Icon(Icons.arrow_back, size: 14),
+                    label: const Text('Anterior'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () {
+                      /* Next */
+                    },
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: const Row(
+                      children: [
+                        Text('Próxima'),
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_forward, size: 14),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Statistics Box
+          _buildStatisticsBox(ndviState),
+
+          const SizedBox(height: 32),
+
+          // Actions
+          _buildActionButton(Icons.calendar_today, 'Ver Histórico', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NDVIHistoryScreen()),
+            );
+          }),
+          const SizedBox(height: 12),
+          _buildActionButton(Icons.compare_arrows, 'Comparar Áreas', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => NDVIComparisonScreen(areas: [widget.area]),
+              ),
+            );
+          }),
+          const SizedBox(height: 12),
+          _buildActionButton(Icons.download, 'Baixar Relatório', _exportReport),
+        ],
       ),
     );
   }

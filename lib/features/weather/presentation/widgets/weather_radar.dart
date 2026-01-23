@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import 'package:soloforte_app/core/theme/app_spacing.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class WeatherRadarWidget extends StatefulWidget {
   const WeatherRadarWidget({super.key});
@@ -78,7 +79,7 @@ class _WeatherRadarWidgetState extends State<WeatherRadarWidget> {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching radar data: $e');
+      LoggerService.e('Error fetching radar data', error: e, tag: 'WEATHER');
     }
 
     // Fallback: Simulate data if API fails or returns nothing (so UI controls are visible)

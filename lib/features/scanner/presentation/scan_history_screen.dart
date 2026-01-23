@@ -69,32 +69,26 @@ class ScanHistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(scanHistoryProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Histórico de Análises'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleTextStyle: AppTypography.h4.copyWith(color: AppColors.textPrimary),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-      ),
-      body: historyAsync.when(
-        data: (history) => ListView.separated(
-          padding: EdgeInsets.all(AppSpacing.md),
-          itemCount: history.length,
-          separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm),
-          itemBuilder: (context, index) {
-            final scan = history[index];
-            return _HistoryCard(scan: scan);
-          },
+    return historyAsync.when(
+      data: (history) => ListView.separated(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + AppSpacing.md,
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+          bottom: AppSpacing.md,
         ),
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-        error: (err, stack) =>
-            Center(child: Text('Erro ao carregar histórico: $err')),
+        itemCount: history.length,
+        separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final scan = history[index];
+          return _HistoryCard(scan: scan);
+        },
       ),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
+      error: (err, stack) =>
+          Center(child: Text('Erro ao carregar histórico: $err')),
     );
   }
 }

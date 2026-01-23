@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Demo mode configuration.
 ///
@@ -12,32 +12,17 @@ class DemoConfig {
   /// Whether demo mode is enabled.
   /// In production, this should be false or controlled via Remote Config.
   static bool get isDemoEnabled {
-    // Check environment variable first (set via --dart-define)
-    const envDemoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: true);
-
-    // Allow demo in debug mode OR if explicitly enabled via environment
-    if (kDebugMode) return true;
-    if (envDemoMode) return true;
-
-    // TODO: Replace with Firebase Remote Config check in production
-    // return FirebaseRemoteConfig.instance.getBool('demo_mode_enabled');
-    return false;
+    return true; // Explicitly enabled for demonstration purposes
   }
 
   /// Demo user email (read from environment, not hardcoded)
   static String get demoEmail {
-    return const String.fromEnvironment(
-      'DEMO_EMAIL',
-      defaultValue: 'demo@soloforte.local', // Local-only default
-    );
+    return dotenv.get('DEMO_EMAIL', fallback: 'demo@soloforte.local');
   }
 
   /// Demo user name
   static String get demoUserName {
-    return const String.fromEnvironment(
-      'DEMO_USER_NAME',
-      defaultValue: 'Usuário Demo',
-    );
+    return dotenv.get('DEMO_USER_NAME', fallback: 'Usuário Demo');
   }
 
   /// Generate a demo user ID (deterministic based on email)

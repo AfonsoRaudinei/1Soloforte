@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import 'package:soloforte_app/features/ndvi/domain/ndvi_heatmap_point.dart';
+import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
+import 'package:soloforte_app/features/reports/application/telemetry_logger.dart';
 
 /// Widget que gera um mapa de calor NDVI visual sem necessidade de assets
 class NdviHeatmapWidget extends StatelessWidget {
@@ -19,6 +20,21 @@ class NdviHeatmapWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (dataPoints == null || dataPoints!.isEmpty) {
+      TelemetryLogger.logOnce(
+        'ndvi_analysis_unavailable',
+        context: {'metric': 'heatmap_points'},
+      );
+      return SizedBox(
+        width: width,
+        height: height,
+        child: const EmptyStateWidget(
+          title: 'Sem dados NDVI',
+          message: 'Nenhum dado de NDVI disponivel para este periodo.',
+        ),
+      );
+    }
+
     return Container(
       width: width,
       height: height,
@@ -31,43 +47,13 @@ class NdviHeatmapWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: CustomPaint(
           painter: NdviHeatmapPainter(
-            dataPoints: dataPoints ?? _generateMockData(),
+            dataPoints: dataPoints!,
             showGrid: showGrid,
           ),
           child: Container(),
         ),
       ),
     );
-  }
-
-  /// Gera dados mock para demonstração
-  List<NdviHeatmapPoint> _generateMockData() {
-    final random = math.Random(42); // Seed fixo para consistência
-    final points = <NdviHeatmapPoint>[];
-
-    // Gera grid de pontos com valores NDVI variados
-    for (var x = 0.0; x <= 1.0; x += 0.1) {
-      for (var y = 0.0; y <= 1.0; y += 0.1) {
-        // Cria padrões interessantes
-        final centerDistance = math.sqrt(
-          math.pow(x - 0.5, 2) + math.pow(y - 0.5, 2),
-        );
-
-        // Valor NDVI baseado na distância do centro + ruído
-        var ndviValue = 0.8 - (centerDistance * 0.6);
-        ndviValue += (random.nextDouble() - 0.5) * 0.2; // Adiciona variação
-        ndviValue = ndviValue.clamp(0.0, 1.0);
-
-        points.add(NdviHeatmapPoint(x: x, y: y, ndviValue: ndviValue));
-      }
-    }
-
-    // Adiciona algumas zonas de atenção (baixo NDVI)
-    points.add(NdviHeatmapPoint(x: 0.2, y: 0.3, ndviValue: 0.25));
-    points.add(NdviHeatmapPoint(x: 0.8, y: 0.7, ndviValue: 0.30));
-    points.add(NdviHeatmapPoint(x: 0.6, y: 0.2, ndviValue: 0.35));
-
-    return points;
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'dart:convert';
 
 /// Serviço para gerenciar background jobs e notificações de relatórios
@@ -137,7 +138,7 @@ class ReportSchedulerService {
   /// Callback quando notificação é tocada
   void _onNotificationTapped(NotificationResponse response) {
     // TODO: Navegar para tela de relatórios
-    print('Notification tapped: ${response.payload}');
+    LoggerService.i('Notification tapped: ${response.payload}', tag: 'REPORTS');
   }
 }
 
@@ -149,7 +150,7 @@ void callbackDispatcher() {
       await _checkAndGenerateScheduledReports();
       return Future.value(true);
     } catch (e) {
-      print('Error in background task: $e');
+      LoggerService.e('Error in background task', error: e, tag: 'REPORTS');
       return Future.value(false);
     }
   });
@@ -200,7 +201,11 @@ Future<void> _checkAndGenerateScheduledReports() async {
       }
     }
   } catch (e) {
-    print('Error checking scheduled reports: $e');
+    LoggerService.e(
+      'Error checking scheduled reports',
+      error: e,
+      tag: 'REPORTS',
+    );
   }
 }
 

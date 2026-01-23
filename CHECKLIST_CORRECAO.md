@@ -118,12 +118,12 @@
 ## 🔥 QUICK WINS RESTANTES
 
 1. [x] Corrigir 1 `use_build_context_synchronously` restante em `privacy_policy_screen.dart`
-2. [ ] Substituir 6 `print()` restantes (reports providers)
+2. [x] Substituir 6 `print()` restantes (reports providers e serviços) ✅
 
-### Quick Wins de UI [2/3] 🚧
+### Quick Wins de UI [3/3] ✅
 - [x] Atualizar Radio para RadioGroup (6 ocorrências) ✅
 - [x] Corrigir cores hardcoded (Container com 'Colors.white') ✅
-- [ ] Corrigir overflow no `Dashboard` em telas pequenas (iPhone SE)
+- [x] Corrigir overflow no `Dashboard` em telas pequenas (iPhone SE) ✅
 
 ---
 
@@ -132,11 +132,11 @@
 **Hoje:**
 - ✅ Removidas credenciais hardcoded
 - ✅ Substituídos 80+ withOpacity
-- ✅ Substituídos maioria dos prints
+- ✅ Substituídos TODOS os prints por LoggerService
 - ✅ Regenerados arquivos freezed
+- ✅ Corrigido overflow em dashboards
 
 **Esta semana:**
-- Corrigir issues restantes de Fase 1
 - Iniciar Fase 2 (refatoração de God Classes)
 
 **Bloqueadores:**

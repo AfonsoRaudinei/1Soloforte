@@ -9,43 +9,7 @@ import 'package:soloforte_app/features/settings/domain/entities/marketing_plan.d
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 
-// --- Shared Base Scaffold ---
-
-class _BaseSettingsPage extends StatelessWidget {
-  final String title;
-  final Widget? floatingActionButton;
-  final Widget body;
-
-  const _BaseSettingsPage({
-    required this.title,
-    required this.body,
-    this.floatingActionButton,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.pop(),
-        ),
-        titleTextStyle: const TextStyle(
-          color: Colors.black,
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      body: SafeArea(child: body),
-      floatingActionButton: floatingActionButton,
-    );
-  }
-}
+// Removido _BaseSettingsPage - todas as subpáginas agora retornam conteúdo direto
 
 // --- 1. Farm Logo Screen ---
 
@@ -499,57 +463,55 @@ class _MarketingPlansSettingsScreenState
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text('Erro: $_error'))
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Text(
-                      'Planos de Marketing',
-                      style: AppTypography.h4.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Area administrativa. Valores internos, sem impacto no mapa.',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPlanCard(MarketingPlanLevel.bronze),
-                    const SizedBox(height: 16),
-                    _buildPlanCard(MarketingPlanLevel.prata),
-                    const SizedBox(height: 16),
-                    _buildPlanCard(MarketingPlanLevel.ouro),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _savePlans,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Salvar alteracoes',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Nao e possivel criar novos niveis.',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+          ? Center(child: Text('Erro: $_error'))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text(
+                  'Planos de Marketing',
+                  style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold),
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  'Area administrativa. Valores internos, sem impacto no mapa.',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildPlanCard(MarketingPlanLevel.bronze),
+                const SizedBox(height: 16),
+                _buildPlanCard(MarketingPlanLevel.prata),
+                const SizedBox(height: 16),
+                _buildPlanCard(MarketingPlanLevel.ouro),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _savePlans,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Salvar alteracoes',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Nao e possivel criar novos niveis.',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
     );
   }
 
@@ -688,10 +650,8 @@ class _PlanDraft {
   }
 
   MarketingPlan toPlan(MarketingPlanLevel level) {
-    final parsed = double.tryParse(
-          valueController.text.replaceAll(',', '.'),
-        ) ??
-        0;
+    final parsed =
+        double.tryParse(valueController.text.replaceAll(',', '.')) ?? 0;
     return MarketingPlan(
       level: level,
       description: descriptionController.text.trim(),
@@ -909,4 +869,26 @@ class LinkHubSettingsScreen extends StatelessWidget {
     title: 'LinkHub',
     body: Center(child: Text('Em breve')),
   );
+}
+
+class _BaseSettingsPage extends StatelessWidget {
+  final String title;
+  final Widget body;
+  final Widget? floatingActionButton;
+
+  const _BaseSettingsPage({
+    super.key,
+    required this.title,
+    required this.body,
+    this.floatingActionButton,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title), centerTitle: true),
+      body: body,
+      floatingActionButton: floatingActionButton,
+    );
+  }
 }

@@ -117,8 +117,18 @@ class VisitDashboardScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Check-in: ${DateFormat('HH:mm').format(startTime)}'),
-                Text('Tempo: $durationStr'),
+                Flexible(
+                  child: Text(
+                    'Check-in: ${DateFormat('HH:mm').format(startTime)}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    'Tempo: $durationStr',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -190,7 +200,13 @@ class VisitDashboardScreen extends ConsumerWidget {
             '• $label:',
             style: const TextStyle(fontWeight: FontWeight.w500),
           ),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
@@ -252,11 +268,13 @@ class VisitDashboardScreen extends ConsumerWidget {
                 color: isFinished ? Colors.green : Colors.orange,
               ),
               const SizedBox(width: 8),
-              Text(
-                location,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  location,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
             ],
           ),
           Text(client, style: TextStyle(color: Colors.grey.shade600)),

@@ -1,108 +1,77 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'package:soloforte_app/shared/widgets/contextual_floating_button.dart';
 import 'side_menu.dart';
 
-class DashboardLayout extends StatelessWidget {
+class DashboardLayout extends StatefulWidget {
   final Widget child;
   const DashboardLayout({super.key, required this.child});
 
   @override
+  State<DashboardLayout> createState() => _DashboardLayoutState();
+}
+
+class _DashboardLayoutState extends State<DashboardLayout> {
+  final ValueNotifier<bool> _isEndDrawerOpen = ValueNotifier<bool>(false);
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void dispose() {
+    _isEndDrawerOpen.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Check if current route is map (exactly /map) to hide AppBar/BottomNav
-    final String location = GoRouterState.of(context).uri.path;
-    final bool isMap = location == '/map';
+    return DashboardDrawerScope(
+      isEndDrawerOpen: _isEndDrawerOpen,
+      openEndDrawer: () => _scaffoldKey.currentState?.openEndDrawer(),
+      child: Stack(
+        children: [
+          // Scaffold principal
+          Scaffold(
+            key: _scaffoldKey,
+            extendBodyBehindAppBar: true,
+            appBar: null, // Sem AppBar no ShellRoute (Hard Mode)
+            endDrawer: const SideMenu(),
+            endDrawerEnableOpenDragGesture: true,
+            drawerScrimColor: Colors.black.withValues(alpha: 0.4),
+            onEndDrawerChanged: (isOpen) => _isEndDrawerOpen.value = isOpen,
+            body: widget.child,
+            // BottomNavigationBar removido para manter interface fullscreen em todo o ShellRoute
+          ),
 
-    // Also check for sub-routes if we want them to be full screen?
-    // Instruction says "Remover AppBar para rotas /map (fullscreen)... Manter apenas para outras rotas fora do /map"
-    // Since everything is under /map prefix now, we should interpret "rotas /map" as the MAIN map screen.
-    // If I am at /map/reports, I likely want the standard layout (or maybe the new design uses full screen for everything?)
-    // Phase 2 says "FAB abre menu radial... 7 opções principais" -> implies the Radial Menu is the new navigation.
-    // "Remover BottomNavigationBar para rotas /map... Manter apenas para outras rotas fora do /map"
-    // Since ALL main routes are now /map/..., maybe formatting implies the OLD routes?
-    // Let's assume for now that if we are on the main map screen '/map', we hide everything.
-    // If we are on '/map/reports', we show the standard scaffolding?
-    // Actually, Phase 2 implies a "Interface Fullscreen" for the home screen.
-    // Let's implement logic: isMap = location == '/map'.
-
-    return Scaffold(
-      extendBodyBehindAppBar: isMap,
-      appBar: isMap
-          ? null
-          : AppBar(
-              title: const Text('SoloForte'),
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.primary,
-              elevation: 0,
-            ),
-      drawer: const SideMenu(),
-      body: child,
-      // Bottom Navigation Bar - Visible on all screens including Map
-      bottomNavigationBar: isMap
-          ? null
-          : BottomNavigationBar(
-              currentIndex: _calculateSelectedIndex(context),
-              onTap: (index) => _onItemTapped(index, context),
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: AppColors.primary,
-              unselectedItemColor: AppColors.textSecondary,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.map_outlined),
-                  label: 'Mapa',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.bug_report_outlined),
-                  label: 'Ocorrências',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.bar_chart_outlined),
-                  label: 'Relatórios',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.people_outline),
-                  label: 'Clientes',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.calendar_today_outlined),
-                  label: 'Agenda',
-                ),
-              ],
-            ),
+          // ✅ CORREÇÃO ESTRUTURAL DE Z-ORDER:
+          // Botão Flutuante Contextual posicionado FORA do Scaffold
+          // para garantir que NUNCA seja coberto pelo Drawer.
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: const ContextualFloatingButton(),
+          ),
+        ],
+      ),
     );
   }
+}
 
-  int _calculateSelectedIndex(BuildContext context) {
-    try {
-      final String location = GoRouterState.of(context).uri.path;
-      if (location == '/map') return 0;
-      if (location.startsWith('/map/occurrences')) return 1;
-      if (location.startsWith('/map/reports')) return 2;
-      if (location.startsWith('/map/clients')) return 3;
-      if (location.startsWith('/map/calendar')) return 4;
-      return 0;
-    } catch (e) {
-      return 0;
-    }
+class DashboardDrawerScope extends InheritedWidget {
+  final ValueListenable<bool> isEndDrawerOpen;
+  final VoidCallback openEndDrawer;
+
+  const DashboardDrawerScope({
+    required this.isEndDrawerOpen,
+    required this.openEndDrawer,
+    required super.child,
+  });
+
+  static DashboardDrawerScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<DashboardDrawerScope>();
   }
 
-  void _onItemTapped(int index, BuildContext context) {
-    switch (index) {
-      case 0:
-        context.go('/map');
-        break;
-      case 1:
-        context.go('/map/occurrences');
-        break;
-      case 2:
-        context.go('/map/reports');
-        break;
-      case 3:
-        context.go('/map/clients');
-        break;
-      case 4:
-        context.go('/map/calendar');
-        break;
-    }
+  @override
+  bool updateShouldNotify(DashboardDrawerScope oldWidget) {
+    return oldWidget.isEndDrawerOpen != isEndDrawerOpen;
   }
 }

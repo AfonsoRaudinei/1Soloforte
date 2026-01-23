@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soloforte_app/features/harvests/data/harvest_repository.dart';
 import 'package:soloforte_app/features/harvests/domain/harvest_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class FirestoreHarvestRepository implements HarvestRepository {
   final FirebaseFirestore _firestore;
@@ -31,7 +32,7 @@ class FirestoreHarvestRepository implements HarvestRepository {
         return Harvest.fromJson({...data, 'id': doc.id});
       }).toList();
     } catch (e) {
-      print('Error fetching harvests: $e');
+      LoggerService.e('Error fetching harvests', error: e, tag: 'HARVESTS');
       return [];
     }
   }
@@ -57,7 +58,7 @@ class FirestoreHarvestRepository implements HarvestRepository {
       }
       return null;
     } catch (e) {
-      print('Error fetching harvest $id: $e');
+      LoggerService.e('Error fetching harvest $id', error: e, tag: 'HARVESTS');
       return null;
     }
   }

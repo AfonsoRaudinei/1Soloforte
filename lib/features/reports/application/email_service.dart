@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
 import 'dart:typed_data';
+import 'dart:convert';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 /// Serviço para envio de emails com relatórios
 class EmailService {
   final Dio _dio = Dio();
-
   // TODO: Configurar com suas credenciais de email
   static const String _apiEndpoint = 'https://api.sendgrid.com/v3/mail/send';
   static const String _apiKey = 'YOUR_SENDGRID_API_KEY'; // Configurar
@@ -56,7 +57,7 @@ class EmailService {
 
       return response.statusCode == 202;
     } catch (e) {
-      print('Error sending email: $e');
+      LoggerService.e('Error sending email', error: e, tag: 'EmailService');
       return false;
     }
   }
@@ -144,7 +145,7 @@ class EmailService {
 
   /// Converte bytes para base64
   String _bytesToBase64(Uint8List bytes) {
-    return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+    return base64Encode(bytes);
   }
 
   /// Sanitiza nome de arquivo

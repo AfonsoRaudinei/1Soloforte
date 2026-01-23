@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 /// Global error boundary to catch and handle uncaught errors
 class ErrorBoundary extends StatefulWidget {
@@ -26,8 +27,12 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
         });
       }
       // Log to console in debug mode
-      debugPrint('Flutter Error: ${details.exception}');
-      debugPrint('Stack trace: ${details.stack}');
+      LoggerService.e(
+        'Flutter Error',
+        error: details.exception,
+        stackTrace: details.stack,
+        tag: 'ERROR',
+      );
     };
   }
 
@@ -94,8 +99,12 @@ extension SafeAsync<T> on Future<T> {
     try {
       return await this;
     } catch (error, stack) {
-      debugPrint('Error caught: $error');
-      debugPrint('Stack trace: $stack');
+      LoggerService.e(
+        'Error caught',
+        error: error,
+        stackTrace: stack,
+        tag: 'ASYNC',
+      );
       onError?.call(error, stack);
       return null;
     }

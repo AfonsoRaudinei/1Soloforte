@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class AuditService {
   final SupabaseClient _supabase;
@@ -21,7 +21,11 @@ class AuditService {
         // created_at is auto-generated
       });
     } catch (e) {
-      debugPrint('Audit Log Failed: $e'); // Fail safe, don't crash app
+      LoggerService.e(
+        'Audit Log Failed',
+        error: e,
+        tag: 'AUDIT',
+      ); // Fail safe, don't crash app
     }
   }
 
@@ -38,7 +42,7 @@ class AuditService {
       });
     } catch (e) {
       // Ignore errors (fire and forget)
-      debugPrint('Rate Limit Event Log Failed: $e');
+      LoggerService.e('Rate Limit Event Log Failed', error: e, tag: 'AUDIT');
     }
   }
 }

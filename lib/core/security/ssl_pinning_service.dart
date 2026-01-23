@@ -38,12 +38,12 @@ class SslPinningService {
             final isValid = certificateHashes.contains(certHash);
 
             if (!isValid) {
-              print('⚠️ SSL Pinning: Certificate validation failed!');
-              print('   Host: $host:$port');
-              print('   Received hash: $certHash');
-              print('   Expected one of: ${certificateHashes.join(', ')}');
+              LoggerService.e('⚠️ SSL Pinning: Certificate validation failed!', tag: 'SslPinningService');
+              LoggerService.e('   Host: $host:$port', tag: 'SslPinningService');
+              LoggerService.e('   Received hash: $certHash', tag: 'SslPinningService');
+              LoggerService.e('   Expected one of: ${certificateHashes.join(', ')}', tag: 'SslPinningService');
             } else {
-              print('✅ SSL Pinning: Certificate validated successfully');
+              LoggerService.i('✅ SSL Pinning: Certificate validated successfully', tag: 'SslPinningService');
             }
 
             return isValid;

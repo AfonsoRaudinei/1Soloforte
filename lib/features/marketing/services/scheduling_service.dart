@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:soloforte_app/features/marketing/data/marketing_repository.dart';
 import 'package:soloforte_app/features/marketing/domain/post_model.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'package:uuid/uuid.dart';
 // NOTE: Ideally we would use Workmanager or a server for robust scheduling.
 // Utilizing LocalNotifications for simulation purposes as per constraints.
@@ -63,7 +64,10 @@ class SchedulingService {
 
       // Usando ZonedSchedule se possível, mas para simplificar mock:
       // Apenas simulamos o sucesso. Se fosse real, usariamos tz.TZDateTime
-      debugPrint('Notificação agendada para: $scheduledTime');
+      LoggerService.i(
+        'Notificação agendada para: $scheduledTime',
+        tag: 'MARKETING',
+      );
 
       /* 
       // Exemplo de implementação real (requer timezone package configurado)
@@ -77,7 +81,11 @@ class SchedulingService {
       ); 
       */
     } catch (e) {
-      debugPrint('Erro ao agendar notificação: $e');
+      LoggerService.e(
+        'Erro ao agendar notificação',
+        error: e,
+        tag: 'MARKETING',
+      );
     }
   }
 

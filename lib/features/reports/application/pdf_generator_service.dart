@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
 import 'package:soloforte_app/features/reports/domain/report_models.dart';
 import 'package:soloforte_app/features/occurrences/domain/entities/occurrence.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 /// Service responsible for generating PDF documents.
 ///
@@ -549,7 +550,11 @@ class PdfGeneratorService {
       );
     } catch (e) {
       // Silently fail if sharing is cancelled or fails - no crash
-      debugPrint('PDF sharing failed or cancelled: $e');
+      LoggerService.e(
+        'PDF sharing failed or cancelled',
+        error: e,
+        tag: 'REPORT',
+      );
     }
   }
 

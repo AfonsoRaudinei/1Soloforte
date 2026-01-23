@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soloforte_app/features/reports/domain/report_history.dart';
 import 'package:soloforte_app/features/reports/domain/report_configuration.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'dart:convert';
 
 /// Notifier para gerenciar o histórico de relatórios
@@ -39,7 +40,11 @@ class ReportHistoryNotifier extends ChangeNotifier {
                 .toList() ??
             [];
       } catch (e) {
-        print('Error loading report history: $e');
+        LoggerService.e(
+          'Error loading report history',
+          error: e,
+          tag: 'REPORTS',
+        );
         _reports = [];
         _schedules = [];
       }
@@ -57,7 +62,21 @@ class ReportHistoryNotifier extends ChangeNotifier {
 
   // Gerenciamento de Relatórios
   Future<void> addReport(SavedReport report) async {
-    _reports.insert(0, report); // Mais recente primeiro
+    final index = _reports.indexWhere((r) => r.id == report.id);
+    if (index != -1) {
+      final existing = _reports[index];
+      _reports[index] = existing.copyWith(
+        title: report.title,
+        template: report.template,
+        createdAt: report.createdAt,
+        configuration: report.configuration,
+        pdfPath: report.pdfPath ?? existing.pdfPath,
+        fileSizeBytes: report.fileSizeBytes ?? existing.fileSizeBytes,
+        sharedLink: report.sharedLink ?? existing.sharedLink,
+      );
+    } else {
+      _reports.insert(0, report); // Mais recente primeiro
+    }
     notifyListeners();
     await _saveHistory();
   }

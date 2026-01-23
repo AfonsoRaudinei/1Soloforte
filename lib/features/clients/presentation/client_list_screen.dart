@@ -33,121 +33,99 @@ class _ClientListScreenState extends ConsumerState<ClientListScreen> {
   @override
   Widget build(BuildContext context) {
     final clientsAsync = ref.watch(clientsControllerProvider);
+    final topPadding = MediaQuery.of(context).padding.top;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            // Open Drawer if exists
-            Scaffold.of(context).openDrawer();
-          },
-        ),
-        title: const Text('Produtores'),
-        centerTitle: false,
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              context.push('/map/clients/new');
-            },
-            icon: const Icon(Icons.add, color: AppColors.primary),
-            label: Text(
-              'Novo',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+    return Container(
+      color: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Top spacing for visual consistency
+            SizedBox(height: topPadding > 0 ? 8 : 16),
+
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Buscar produtor...',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
+
+            // Filters
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search, color: Colors.grey),
+                  _buildFilterChip('Todos'),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Buscar produtor...',
-                      ),
-                    ),
-                  ),
+                  _buildFilterChip('Ativos'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Inativos'),
                 ],
               ),
             ),
-          ),
 
-          // Filters
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Row(
-              children: [
-                _buildFilterChip('Todos'),
-                const SizedBox(width: 8),
-                _buildFilterChip('Ativos'),
-                const SizedBox(width: 8),
-                _buildFilterChip('Inativos'),
-              ],
-            ),
-          ),
-
-          // List
-          Expanded(
-            child: clientsAsync.when(
-              data: (clients) {
-                final filteredClients = _applyFilters(clients);
-                if (filteredClients.isEmpty) {
-                  return EmptyStateWidget(
-                    title: 'Nenhum produtor encontrado',
-                    message:
-                        'Tente ajustar os filtros ou cadastre um novo produtor.',
-                    icon: Icons.person_off_outlined,
-                    actionLabel: 'Cadastrar Produtor',
-                    onAction: () => context.push('/map/clients/new'),
+            // List
+            Expanded(
+              child: clientsAsync.when(
+                data: (clients) {
+                  final filteredClients = _applyFilters(clients);
+                  if (filteredClients.isEmpty) {
+                    return EmptyStateWidget(
+                      title: 'Nenhum produtor encontrado',
+                      message:
+                          'Tente ajustar os filtros ou cadastre um novo produtor.',
+                      icon: Icons.person_off_outlined,
+                      actionLabel: 'Cadastrar Produtor',
+                      onAction: () => context.push('/map/clients/new'),
+                    );
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredClients.length + 1, // +1 for "Load more"
+                    separatorBuilder: (c, i) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      if (index == filteredClients.length) {
+                        return Center(
+                          child: TextButton(
+                            onPressed: () {},
+                            child: const Text('Carregar mais...'),
+                          ),
+                        );
+                      }
+                      return _buildProducerCard(filteredClients[index]);
+                    },
                   );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredClients.length + 1, // +1 for "Load more"
-                  separatorBuilder: (c, i) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    if (index == filteredClients.length) {
-                      return Center(
-                        child: TextButton(
-                          onPressed: () {},
-                          child: const Text('Carregar mais...'),
-                        ),
-                      );
-                    }
-                    return _buildProducerCard(filteredClients[index]);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Text('Erro ao carregar clientes: $error'),
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) =>
+                    Center(child: Text('Erro ao carregar clientes: $error')),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

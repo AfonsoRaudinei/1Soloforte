@@ -29,54 +29,14 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
     final eventsState = ref.watch(filteredAgendaProvider);
     final filterState = ref.watch(agendaFilterProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-        ),
-        title: const Text('Agenda'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.filter_list,
-              color: filterState.statuses.length < EventStatus.values.length
-                  ? AppColors.primary
-                  : null,
-            ),
-            onPressed: () => _showFilterDialog(context),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              if (widget.clientId != null) {
-                context.push(
-                  '/dashboard/calendar/new',
-                  extra: {
-                    'initialDate': _selectedDay,
-                    'clientId': widget.clientId,
-                  },
-                );
-                return;
-              }
-              context.push('/dashboard/calendar/new', extra: _selectedDay);
-            },
-            icon: const Icon(Icons.add, size: 20),
-            label: const Text('Nova'),
-            style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-          ),
-        ],
-      ),
-      body: eventsState.when(
+    return SafeArea(
+      child: eventsState.when(
         data: (allEvents) {
           final scopedEvents = widget.clientId == null
               ? allEvents
               : allEvents
-                  .where((event) => event.clientId == widget.clientId)
-                  .toList();
+                    .where((event) => event.clientId == widget.clientId)
+                    .toList();
           final dailyEvents = scopedEvents
               .where((e) => isSameDay(e.startTime, _selectedDay))
               .toList();
@@ -84,7 +44,7 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
 
           return Column(
             children: [
-              // Custom Month Navigation
+              // Custom Month Navigator
               _buildMonthNavigator(),
 
               // Calendar
@@ -115,14 +75,13 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                         _focusedDay = focusedDay;
                       });
                     },
-                    headerVisible: false, // Using custom navigator
+                    headerVisible: false,
                     daysOfWeekHeight: 40,
                     rowHeight: 40,
                     calendarStyle: CalendarStyle(
                       selectedDecoration: const BoxDecoration(
                         color: AppColors.primary,
-                        shape: BoxShape
-                            .rectangle, // ASCII suggests boxy look? Or standard. Let's stick to circle/shape matching app theme but maybe cleaner.
+                        shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.all(Radius.circular(4)),
                       ),
                       todayDecoration: BoxDecoration(
@@ -139,15 +98,8 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                     ),
                     calendarBuilders: CalendarBuilders(
                       markerBuilder: (context, day, events) {
-                        // Custom markers based on legend
-                        // • = Visita (technicalVisit)
-                        // ○ = Lembrete (reminder)
-                        // ◆ = Aplicação (application)
                         if (events.isEmpty) return null;
 
-                        // We show only the highest priority marker or a mix?
-                        // The ASCII shows specific symbols. TableCalendar usually puts dots.
-                        // Let's simplified: show up to 3 markers.
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: events.take(3).map((e) {
@@ -213,14 +165,12 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                     ),
 
                     const SizedBox(height: 24),
-                    // Tomorrow preview if wanted, or just buttons
                     if (isSameDay(DateTime.now(), _selectedDay)) ...[
                       _buildDayHeader(
                         DateTime.now().add(const Duration(days: 1)),
                         labelPrefix: 'Amanhã',
                       ),
                       const SizedBox(height: 8),
-                      // Future improvements: Show tomorrow's events here too
                       Center(
                         child: TextButton(
                           onPressed: () {

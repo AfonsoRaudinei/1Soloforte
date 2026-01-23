@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import '../../../core/services/secure_storage_service.dart';
-import '../../../core/security/ssl_pinning_service.dart';
+import 'package:soloforte_app/core/services/secure_storage_service.dart';
+import 'package:soloforte_app/core/security/ssl_pinning_service.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import '../config/env_config.dart';
 
 class ApiClient {
@@ -27,11 +28,6 @@ class ApiClient {
     }
 
     _setupInterceptors();
-
-    // Print config in debug mode
-    if (EnvConfig.isDebug) {
-      EnvConfig.printConfig();
-    }
   }
 
   void _setupInterceptors() {
@@ -78,10 +74,7 @@ class ApiClient {
         responseBody: true,
         error: true,
         logPrint: (obj) {
-          // Only log in debug mode
-          if (kDebugMode) {
-            debugPrint(obj.toString());
-          }
+          LoggerService.d(obj.toString(), tag: 'API');
         },
       ),
     );

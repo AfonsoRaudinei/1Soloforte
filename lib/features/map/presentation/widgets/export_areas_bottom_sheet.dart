@@ -124,8 +124,7 @@ class _ExportAreasBottomSheetState
           ),
           const SizedBox(height: 24),
 
-          // Format Selection
-          Text('Formato do Arquivo', style: AppTypography.subtitle1),
+          Text('Formato do Arquivo', style: AppTypography.h4),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -151,9 +150,8 @@ class _ExportAreasBottomSheetState
 
           const SizedBox(height: 24),
 
-          // Scope Selection
           if (canSelectSpecific) ...[
-            Text('Escopo', style: AppTypography.subtitle1),
+            Text('Escopo', style: AppTypography.h4),
             const SizedBox(height: 8),
             SwitchListTile(
               title: const Text('Exportar apenas área selecionada'),
@@ -172,7 +170,7 @@ class _ExportAreasBottomSheetState
           if (!canSelectSpecific) ...[
             Text(
               'Serão exportadas todas as ${widget.allAreas.length} áreas salvas.',
-              style: AppTypography.body2.copyWith(color: Colors.grey),
+              style: AppTypography.bodyMedium.copyWith(color: Colors.grey),
             ),
             const SizedBox(height: 24),
           ],
@@ -240,14 +238,14 @@ class _ExportAreasBottomSheetState
             const SizedBox(height: 8),
             Text(
               title,
-              style: AppTypography.body1.copyWith(
+              style: AppTypography.bodyLarge.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isSelected ? AppColors.primary : Colors.black87,
               ),
             ),
             Text(
               subtitle,
-              style: AppTypography.caption.copyWith(color: Colors.grey),
+              style: AppTypography.bodySmall.copyWith(color: Colors.grey),
             ),
           ],
         ),

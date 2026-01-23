@@ -103,78 +103,72 @@ class _PestLibraryScreenState extends State<PestLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Biblioteca de Pragas'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleTextStyle: AppTypography.h4.copyWith(color: AppColors.textPrimary),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar praga, doença ou sintoma...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+    return Column(
+      children: [
+        // Search Bar
+        Padding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 16,
+            right: 16,
+            bottom: 16,
+          ),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Buscar praga, doença ou sintoma...',
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
               ),
-            ),
-          ),
-
-          // Filters (Mock Tabs)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _FilterChip(label: 'Todos', isSelected: true),
-                const SizedBox(width: 8),
-                _FilterChip(label: 'Pragas', isSelected: false),
-                const SizedBox(width: 8),
-                _FilterChip(label: 'Doenças', isSelected: false),
-                const SizedBox(width: 8),
-                _FilterChip(label: 'Deficiências', isSelected: false),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Grid
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
               ),
-              itemCount: _filteredPests.length,
-              itemBuilder: (context, index) {
-                final pest = _filteredPests[index];
-                return _PestCard(pest: pest);
-              },
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
             ),
           ),
-        ],
-      ),
+        ),
+
+        // Filters (Mock Tabs)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              _FilterChip(label: 'Todos', isSelected: true),
+              const SizedBox(width: 8),
+              _FilterChip(label: 'Pragas', isSelected: false),
+              const SizedBox(width: 8),
+              _FilterChip(label: 'Doenças', isSelected: false),
+              const SizedBox(width: 8),
+              _FilterChip(label: 'Deficiências', isSelected: false),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Grid
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: _filteredPests.length,
+            itemBuilder: (context, index) {
+              final pest = _filteredPests[index];
+              return _PestCard(pest: pest);
+            },
+          ),
+        ),
+      ],
     );
   }
 }

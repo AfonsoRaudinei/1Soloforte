@@ -437,81 +437,81 @@ class _PublicationEditorScreenState
     });
   }
 
-  @override
   Widget build(BuildContext context) {
     final isNewPublication = widget.publicationId == null;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
-          onPressed: () {
-            if (_hasChanges) {
-              _showDiscardDialog();
-            } else {
-              context.pop();
-            }
-          },
-        ),
-        title: Text(
-          isNewPublication ? 'Nova Publicação' : 'Editar Publicação',
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          if (!isNewPublication)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.error),
-              onPressed: _delete,
-            ),
-          TextButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text(
-                    'Salvar',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _publication == null
+        ? _buildErrorState()
+        : Column(
+            children: [
+              // Header com ações (movido do AppBar)
+              Container(
+                color: Colors.white,
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 8,
+                  left: 16,
+                  right: 16,
+                  bottom: 8,
+                ),
+                child: Row(
+                  children: [
+                    if (!isNewPublication)
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.error,
+                        ),
+                        onPressed: _delete,
+                      ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _isSaving ? null : _save,
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text(
+                              'Salvar',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
-                  ),
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textSecondary,
-          indicatorColor: AppColors.primary,
-          tabs: const [
-            Tab(text: 'Dados'),
-            Tab(text: 'Comparativo'),
-            Tab(text: 'Resultado'),
-          ],
-        ),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _publication == null
-          ? _buildErrorState()
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildDadosTab(),
-                _buildComparativoTab(),
-                _buildResultadoTab(),
-              ],
-            ),
-    );
+                  ],
+                ),
+              ),
+              // TabBar (movido do AppBar)
+              Container(
+                color: Colors.white,
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  indicatorColor: AppColors.primary,
+                  tabs: const [
+                    Tab(text: 'Dados'),
+                    Tab(text: 'Comparativo'),
+                    Tab(text: 'Resultado'),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildDadosTab(),
+                    _buildComparativoTab(),
+                    _buildResultadoTab(),
+                  ],
+                ),
+              ),
+            ],
+          );
   }
 
   Widget _buildErrorState() {

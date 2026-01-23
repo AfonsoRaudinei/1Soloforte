@@ -12,12 +12,11 @@ import 'package:soloforte_app/features/map/application/geometry_utils.dart';
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
 import 'package:soloforte_app/features/map/presentation/widgets/save_area_bottom_sheet.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
-import 'package:soloforte_app/features/occurrences/presentation/new_occurrence_screen.dart';
+import 'package:soloforte_app/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/new_case_modal.dart';
 import 'package:soloforte_app/core/services/analytics_service.dart';
 import 'widgets/drawing_toolbar.dart';
 import 'widgets/area_details_sheet.dart';
-import 'widgets/map_bottom_bar.dart';
 import 'widgets/drawing_measurement_overlay.dart';
 import 'package:intl/intl.dart';
 import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
@@ -321,38 +320,41 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       height: 40,
                       child: GestureDetector(
                         onTap: () async {
-                          // FIX: Open details/edit modal
-                          final result = await showModalBottomSheet<bool>(
+                          // Abrir Bottom Sheet com formulário de edição
+                          await showModalBottomSheet(
                             context: context,
                             isScrollControlled: true,
                             backgroundColor: Colors.transparent,
+                            isDismissible: true,
+                            enableDrag: true,
                             builder: (ctx) => DraggableScrollableSheet(
                               initialChildSize: 0.85,
                               minChildSize: 0.5,
                               maxChildSize: 0.95,
-                              builder: (_, scrollController) => Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(20),
+                              builder: (_, scrollController) =>
+                                  OccurrenceFormSheetContent(
+                                    currentLocation: {
+                                      'lat': occ.latitude,
+                                      'lng': occ.longitude,
+                                    },
+                                    onSave: (data) {
+                                      // TODO: Atualizar ocorrência existente
+                                      Navigator.pop(ctx);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Ocorrência atualizada!',
+                                          ),
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                    },
+                                    onCancel: () => Navigator.pop(ctx),
                                   ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(20),
-                                  ),
-                                  child: NewOccurrenceScreen(
-                                    initialOccurrence: occ,
-                                  ),
-                                ),
-                              ),
                             ),
                           );
-
-                          if (result == true) {
-                            // Optional: Refresh or show feedback manually if needed,
-                            // but provider updates automatically.
-                          }
                         },
                         child: _buildPin(occ.type, false),
                       ),
@@ -669,9 +671,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               ),
             ),
 
-          // BOTTOM BAR (Mode Switcher) - Always visible unless drawing
-          if (!drawingState.isDrawing) const MapBottomBar(),
-
           // DRAWING TOOLBAR (Takes over bottom when drawing)
           if (drawingState.isDrawing)
             const Align(
@@ -791,24 +790,19 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
+        isDismissible: true,
+        enableDrag: true,
         builder: (ctx) => DraggableScrollableSheet(
           initialChildSize: 0.85,
           minChildSize: 0.5,
           maxChildSize: 0.95,
-          builder: (_, scrollController) => Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: NewOccurrenceScreen(
-                initialLatitude: point.latitude,
-                initialLongitude: point.longitude,
-              ),
-            ),
+          builder: (_, scrollController) => OccurrenceFormSheetContent(
+            currentLocation: {'lat': point.latitude, 'lng': point.longitude},
+            onSave: (data) {
+              // TODO: Criar nova ocorrência
+              Navigator.pop(ctx, true);
+            },
+            onCancel: () => Navigator.pop(ctx, false),
           ),
         ),
       );

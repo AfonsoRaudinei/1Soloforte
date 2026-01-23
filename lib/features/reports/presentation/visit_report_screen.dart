@@ -74,319 +74,334 @@ class _VisitReportScreenState extends ConsumerState<VisitReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text('Relatório de Visita'),
-        backgroundColor: const Color(0xFF1C1C1E),
-        foregroundColor: Colors.white,
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Gerando PDF...')));
-            },
-            icon: const Icon(Icons.picture_as_pdf, color: Colors.blue),
-            label: const Text('PDF', style: TextStyle(color: Colors.blue)),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildSection(
-                    title: 'Informações da Visita',
-                    children: [
-                      CustomTextInput(
-                        label: 'Produtor',
-                        controller: _produtorController,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 16,
+          left: 16,
+          right: 16,
+          bottom: 16,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Título e ação no topo
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Relatório de Visita',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 12),
-                      CustomTextInput(
-                        label: 'Propriedade',
-                        controller: _propriedadeController,
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Gerando PDF...')),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.picture_as_pdf,
+                        color: Colors.blue,
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDatePicker(
-                              label: 'Data',
-                              value: _date,
-                              onChanged: (d) => setState(() => _date = d),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: CustomTextInput(
-                              label: 'Área (ha)',
-                              controller: _areaController,
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                        ],
+                      label: const Text(
+                        'PDF',
+                        style: TextStyle(color: Colors.blue),
                       ),
-                      const SizedBox(height: 12),
-                      CustomTextInput(
-                        label: 'Cultivar',
-                        controller: _cultivarController,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDatePicker(
-                        label: 'Data de Plantio',
-                        value: _plantioDate ?? DateTime.now(),
-                        onChanged: (d) => setState(() => _plantioDate = d),
-                        hint: _plantioDate == null ? 'Selecione' : null,
-                      ),
-                      if (_plantioDate != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'DAP: ${DateTime.now().difference(_plantioDate!).inDays} dias',
-                                style: const TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
-                  _buildSection(
-                    title: 'Estádio Fenológico',
-                    children: [
-                      DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          labelText: 'Estádio',
-                          border: OutlineInputBorder(),
-                        ),
-                        initialValue: _selectedStage,
-                        items: _stages.entries.map((e) {
-                          return DropdownMenuItem(
-                            value: e.key,
-                            child: Text(e.value['name']),
-                          );
-                        }).toList(),
-                        onChanged: (v) => setState(() => _selectedStage = v),
-                      ),
-                      if (_selectedStage != null)
-                        Container(
-                          margin: const EdgeInsets.only(top: 16),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.white, Colors.grey[50]!],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                            border: Border.all(color: Colors.grey[200]!),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                _stages[_selectedStage]!['icon'],
-                                style: const TextStyle(fontSize: 48),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _stages[_selectedStage]!['name'],
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _stages[_selectedStage]!['description'],
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  _stages[_selectedStage]!['dap'],
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-
-                  _buildSection(
-                    title: 'Categoria',
-                    children: [
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          _buildCategoryItem(
-                            'doenca',
-                            'Doença',
-                            '🦠',
-                            Colors.green,
-                          ),
-                          _buildCategoryItem(
-                            'insetos',
-                            'Insetos',
-                            '🐛',
-                            Colors.red,
-                          ),
-                          _buildCategoryItem(
-                            'ervas',
-                            'Ervas',
-                            '🌾',
-                            Colors.orange,
-                          ),
-                          _buildCategoryItem(
-                            'nutrientes',
-                            'Nutrientes',
-                            'Ⓝ',
-                            Colors.grey,
-                          ),
-                          _buildCategoryItem('agua', 'Água', '💧', Colors.cyan),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  if (_selectedCategories.contains('nutrientes'))
-                    _buildSection(
-                      title: 'Nutrientes Deficientes',
+                _buildSection(
+                  title: 'Informações da Visita',
+                  children: [
+                    CustomTextInput(
+                      label: 'Produtor',
+                      controller: _produtorController,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextInput(
+                      label: 'Propriedade',
+                      controller: _propriedadeController,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
                       children: [
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children:
-                              ['N', 'P', 'K', 'Ca', 'Mg', 'S', 'B', 'Zn', 'Mn']
-                                  .map(
-                                    (n) => FilterChip(
-                                      label: Text(n),
-                                      selected: _selectedNutrients.contains(n),
-                                      onSelected: (sel) {
-                                        setState(() {
-                                          if (sel) {
-                                            _selectedNutrients.add(n);
-                                          } else {
-                                            _selectedNutrients.remove(n);
-                                          }
-                                        });
-                                      },
-                                    ),
-                                  )
-                                  .toList(),
+                        Expanded(
+                          child: _buildDatePicker(
+                            label: 'Data',
+                            value: _date,
+                            onChanged: (d) => setState(() => _date = d),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: CustomTextInput(
+                            label: 'Área (ha)',
+                            controller: _areaController,
+                            keyboardType: TextInputType.number,
+                          ),
                         ),
                       ],
                     ),
-
-                  _buildSection(
-                    title: 'Observações e Recomendações',
-                    children: [
-                      CustomTextInput(
-                        label: 'Observações',
-                        controller: _observacoesController,
-                        maxLines: 4,
-                      ),
-                      const SizedBox(height: 16),
-                      CustomTextInput(
-                        label: 'Recomendações',
-                        controller: _recomendacoesController,
-                        maxLines: 4,
-                      ),
-                    ],
-                  ),
-
-                  _buildSection(
-                    title: 'Detalhes Finais',
-                    children: [
-                      CustomTextInput(
-                        label: 'Técnico Responsável',
-                        controller: _tecnicoController,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Text(
-                            'Tipo de Ocorrência:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                    const SizedBox(height: 12),
+                    CustomTextInput(
+                      label: 'Cultivar',
+                      controller: _cultivarController,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDatePicker(
+                      label: 'Data de Plantio',
+                      value: _plantioDate ?? DateTime.now(),
+                      onChanged: (d) => setState(() => _plantioDate = d),
+                      hint: _plantioDate == null ? 'Selecione' : null,
+                    ),
+                    if (_plantioDate != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _buildRadioOption('sazonal', 'Sazonal'),
-                                _buildRadioOption('permanente', 'Permanente'),
-                              ],
+                          child: Center(
+                            child: Text(
+                              'DAP: ${DateTime.now().difference(_plantioDate!).inDays} dias',
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                      CheckboxListTile(
-                        title: const Text('Coleta de Amostra de Solo'),
-                        value: _soilSample,
-                        onChanged: (v) =>
-                            setState(() => _soilSample = v ?? false),
-                        contentPadding: EdgeInsets.zero,
+                  ],
+                ),
+
+                _buildSection(
+                  title: 'Estádio Fenológico',
+                  children: [
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Estádio',
+                        border: OutlineInputBorder(),
+                      ),
+                      initialValue: _selectedStage,
+                      items: _stages.entries.map((e) {
+                        return DropdownMenuItem(
+                          value: e.key,
+                          child: Text(e.value['name']),
+                        );
+                      }).toList(),
+                      onChanged: (v) => setState(() => _selectedStage = v),
+                    ),
+                    if (_selectedStage != null)
+                      Container(
+                        margin: const EdgeInsets.only(top: 16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.white, Colors.grey[50]!],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          border: Border.all(color: Colors.grey[200]!),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              _stages[_selectedStage]!['icon'],
+                              style: const TextStyle(fontSize: 48),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _stages[_selectedStage]!['name'],
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _stages[_selectedStage]!['description'],
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                _stages[_selectedStage]!['dap'],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+
+                _buildSection(
+                  title: 'Categoria',
+                  children: [
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _buildCategoryItem(
+                          'doenca',
+                          'Doença',
+                          '🦠',
+                          Colors.green,
+                        ),
+                        _buildCategoryItem(
+                          'insetos',
+                          'Insetos',
+                          '🐛',
+                          Colors.red,
+                        ),
+                        _buildCategoryItem(
+                          'ervas',
+                          'Ervas',
+                          '🌾',
+                          Colors.orange,
+                        ),
+                        _buildCategoryItem(
+                          'nutrientes',
+                          'Nutrientes',
+                          'Ⓝ',
+                          Colors.grey,
+                        ),
+                        _buildCategoryItem('agua', 'Água', '💧', Colors.cyan),
+                      ],
+                    ),
+                  ],
+                ),
+
+                if (_selectedCategories.contains('nutrientes'))
+                  _buildSection(
+                    title: 'Nutrientes Deficientes',
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            ['N', 'P', 'K', 'Ca', 'Mg', 'S', 'B', 'Zn', 'Mn']
+                                .map(
+                                  (n) => FilterChip(
+                                    label: Text(n),
+                                    selected: _selectedNutrients.contains(n),
+                                    onSelected: (sel) {
+                                      setState(() {
+                                        if (sel) {
+                                          _selectedNutrients.add(n);
+                                        } else {
+                                          _selectedNutrients.remove(n);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                )
+                                .toList(),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 32),
-                  PrimaryButton(
-                    text: 'Salvar Relatório',
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        context.pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Relatório salvo com sucesso!'),
+                _buildSection(
+                  title: 'Observações e Recomendações',
+                  children: [
+                    CustomTextInput(
+                      label: 'Observações',
+                      controller: _observacoesController,
+                      maxLines: 4,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextInput(
+                      label: 'Recomendações',
+                      controller: _recomendacoesController,
+                      maxLines: 4,
+                    ),
+                  ],
+                ),
+
+                _buildSection(
+                  title: 'Detalhes Finais',
+                  children: [
+                    CustomTextInput(
+                      label: 'Técnico Responsável',
+                      controller: _tecnicoController,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text(
+                          'Tipo de Ocorrência:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              _buildRadioOption('sazonal', 'Sazonal'),
+                              _buildRadioOption('permanente', 'Permanente'),
+                            ],
                           ),
-                        );
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 48),
-                ],
-              ),
+                        ),
+                      ],
+                    ),
+                    CheckboxListTile(
+                      title: const Text('Coleta de Amostra de Solo'),
+                      value: _soilSample,
+                      onChanged: (v) =>
+                          setState(() => _soilSample = v ?? false),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 32),
+                PrimaryButton(
+                  text: 'Salvar Relatório',
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      context.pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Relatório salvo com sucesso!'),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 48),
+              ],
             ),
           ),
         ),

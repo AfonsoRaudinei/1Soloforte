@@ -17,39 +17,41 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Integrações')),
-      body: Wrapper(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              'Conecte suas ferramentas favoritas',
-              style: AppTypography.bodyMedium.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            _IntegrationCard(
-              name: 'John Deere Operations Center',
-              iconValues: const [Colors.green, Icons.agriculture],
-              isConnected: _johnDeereConnected,
-              onToggle: (v) => setState(() => _johnDeereConnected = v),
-            ),
-            const SizedBox(height: 16),
-            _IntegrationCard(
-              name: 'Climate FieldView',
-              iconValues: const [Colors.red, Icons.cloud_circle],
-              isConnected: _fieldViewConnected,
-              onToggle: (v) => setState(() => _fieldViewConnected = v),
-            ),
-            const SizedBox(height: 16),
-            _IntegrationCard(
-              name: 'Solinftec',
-              iconValues: const [Colors.blue, Icons.settings_input_antenna],
-              isConnected: _solinftecConnected,
-              onToggle: (v) => setState(() => _solinftecConnected = v),
-            ),
-          ],
-        ),
+    return Wrapper(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Conecte suas ferramentas favoritas',
+            style: AppTypography.bodyMedium.copyWith(color: Colors.grey),
+          ),
+          const SizedBox(height: 24),
+          _IntegrationCard(
+            name: 'John Deere Operations Center',
+            iconValues: const [Colors.green, Icons.agriculture],
+            isConnected: _johnDeereConnected,
+            onToggle: (v) => setState(() => _johnDeereConnected = v),
+          ),
+          const SizedBox(height: 16),
+          _IntegrationCard(
+            name: 'Climate FieldView',
+            iconValues: const [Colors.red, Icons.cloud_circle],
+            isConnected: _fieldViewConnected,
+            onToggle: (v) => setState(() => _fieldViewConnected = v),
+          ),
+          const SizedBox(height: 16),
+          _IntegrationCard(
+            name: 'Solinftec',
+            iconValues: const [Colors.blue, Icons.settings_input_antenna],
+            isConnected: _solinftecConnected,
+            onToggle: (v) => setState(() => _solinftecConnected = v),
+          ),
+        ],
       ),
     );
   }

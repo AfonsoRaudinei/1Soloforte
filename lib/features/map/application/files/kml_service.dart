@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:latlong2/latlong.dart';
@@ -45,7 +46,7 @@ class KmlService {
 
       return _parseKml(kmlContent, file.name);
     } catch (e) {
-      print('Error parsing KML/KMZ: $e');
+      LoggerService.e('Error parsing KML/KMZ', error: e, tag: 'KmlService');
       return []; // Return empty list on error
     }
   }
@@ -100,7 +101,7 @@ class KmlService {
           }
         }
       } catch (e) {
-        print('Error parsing placemark: $e');
+        LoggerService.e('Error parsing placemark', error: e, tag: 'KmlService');
         continue;
       }
     }

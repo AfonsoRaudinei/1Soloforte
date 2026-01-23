@@ -7,21 +7,9 @@ class OccurrenceListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Ocorrências'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              // Navigate to New Occurrence
-              context.push('/occurrences/new');
-            },
-          ),
-        ],
-      ),
-      body: const OccurrenceListView(),
+    return Container(
+      color: Colors.grey[50],
+      child: SafeArea(child: const OccurrenceListView()),
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:soloforte_app/shared/widgets/primary_button.dart';
 import 'package:soloforte_app/shared/widgets/custom_text_input.dart';
 import 'package:soloforte_app/core/services/secure_storage_service.dart';
 import 'package:soloforte_app/core/validators/input_validators.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'providers/auth_provider.dart';
 import 'package:soloforte_app/core/config/demo_config.dart';
 
@@ -29,8 +30,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    print('🎭 LoginScreen: isDemoEnabled = ${DemoConfig.isDemoEnabled}');
-    print('🎭 LoginScreen: demoEmail = ${DemoConfig.demoEmail}');
+    LoggerService.d(
+      'LoginScreen: isDemoEnabled = ${DemoConfig.isDemoEnabled}',
+      tag: 'AUTH',
+    );
+    LoggerService.d(
+      'LoginScreen: demoEmail = ${DemoConfig.demoEmail}',
+      tag: 'AUTH',
+    );
     _loadRememberedEmail();
   }
 

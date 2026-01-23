@@ -4,44 +4,160 @@ import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soloforte_app/features/map/application/drawing_controller.dart';
+import 'package:soloforte_app/features/reports/application/report_export_service.dart';
+import 'package:soloforte_app/features/reports/application/date_filter_provider.dart';
+import 'package:soloforte_app/features/reports/application/report_history_provider.dart';
+import 'package:soloforte_app/features/reports/domain/report_configuration.dart';
+import 'package:soloforte_app/features/reports/domain/report_history.dart';
 import 'package:soloforte_app/features/reports/data/report_repository.dart';
 
-class ReportDetailScreen extends ConsumerWidget {
+class ReportDetailScreen extends ConsumerStatefulWidget {
   final String reportId;
 
   const ReportDetailScreen({super.key, required this.reportId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reportAsync = ref.watch(reportByIdProvider(reportId));
+  ConsumerState<ReportDetailScreen> createState() => _ReportDetailScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Relatório'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleTextStyle: AppTypography.h4.copyWith(color: AppColors.textPrimary),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        actions: [
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
-        ],
+class _ReportDetailScreenState extends ConsumerState<ReportDetailScreen> {
+  bool _loggedInHistory = false;
+  bool _isExporting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listen<AsyncValue<ReportSummary?>>(
+      reportByIdProvider(widget.reportId),
+      (previous, next) {
+        next.whenOrNull(
+          data: (report) async {
+            if (report == null || _loggedInHistory) return;
+            final template = _mapReportTemplate(report.type);
+            if (template == null) return;
+
+            final savedReport = SavedReport(
+              id: report.id,
+              title: report.title,
+              template: template,
+              createdAt: report.createdAt,
+              configuration: ReportConfiguration(
+                template: template,
+                customTitle: report.title,
+              ),
+            );
+
+            await ref.read(reportHistoryProvider).addReport(savedReport);
+            await ref.read(reportHistoryProvider).updateViewCount(report.id);
+            _loggedInHistory = true;
+          },
+        );
+      },
+    );
+  }
+
+  ReportTemplate? _mapReportTemplate(String type) {
+    switch (type) {
+      case 'Semanal':
+        return ReportTemplate.weekly;
+      case 'NDVI':
+        return ReportTemplate.ndvi;
+      case 'Safra':
+        return ReportTemplate.cropSummary;
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _exportReport(ReportSummary report) async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      final template = _mapReportTemplate(report.type);
+      if (template == null) {
+        throw Exception('Tipo de relatório não suportado.');
+      }
+      final exporter = ref.read(reportExportServiceProvider);
+      switch (template) {
+        case ReportTemplate.weekly:
+          final range = ref.read(dateFilterProvider).dateRange;
+          await exporter.exportByTemplate(
+            template: template,
+            weeklyRange: DateTimeRange(start: range.start, end: range.end),
+          );
+          break;
+        case ReportTemplate.ndvi:
+          final drawingState = ref.read(drawingControllerProvider);
+          await exporter.exportByTemplate(
+            template: template,
+            areas: drawingState.savedAreas,
+          );
+          break;
+        case ReportTemplate.cropSummary:
+          await exporter.exportByTemplate(template: template);
+          break;
+        case ReportTemplate.pest:
+        case ReportTemplate.custom:
+          throw Exception('Exportação indisponível para este relatório.');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Falha ao exportar: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reportAsync = ref.watch(reportByIdProvider(widget.reportId));
+
+    return reportAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, stack) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Erro'),
+          leading: const BackButton(),
+          centerTitle: true,
+        ),
+        body: Center(child: Text('Erro: $err')),
       ),
-      body: reportAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Erro: $err')),
-        data: (report) {
-          if (report == null) {
-            return const Center(child: Text('Relatório não encontrado'));
-          }
-          return SingleChildScrollView(
+      data: (report) {
+        if (report == null) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Não Encontrado'),
+              leading: const BackButton(),
+              centerTitle: true,
+            ),
+            body: const Center(child: Text('Relatório não encontrado')),
+          );
+        }
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Detalhe do Relatório'),
+            leading: const BackButton(),
+            centerTitle: true,
+          ),
+          body: SingleChildScrollView(
             child: Column(
               children: [
                 // Header
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 24,
+                    left: 24,
+                    right: 24,
+                    bottom: 24,
+                  ),
                   color: Colors.white,
                   child: Column(
                     children: [
@@ -132,7 +248,7 @@ class ReportDetailScreen extends ConsumerWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () => _exportReport(report),
                           icon: const Icon(Icons.picture_as_pdf),
                           label: const Text('VER RELATÓRIO COMPLETO (PDF)'),
                           style: ElevatedButton.styleFrom(
@@ -178,9 +294,9 @@ class ReportDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 32),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

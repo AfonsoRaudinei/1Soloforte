@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:soloforte_app/core/database/database_helper.dart';
@@ -275,7 +276,11 @@ class PersistentMarketingRepository implements MarketingRepositoryBase {
         ..addAll(legacyPosts);
     } catch (e) {
       // Fallback safe: if table doesn't exist or error, just return legacy
-      print('Error fetching new publications in legacy adapter: $e');
+      LoggerService.e(
+        'Error fetching new publications in legacy adapter',
+        error: e,
+        tag: 'MarketingRepository',
+      );
       _mapPosts
         ..clear()
         ..addAll(legacyPosts);

@@ -19,6 +19,7 @@ import 'package:soloforte_app/features/ndvi/data/satellite_service.dart';
 import 'package:soloforte_app/features/ndvi/domain/ndvi_heatmap_point.dart';
 import 'package:soloforte_app/features/map/application/geometry_utils.dart';
 import 'package:soloforte_app/core/services/logger_service.dart';
+import 'package:soloforte_app/features/reports/application/telemetry_logger.dart';
 
 class ReportService {
   final OccurrenceRepository _occurrenceRepository;
@@ -1095,18 +1096,28 @@ class ReportService {
         activities = ['Nenhuma atividade registrada neste período.'];
       }
 
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'weekly', 'field': 'applications'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'weekly', 'field': 'weather_summary'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'weekly', 'field': 'next_actions'},
+      );
       return WeeklyReportData(
         activities: activities.take(5).toList(), // Limit to top 5
         occurrences: recentOccurrences.length,
         applications: 0,
         teamCheckins: recentVisits.length,
-        weatherSummary:
-            'Clima predominantemente ensolarado com temperaturas entre 22°C e 30°C.',
-        nextActions: [
-          'Monitorar áreas com alta incidência de pragas',
-          'Planejar próxima aplicação de defensivos',
-          'Verificar níveis de umidade do solo',
-        ],
+        weatherSummary: '',
+        nextActions: const [],
+        applicationsAvailable: false,
+        weatherSummaryAvailable: false,
+        nextActionsAvailable: false,
       );
     } catch (e) {
       LoggerService.e(
@@ -1114,13 +1125,28 @@ class ReportService {
         error: e,
         tag: 'REPORT',
       );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'weekly', 'field': 'applications'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'weekly', 'field': 'weather_summary'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'weekly', 'field': 'next_actions'},
+      );
       return WeeklyReportData(
         activities: ['Erro ao carregar atividades'],
         occurrences: 0,
         applications: 0,
         teamCheckins: 0,
-        weatherSummary: 'Dados climáticos indisponíveis',
-        nextActions: [],
+        weatherSummary: '',
+        nextActions: const [],
+        applicationsAvailable: false,
+        weatherSummaryAvailable: false,
+        nextActionsAvailable: false,
       );
     }
   }
@@ -1134,7 +1160,7 @@ class ReportService {
         temporalEvolution: [],
         areaComparisons: [],
         attentionZoneImageBytes: null,
-        correlationWithWeather: 0.0,
+        correlationWithWeather: null,
       );
     }
 
@@ -1232,11 +1258,6 @@ class ReportService {
         }
       }
 
-      // If no data (e.g. clouds or error), add a dummy point or leave empty
-      if (temporalData.isEmpty) {
-        temporalData.add(NdviDataPoint(now, 0.5)); // Fallback
-      }
-
       // 2. Fetch Image for main area (latest date)
       final latestDate = temporalData.isNotEmpty ? temporalData.last.date : now;
 
@@ -1273,15 +1294,11 @@ class ReportService {
           mean = (bands['stats']['mean'] as num?)?.toDouble() ?? 0.0;
         }
 
-        // Calculate growth (mocked for now as we don't have historical for all easily)
-        double growth =
-            (mean - 0.5) * 10; // Pseudo random growth based on value
-
         comparisons.add(
           AreaComparison(
             areaName: area.name,
             currentNdvi: mean,
-            growth: growth,
+            growth: null,
           ),
         );
       } catch (e) {
@@ -1294,7 +1311,7 @@ class ReportService {
       areaComparisons: comparisons,
       attentionZoneImageBytes: imageBytes,
       heatmapPoints: heatmapPoints,
-      correlationWithWeather: 0.85, // Still mocked as no weather API connected
+      correlationWithWeather: null,
     );
   }
 
@@ -1303,6 +1320,22 @@ class ReportService {
       final harvests = await _harvestRepository.getHarvests();
 
       if (harvests.isEmpty) {
+        TelemetryLogger.logOnce(
+          'report_data_missing',
+          context: {'report': 'crop_summary', 'field': 'planted_area'},
+        );
+        TelemetryLogger.logOnce(
+          'report_data_missing',
+          context: {'report': 'crop_summary', 'field': 'estimated_productivity'},
+        );
+        TelemetryLogger.logOnce(
+          'report_data_missing',
+          context: {'report': 'crop_summary', 'field': 'real_productivity'},
+        );
+        TelemetryLogger.logOnce(
+          'report_data_missing',
+          context: {'report': 'crop_summary', 'field': 'cost_per_hectare'},
+        );
         return CropSummaryData(
           plantedArea: 0,
           phenologicalStage: 'Sem Dados',
@@ -1311,6 +1344,10 @@ class ReportService {
           costPerHectare: 0,
           problemsFaces: [],
           lessonsLearned: [],
+          plantedAreaAvailable: false,
+          estimatedProductivityAvailable: false,
+          realProductivityAvailable: false,
+          costPerHectareAvailable: false,
         );
       }
 
@@ -1358,6 +1395,27 @@ class ReportService {
       final mostRecentActive = activeHarvests.first;
       String phenologyStage = _mapStatusToPhenology(mostRecentActive.status);
 
+      if (totalArea <= 0) {
+        TelemetryLogger.logOnce(
+          'report_data_missing',
+          context: {'report': 'crop_summary', 'field': 'planted_area'},
+        );
+        TelemetryLogger.logOnce(
+          'report_data_missing',
+          context: {'report': 'crop_summary', 'field': 'estimated_productivity'},
+        );
+        TelemetryLogger.logOnce(
+          'report_data_missing',
+          context: {'report': 'crop_summary', 'field': 'cost_per_hectare'},
+        );
+      }
+      if (harvestedArea <= 0) {
+        TelemetryLogger.logOnce(
+          'report_data_missing',
+          context: {'report': 'crop_summary', 'field': 'real_productivity'},
+        );
+      }
+
       return CropSummaryData(
         plantedArea: totalArea,
         phenologicalStage: phenologyStage,
@@ -1370,9 +1428,29 @@ class ReportService {
         costPerHectare: totalArea > 0 ? totalCost / totalArea : 0,
         problemsFaces: allProblems.take(5).toList(), // Limit to top 5
         lessonsLearned: allLessons.take(5).toList(), // Limit to top 5
+        plantedAreaAvailable: totalArea > 0,
+        estimatedProductivityAvailable: totalArea > 0,
+        realProductivityAvailable: harvestedArea > 0,
+        costPerHectareAvailable: totalArea > 0,
       );
     } catch (e) {
       LoggerService.e('Error generating crop summary', error: e, tag: 'REPORT');
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'crop_summary', 'field': 'planted_area'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'crop_summary', 'field': 'estimated_productivity'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'crop_summary', 'field': 'real_productivity'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'crop_summary', 'field': 'cost_per_hectare'},
+      );
       return CropSummaryData(
         plantedArea: 0,
         phenologicalStage: 'Erro',
@@ -1381,6 +1459,10 @@ class ReportService {
         costPerHectare: 0,
         problemsFaces: [],
         lessonsLearned: [],
+        plantedAreaAvailable: false,
+        estimatedProductivityAvailable: false,
+        realProductivityAvailable: false,
+        costPerHectareAvailable: false,
       );
     }
   }
@@ -1389,6 +1471,27 @@ class ReportService {
     final productivity = harvest.plantedAreaHa > 0
         ? harvest.totalProductionBags / harvest.plantedAreaHa
         : 0;
+
+    if (harvest.plantedAreaHa <= 0) {
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'crop_summary', 'field': 'planted_area'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'crop_summary', 'field': 'estimated_productivity'},
+      );
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'crop_summary', 'field': 'cost_per_hectare'},
+      );
+    }
+    if (harvest.status != 'harvested') {
+      TelemetryLogger.logOnce(
+        'report_data_missing',
+        context: {'report': 'crop_summary', 'field': 'real_productivity'},
+      );
+    }
 
     return CropSummaryData(
       plantedArea: harvest.plantedAreaHa,
@@ -1406,6 +1509,10 @@ class ReportService {
       lessonsLearned: harvest.notes
           .where((n) => n.toLowerCase().contains('lição:'))
           .toList(),
+      plantedAreaAvailable: harvest.plantedAreaHa > 0,
+      estimatedProductivityAvailable: harvest.plantedAreaHa > 0,
+      realProductivityAvailable: harvest.status == 'harvested',
+      costPerHectareAvailable: harvest.plantedAreaHa > 0,
     );
   }
 

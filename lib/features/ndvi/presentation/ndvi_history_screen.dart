@@ -40,95 +40,95 @@ class _NDVIHistoryScreenState extends State<NDVIHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Histórico NDVI')),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: _records.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
-        itemBuilder: (context, index) {
-          final record = _records[index];
-          return Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NDVIDetailScreen(
-                      area: GeoArea(
-                        id: record.id,
-                        name: record.description,
-                        points: const [], // Dummy
-                      ),
+    return ListView.separated(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      itemCount: _records.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final record = _records[index];
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => NDVIDetailScreen(
+                    area: GeoArea(
+                      id: record.id,
+                      name: record.description,
+                      points: const [],
                     ),
                   ),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.satellite_alt,
-                        color: Colors.green,
-                        size: 30,
-                      ),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            DateFormat('dd/MM/yyyy').format(record.date),
-                            style: AppTypography.h3, // Applied AppTypography.h3
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            record.description,
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
+                    child: const Icon(
+                      Icons.satellite_alt,
+                      color: Colors.green,
+                      size: 30,
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          DateFormat('dd/MM/yyyy').format(
-                            record.date,
-                          ), // This line was added based on the instruction's intent
-                          style: AppTypography.bodySmall.copyWith(
-                            color: Colors.grey,
-                          ), // Applied AppTypography.bodySmall
+                          DateFormat('dd/MM/yyyy').format(record.date),
+                          style: AppTypography.h3,
                         ),
+                        const SizedBox(height: 4),
                         Text(
-                          'NDVI: ${record.averageValue.toStringAsFixed(2)}', // Changed text content and applied AppTypography.h4
-                          style: AppTypography.h4.copyWith(
-                            color: _getColorForValue(record.averageValue),
-                          ),
+                          record.description,
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        DateFormat('dd/MM/yyyy').format(record.date),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        'NDVI: ${record.averageValue.toStringAsFixed(2)}',
+                        style: AppTypography.h4.copyWith(
+                          color: _getColorForValue(record.averageValue),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

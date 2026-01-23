@@ -79,15 +79,14 @@ class _AnalysisWizardScreenState extends ConsumerState<AnalysisWizardScreen> {
 
     try {
       await ref.read(analysisRepositoryProvider).saveAnalysis(newAnalysis);
-      if (mounted) {
-        context.pop(); // Close wizard
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Análise solicitada com sucesso!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
+      if (!mounted) return;
+      context.pop(); // Close wizard
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Análise solicitada com sucesso!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

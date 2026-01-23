@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class PushNotificationService {
   static final PushNotificationService _instance =
@@ -25,18 +26,21 @@ class PushNotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      debugPrint('User granted permission');
+      LoggerService.i('User granted permission', tag: 'NOTIF');
     } else if (settings.authorizationStatus ==
         AuthorizationStatus.provisional) {
-      debugPrint('User granted provisional permission');
+      LoggerService.i('User granted provisional permission', tag: 'NOTIF');
     } else {
-      debugPrint('User declined or has not accepted permission');
+      LoggerService.w(
+        'User declined or has not accepted permission',
+        tag: 'NOTIF',
+      );
       return;
     }
 
     // Get FCM Token
     String? token = await _firebaseMessaging.getToken();
-    debugPrint('FCM Token: $token');
+    LoggerService.d('FCM Token: $token', tag: 'NOTIF');
 
     // Setup Local Notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -55,12 +59,13 @@ class PushNotificationService {
 
     // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Got a message whilst in the foreground!');
-      debugPrint('Message data: ${message.data}');
+      LoggerService.d('Got a message whilst in the foreground!', tag: 'NOTIF');
+      LoggerService.d('Message data: ${message.data}', tag: 'NOTIF');
 
       if (message.notification != null) {
-        debugPrint(
-          'Message also contained a notification: ${message.notification}',
+        LoggerService.d(
+          'Message also contained a notification: ${message.notification?.title}',
+          tag: 'NOTIF',
         );
         _showLocalNotification(message);
       }

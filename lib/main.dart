@@ -12,46 +12,53 @@ import 'core/error/global_error_handler.dart';
 import 'core/router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Run app with error zone protection - all initialization must be inside
+  GlobalErrorHandler.runAppGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize global error handling
-  GlobalErrorHandler.init();
+    // Load environment variables
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      LoggerService.e('Error loading .env file', error: e, tag: 'INIT');
+    }
 
-  if (kIsWeb) {
-    // Initialize database factory for Web
-    databaseFactory = databaseFactoryFfiWeb;
-  }
+    if (kIsWeb) {
+      // Initialize database factory for Web
+      databaseFactory = databaseFactoryFfiWeb;
+    }
 
-  // Initialize Firebase
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e) {
-    debugPrint(
-      'Firebase initialization failed (ignoring for development/unsupported platforms): $e',
-    );
-  }
-
-  // Initialize Supabase
-  try {
-    if (EnvConfig.useSupabase) {
-      await Supabase.initialize(
-        url: EnvConfig.supabaseUrl,
-        anonKey: EnvConfig.supabaseAnonKey,
+    // Initialize Firebase
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } catch (e) {
+      LoggerService.w(
+        'Firebase initialization failed (ignoring for development/unsupported platforms): $e',
+        tag: 'INIT',
       );
     }
-  } catch (e) {
-    debugPrint('Supabase init failed (check env config): $e');
-  }
 
-  // Run app with error zone protection
-  GlobalErrorHandler.runAppGuarded(
-    () => runApp(const ProviderScope(child: SoloForteApp())),
-  );
+    // Initialize Supabase
+    try {
+      if (EnvConfig.useSupabase) {
+        await Supabase.initialize(
+          url: EnvConfig.supabaseUrl,
+          anonKey: EnvConfig.supabaseAnonKey,
+        );
+      }
+    } catch (e) {
+      LoggerService.e('Supabase init failed', error: e, tag: 'INIT');
+    }
+
+    runApp(const ProviderScope(child: SoloForteApp()));
+  });
 }
 
 class SoloForteApp extends ConsumerWidget {

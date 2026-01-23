@@ -1,6 +1,7 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/foundation.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'package:soloforte_app/core/config/sentinel_config.dart';
 import 'package:soloforte_app/features/ndvi/data/models/sentinel_token.dart';
 
@@ -40,7 +41,11 @@ class SentinelService {
         response.data,
       ).copyWith(receivedAt: DateTime.now().millisecondsSinceEpoch);
     } catch (e) {
-      debugPrint('Error authenticating with Sentinel Hub: $e');
+      LoggerService.e(
+        'Error authenticating with Sentinel Hub',
+        error: e,
+        tag: 'SENTINEL',
+      );
       rethrow;
     }
   }
@@ -99,7 +104,7 @@ class SentinelService {
       );
       return features;
     } catch (e) {
-      debugPrint('Error searching images: $e');
+      LoggerService.e('Error searching images', error: e, tag: 'SENTINEL');
       rethrow;
     }
   }
@@ -192,7 +197,7 @@ class SentinelService {
 
       return response.data;
     } catch (e) {
-      debugPrint('Error fetching NDVI image: $e');
+      LoggerService.e('Error fetching NDVI image', error: e, tag: 'SENTINEL');
       rethrow;
     }
   }
@@ -275,7 +280,7 @@ class SentinelService {
 
       return response.data;
     } catch (e) {
-      debugPrint('Error fetching statistics: $e');
+      LoggerService.e('Error fetching statistics', error: e, tag: 'SENTINEL');
       return {};
     }
   }

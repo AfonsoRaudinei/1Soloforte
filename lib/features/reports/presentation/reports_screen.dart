@@ -7,11 +7,17 @@ import 'package:soloforte_app/features/reports/presentation/tabs/ndvi_analysis_t
 import 'package:soloforte_app/features/reports/presentation/tabs/pest_report_tab.dart';
 import 'package:soloforte_app/features/reports/presentation/tabs/weekly_report_tab.dart';
 
+import 'package:soloforte_app/features/reports/application/report_export_service.dart';
 import 'package:soloforte_app/features/reports/application/report_history_provider.dart';
+import 'package:soloforte_app/features/reports/application/date_filter_provider.dart';
+import 'package:soloforte_app/features/reports/application/custom_report_layout_provider.dart'
+    as report_layout;
 import 'package:soloforte_app/features/reports/domain/report_configuration.dart';
 import 'package:intl/intl.dart';
 
 import 'package:soloforte_app/features/occurrences/presentation/widgets/occurrence_list_view.dart';
+import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
+import 'package:soloforte_app/features/map/application/drawing_controller.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
@@ -23,7 +29,7 @@ class ReportsScreen extends ConsumerStatefulWidget {
 class _ReportsScreenState extends ConsumerState<ReportsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final bool _isExporting = false;
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -38,7 +44,60 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
   }
 
   Future<void> _exportCurrentReport() async {
-    // ... (existing export logic)
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      final exporter = ref.read(reportExportServiceProvider);
+      final currentIndex = _tabController.index;
+
+      switch (currentIndex) {
+        case 2: // Semanal
+          final range = ref.read(dateFilterProvider).dateRange;
+          await exporter.exportByTemplate(
+            template: ReportTemplate.weekly,
+            weeklyRange: DateTimeRange(start: range.start, end: range.end),
+          );
+          break;
+        case 3: // NDVI
+          final drawingState = ref.read(drawingControllerProvider);
+          await exporter.exportByTemplate(
+            template: ReportTemplate.ndvi,
+            areas: drawingState.savedAreas,
+          );
+          break;
+        case 4: // Safra
+          await exporter.exportByTemplate(template: ReportTemplate.cropSummary);
+          break;
+        case 5: // Pragas
+          await exporter.exportByTemplate(template: ReportTemplate.pest);
+          break;
+        case 6: // Personalizado
+          final prefs = ref.read(report_layout.sharedPreferencesProvider).value;
+          if (prefs == null) {
+            throw Exception('Preferências ainda não carregadas.');
+          }
+          final sections = ref
+              .read(report_layout.customReportLayoutProvider)
+              .sections;
+          await exporter.exportByTemplate(
+            template: ReportTemplate.custom,
+            sections: sections,
+          );
+          break;
+        default:
+          throw Exception('Exportação indisponível para esta aba.');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Falha ao exportar: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
   }
 
   @override
@@ -46,90 +105,92 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
     // Watch history for the badges or counts if we wanted
     final history = ref.watch(reportHistoryProvider).reports;
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundSecondary,
-      appBar: AppBar(
-        title: const Text('Relatórios'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        foregroundColor: AppColors.textPrimary,
-        actions: [
-          IconButton(
-            icon: _isExporting
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.download_rounded),
-            onPressed: _isExporting ? null : _exportCurrentReport,
-            tooltip: 'Exportar PDF',
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textTertiary,
-          indicatorColor: AppColors.primary,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          tabs: [
-            const Tab(text: 'Histórico'),
-            const Tab(text: 'Ocorrências'),
-            const Tab(text: 'Semanal'),
-            const Tab(text: 'NDVI'),
-            const Tab(text: 'Safra'),
-            const Tab(text: 'Pragas'),
-            const Tab(text: 'Personalizado'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+    return SafeArea(
+      child: Column(
         children: [
-          // Histórico Tab (Inline List to use provider)
-          ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: history.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final report = history[index];
-              return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: const Icon(
-                      Icons.description,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  title: Text(
-                    report.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    'Criado em: ${DateFormat('dd/MM/yyyy HH:mm').format(report.createdAt)}\nTipo: ${report.template.name}',
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    // Open Detail or PDF
-                  },
-                ),
-              );
-            },
+          Container(
+            color: AppColors.surface,
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textTertiary,
+              indicatorColor: AppColors.primary,
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+              tabs: [
+                const Tab(text: 'Histórico'),
+                const Tab(text: 'Ocorrências'),
+                const Tab(text: 'Semanal'),
+                const Tab(text: 'NDVI'),
+                const Tab(text: 'Safra'),
+                const Tab(text: 'Pragas'),
+                const Tab(text: 'Personalizado'),
+              ],
+            ),
           ),
-          const OccurrenceListView(),
-          const WeeklyReportTab(),
-          const NdviAnalysisTab(),
-          const CropSummaryTab(),
-          const PestReportTab(),
-          const CustomReportTab(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // Histórico Tab (Inline List to use provider)
+                history.isEmpty
+                    ? const EmptyStateWidget(
+                        title: 'Nenhum relatório no histórico',
+                        message:
+                            'Relatórios gerados ou visualizados aparecerão aqui.',
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: history.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final report = history[index];
+                          return Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16),
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.primary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                child: const Icon(
+                                  Icons.description,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              title: Text(
+                                report.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Criado em: ${DateFormat('dd/MM/yyyy HH:mm').format(report.createdAt)}\nTipo: ${report.template.name}',
+                              ),
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                              ),
+                              onTap: () {
+                                // Open Detail or PDF
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                const OccurrenceListView(),
+                const WeeklyReportTab(),
+                const NdviAnalysisTab(),
+                const CropSummaryTab(),
+                const PestReportTab(),
+                const CustomReportTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );

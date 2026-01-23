@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -158,7 +159,7 @@ class ExportService {
           XFile(file.path, mimeType: mimeType),
         ], text: 'Exportação de Áreas - SoloForte');
       } catch (e) {
-        debugPrint('Error exporting file: $e');
+        LoggerService.e('Error exporting file', error: e, tag: 'EXPORT');
       }
     } else {
       // Web specific handling if needed, usually handled by anchor download or specific web share
@@ -193,7 +194,7 @@ class ExportService {
           ),
         ]);
       } catch (e) {
-        debugPrint('Web export error: $e');
+        LoggerService.e('Web export error', error: e, tag: 'EXPORT');
       }
     }
   }

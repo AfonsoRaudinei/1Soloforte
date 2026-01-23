@@ -5,6 +5,10 @@ import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/reports/domain/report_models.dart';
 import 'package:soloforte_app/features/reports/application/report_service.dart';
 import 'package:soloforte_app/features/reports/application/custom_report_layout_provider.dart';
+import 'package:soloforte_app/features/reports/application/report_history_provider.dart'
+    as report_history;
+import 'package:soloforte_app/features/reports/domain/report_configuration.dart';
+import 'package:soloforte_app/features/reports/domain/report_history.dart';
 import 'package:soloforte_app/shared/widgets/app_card.dart';
 import 'package:soloforte_app/shared/widgets/primary_button.dart';
 
@@ -51,6 +55,20 @@ class _CustomReportTabState extends ConsumerState<CustomReportTab> {
         cropData: cropData,
         pestData: pestData,
       );
+
+      final savedReport = SavedReport(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: ReportTemplate.custom.name,
+        template: ReportTemplate.custom,
+        createdAt: DateTime.now(),
+        configuration: ReportConfiguration(
+          template: ReportTemplate.custom,
+          includedSections: visibleSections.map((s) => s.id).toList(),
+        ),
+      );
+      await ref
+          .read(report_history.reportHistoryProvider)
+          .addReport(savedReport);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

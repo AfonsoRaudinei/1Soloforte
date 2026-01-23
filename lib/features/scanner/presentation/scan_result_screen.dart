@@ -19,114 +19,86 @@ class ScanResultsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text(
-          "Análise Concluída",
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 16),
+          // 1. Interactive Image
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: InteractiveResultImage(
+              imagePath: imagePath,
+              detections: result.detections,
+            ),
           ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined, color: Colors.black),
-            onPressed: () {
-              // TODO: Implement share
-            },
+
+          const SizedBox(height: 16),
+
+          // 2. Summary Card
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ResultSummaryCard(result: result),
           ),
+
+          const SizedBox(height: 16),
+
+          // 3. Weather Widget
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: WeatherValidationWidget(),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 4. Recommendations Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.medication_liquid,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "Recomendações de Controle",
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 5. Recommendations Tabs
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: RecommendationTabs(result: result),
+          ),
+
+          // 6. Action Button
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: PrimaryButton(
+              text: "CONVERTER EM OCORRÊNCIA",
+              onPressed: () {
+                context.push(
+                  '/occurrences/new',
+                  extra: {
+                    'title': result.commonName,
+                    'description': result.description,
+                    'type': result.type.name,
+                    'imagePath': imagePath,
+                    'severity': result.severity,
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 30),
         ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            // 1. Interactive Image
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: InteractiveResultImage(
-                imagePath: imagePath,
-                detections: result.detections,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 2. Summary Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ResultSummaryCard(result: result),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 3. Weather Widget
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: WeatherValidationWidget(),
-            ),
-
-            const SizedBox(height: 24),
-
-            // 4. Recommendations Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.medication_liquid,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Recomendações de Controle",
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // 5. Recommendations Tabs
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: RecommendationTabs(result: result),
-            ),
-
-            // 6. Action Button
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: PrimaryButton(
-                text: "CONVERTER EM OCORRÊNCIA",
-                onPressed: () {
-                  context.push(
-                    '/occurrences/new',
-                    extra: {
-                      'title': result.commonName,
-                      'description': result.description,
-                      'type': result.type.name,
-                      'imagePath': imagePath,
-                      'severity': result.severity,
-                    },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 30),
-          ],
-        ),
       ),
     );
   }

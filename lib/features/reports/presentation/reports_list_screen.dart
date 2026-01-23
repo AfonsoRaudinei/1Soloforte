@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
-import 'package:soloforte_app/core/theme/app_typography.dart';
 
 // Mock Model for Reports
 class MockReport {
@@ -82,92 +81,70 @@ class _ReportsListScreenState extends State<ReportsListScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Relatórios'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleTextStyle: AppTypography.h4.copyWith(color: AppColors.textPrimary),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Container(
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
+    return Column(
+      children: [
+        // Tabs Header (moved from AppBar)
+        Container(
+          color: Colors.white,
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 16,
+            right: 16,
+            bottom: 8,
+          ),
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[600],
-                tabs: const [
-                  Tab(text: 'Meus'),
-                  Tab(text: 'Compartilhados'),
-                ],
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push('/reports/new'),
-            tooltip: 'Novo Relatório',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar relatórios...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              ),
-            ),
-          ),
-
-          // List
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildReportList(_mockReports), // Meus (Mocked same for now)
-                _buildReportList([]), // Compartilhados (Empty mock)
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey[600],
+              tabs: const [
+                Tab(text: 'Meus'),
+                Tab(text: 'Compartilhados'),
               ],
             ),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/reports/new'),
-        icon: const Icon(Icons.add),
-        label: const Text('Novo'),
-        backgroundColor: AppColors.primary,
-      ),
+        ),
+
+        // Search Bar
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Buscar relatórios...',
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            ),
+          ),
+        ),
+
+        // List
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [_buildReportList(_mockReports), _buildReportList([])],
+          ),
+        ),
+      ],
     );
   }
 

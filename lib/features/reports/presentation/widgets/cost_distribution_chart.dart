@@ -1,14 +1,21 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/shared/widgets/app_card.dart';
+import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
+import 'package:soloforte_app/features/reports/application/telemetry_logger.dart';
 import 'chart_legend_item.dart';
 
 class CostDistributionChart extends StatefulWidget {
   final List<CostCategoryData>? data;
   final Function(CostCategoryData)? onSectionTap;
+  final VoidCallback? onExport;
 
-  const CostDistributionChart({super.key, this.data, this.onSectionTap});
+  const CostDistributionChart({
+    super.key,
+    this.data,
+    this.onSectionTap,
+    this.onExport,
+  });
 
   @override
   State<CostDistributionChart> createState() => _CostDistributionChartState();
@@ -16,56 +23,6 @@ class CostDistributionChart extends StatefulWidget {
 
 class _CostDistributionChartState extends State<CostDistributionChart> {
   int touchedIndex = -1;
-
-  // Default mock data if none provided
-  List<CostCategoryData> get _chartData =>
-      widget.data ??
-      [
-        CostCategoryData(
-          label: 'Insumos',
-          percentage: 45,
-          color: AppColors.primary,
-          details:
-              'Insumos Agrícolas\n\n'
-              '• Sementes: R\$ 25,000\n'
-              '• Fertilizantes: R\$ 35,000\n'
-              '• Defensivos: R\$ 30,000\n\n'
-              'Total: R\$ 90,000',
-        ),
-        CostCategoryData(
-          label: 'Operacional',
-          percentage: 30,
-          color: AppColors.secondary,
-          details:
-              'Custos Operacionais\n\n'
-              '• Combustível: R\$ 20,000\n'
-              '• Mão de obra: R\$ 30,000\n'
-              '• Transporte: R\$ 10,000\n\n'
-              'Total: R\$ 60,000',
-        ),
-        CostCategoryData(
-          label: 'Manutenção',
-          percentage: 15,
-          color: AppColors.alert,
-          details:
-              'Manutenção de Equipamentos\n\n'
-              '• Tratores: R\$ 15,000\n'
-              '• Implementos: R\$ 8,000\n'
-              '• Irrigação: R\$ 7,000\n\n'
-              'Total: R\$ 30,000',
-        ),
-        CostCategoryData(
-          label: 'Outros',
-          percentage: 10,
-          color: Colors.grey,
-          details:
-              'Outros Custos\n\n'
-              '• Administrativo: R\$ 10,000\n'
-              '• Seguros: R\$ 5,000\n'
-              '• Diversos: R\$ 5,000\n\n'
-              'Total: R\$ 20,000',
-        ),
-      ];
 
   void _showDetailSheet(CostCategoryData data) {
     showModalBottomSheet(
@@ -135,9 +92,14 @@ class _CostDistributionChartState extends State<CostDistributionChart> {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
+                      if (widget.onExport != null) {
+                        widget.onExport!.call();
+                        return;
+                      }
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Exportando relatório de custos...'),
+                          content:
+                              Text('Exportação indisponível no momento.'),
                         ),
                       );
                     },
@@ -176,6 +138,20 @@ class _CostDistributionChartState extends State<CostDistributionChart> {
 
   @override
   Widget build(BuildContext context) {
+    final chartData = widget.data ?? const <CostCategoryData>[];
+    if (chartData.isEmpty) {
+      TelemetryLogger.logOnce(
+        'chart_empty_due_to_no_data',
+        context: {'chart': 'cost_distribution'},
+      );
+      return const AppCard(
+        child: EmptyStateWidget(
+          title: 'Sem dados',
+          message: 'Nao ha dados de custos para exibir.',
+        ),
+      );
+    }
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +180,7 @@ class _CostDistributionChartState extends State<CostDistributionChart> {
                       Icon(Icons.touch_app, size: 14, color: Colors.blue[700]),
                       const SizedBox(width: 4),
                       Text(
-                        'Toque para detalhes',
+                        'Toque no grafico para detalhes',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.blue[700],
@@ -241,7 +217,7 @@ class _CostDistributionChartState extends State<CostDistributionChart> {
 
                           // Handle tap
                           if (event is FlTapUpEvent && touchedIndex >= 0) {
-                            final data = _chartData[touchedIndex];
+                            final data = chartData[touchedIndex];
                             _showDetailSheet(data);
                             widget.onSectionTap?.call(data);
                           }
@@ -258,7 +234,7 @@ class _CostDistributionChartState extends State<CostDistributionChart> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _chartData.map((data) {
+                    children: chartData.map((data) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: ChartLegendItem(
@@ -278,13 +254,14 @@ class _CostDistributionChartState extends State<CostDistributionChart> {
   }
 
   List<PieChartSectionData> showingSections() {
-    return List.generate(_chartData.length, (i) {
+    final chartData = widget.data ?? const <CostCategoryData>[];
+    return List.generate(chartData.length, (i) {
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 20.0 : 14.0;
       final radius = isTouched ? 65.0 : 50.0;
       const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
 
-      final data = _chartData[i];
+      final data = chartData[i];
 
       return PieChartSectionData(
         color: data.color,

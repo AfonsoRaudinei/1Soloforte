@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class AvatarPicker extends StatefulWidget {
   final String? initialImageUrl;
@@ -41,7 +42,7 @@ class _AvatarPickerState extends State<AvatarPicker> {
         widget.onImageSelected(_selectedImage);
       }
     } catch (e) {
-      debugPrint('Erro ao selecionar imagem: $e');
+      LoggerService.e('Erro ao selecionar imagem', error: e, tag: 'UI');
     }
   }
 

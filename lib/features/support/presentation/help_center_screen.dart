@@ -7,39 +7,35 @@ class HelpCenterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Central de Ajuda'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: Colors.black,
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
       ),
-      backgroundColor: const Color(0xFFF5F5F7),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildFaqItem(
-              'Como funciona o modo offline?',
-              'O modo offline permite que você acesse seus mapas e dados mesmo sem internet. Os dados são sincronizados automaticamente quando a conexão for restabelecida.',
-            ),
-            const SizedBox(height: 12),
-            _buildFaqItem(
-              'Como alterar configurações?',
-              'Acesse o menu Configurações no canto superior direito do mapa. Lá você pode ajustar preferências de conta, tema, idioma e dados.',
-            ),
-            const SizedBox(height: 12),
-            _buildFaqItem(
-              'Como funcionam ocorrências e alertas?',
-              'As ocorrências permitem registrar problemas no campo com geolocalização. Alertas são gerados automaticamente baseados na gravidade da ocorrência.',
-            ),
-            const SizedBox(height: 12),
-            _buildFaqItem(
-              'Problemas comuns de sincronização',
-              'Verifique se você está conectado à internet. Se o problema persistir, tente fazer logout e login novamente para forçar uma nova sincronização.',
-            ),
-          ],
-        ),
+      child: Column(
+        children: [
+          _buildFaqItem(
+            'Como funciona o modo offline?',
+            'O modo offline permite que você acesse seus mapas e dados mesmo sem internet. Os dados são sincronizados automaticamente quando a conexão for restabelecida.',
+          ),
+          const SizedBox(height: 12),
+          _buildFaqItem(
+            'Como alterar configurações?',
+            'Acesse o menu Configurações no canto superior direito do mapa. Lá você pode ajustar preferências de conta, tema, idioma e dados.',
+          ),
+          const SizedBox(height: 12),
+          _buildFaqItem(
+            'Como funcionam ocorrências e alertas?',
+            'As ocorrências permitem registrar problemas no campo com geolocalização. Alertas são gerados automaticamente baseados na gravidade da ocorrência.',
+          ),
+          const SizedBox(height: 12),
+          _buildFaqItem(
+            'Problemas comuns de sincronização',
+            'Verifique se você está conectado à internet. Se o problema persistir, tente fazer logout e login novamente para forçar uma nova sincronização.',
+          ),
+        ],
       ),
     );
   }

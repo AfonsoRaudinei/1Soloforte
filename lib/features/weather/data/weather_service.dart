@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:soloforte_app/core/database/database_helper.dart';
 import '../domain/weather_model.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class WeatherService {
   final Dio _dio;
@@ -17,10 +18,13 @@ class WeatherService {
     final cached = await _getCachedWeather(lat, lon);
     if (cached != null) {
       if (!_isExpired(cached['timestamp'] as int)) {
-        debugPrint('Using fresh weather cache');
+        LoggerService.d('Using fresh weather cache', tag: 'WEATHER');
         return _parseOpenMeteoResponse(jsonDecode(cached['data'] as String));
       } else {
-        debugPrint('Weather cache expired, trying to refresh...');
+        LoggerService.d(
+          'Weather cache expired, trying to refresh...',
+          tag: 'WEATHER',
+        );
       }
     }
 
@@ -52,10 +56,13 @@ class WeatherService {
         throw Exception('Failed to load weather data');
       }
     } catch (e) {
-      debugPrint('Weather fetch error: $e');
+      LoggerService.e('Weather fetch error', error: e, tag: 'WEATHER');
       // 4. Fallback to expired cache if available
       if (cached != null) {
-        debugPrint('Falling back to expired weather cache');
+        LoggerService.d(
+          'Falling back to expired weather cache',
+          tag: 'WEATHER',
+        );
         return _parseOpenMeteoResponse(jsonDecode(cached['data'] as String));
       }
       rethrow;

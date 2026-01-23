@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/notification_model.dart';
 
@@ -23,7 +23,11 @@ class NotificationRepository {
           .map((json) => NotificationModel.fromJson(json))
           .toList();
     } catch (e) {
-      debugPrint('Erro ao carregar notificações: $e');
+      LoggerService.e(
+        'Erro ao carregar notificações',
+        error: e,
+        tag: 'NOTIFICATIONS',
+      );
       return _getMockNotifications();
     }
   }
@@ -35,7 +39,11 @@ class NotificationRepository {
       final jsonList = notifications.map((n) => n.toJson()).toList();
       await prefs.setString(_notificationsKey, jsonEncode(jsonList));
     } catch (e) {
-      debugPrint('Erro ao salvar notificações: $e');
+      LoggerService.e(
+        'Erro ao salvar notificações',
+        error: e,
+        tag: 'NOTIFICATIONS',
+      );
     }
   }
 

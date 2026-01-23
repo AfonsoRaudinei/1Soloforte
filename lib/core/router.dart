@@ -191,6 +191,26 @@ final routerProvider = Provider<GoRouter>((ref) {
               );
             },
           ),
+          GoRoute(
+            path: '/map/harvest',
+            builder: (context, state) => const HarvestListScreen(),
+          ),
+          GoRoute(
+            path: '/map/integrations',
+            builder: (context, state) => const IntegrationsScreen(),
+          ),
+          GoRoute(
+            path: '/map/support',
+            builder: (context, state) => const SupportHomeScreen(),
+          ),
+          GoRoute(
+            path: '/map/link-hub',
+            builder: (context, state) => const LinkHubScreen(),
+          ),
+          GoRoute(
+            path: '/map/feedback',
+            builder: (context, state) => const FeedbackScreen(),
+          ),
         ],
       ),
       // Full screen routes (outside ShellRoute)
@@ -271,38 +291,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(
-        path: '/map/harvest',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const HarvestListScreen(),
-      ),
-      GoRoute(
-        path: '/map/integrations',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const IntegrationsScreen(),
-      ),
-      GoRoute(
-        path: '/map/support',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const SupportHomeScreen(),
-      ),
-      /*
-      GoRoute(
-        path: '/map/feed',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const FeedScreen(),
-      ),
-      */
-      GoRoute(
-        path: '/map/link-hub',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const LinkHubScreen(),
-      ),
-      GoRoute(
-        path: '/map/feedback',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const FeedbackScreen(),
-      ),
+
       GoRoute(
         path: '/map/harvest/new',
         parentNavigatorKey: _rootNavigatorKey,

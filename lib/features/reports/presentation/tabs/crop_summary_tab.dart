@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
+import 'package:soloforte_app/features/reports/application/report_export_service.dart';
 import 'package:soloforte_app/features/reports/application/report_service.dart';
 import 'package:soloforte_app/features/reports/domain/report_models.dart';
+import 'package:soloforte_app/features/reports/domain/report_configuration.dart';
 import 'package:soloforte_app/features/reports/presentation/widgets/cost_distribution_chart.dart';
 import 'package:soloforte_app/features/reports/presentation/widgets/productivity_bar_chart.dart';
 import 'package:soloforte_app/features/reports/presentation/widgets/summary_card.dart';
@@ -26,6 +28,19 @@ class CropSummaryTab extends ConsumerWidget {
         }
 
         final data = snapshot.data!;
+        Future<void> exportCropSummary() async {
+          try {
+            await ref
+                .read(reportExportServiceProvider)
+                .exportByTemplate(template: ReportTemplate.cropSummary);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Falha ao exportar: $e')),
+              );
+            }
+          }
+        }
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -42,7 +57,7 @@ class CropSummaryTab extends ConsumerWidget {
               const SizedBox(height: 24),
               Text('Distribuição de Custos', style: AppTypography.h3),
               const SizedBox(height: 12),
-              const CostDistributionChart(), // Reusing existing widget
+              CostDistributionChart(onExport: exportCropSummary),
               const SizedBox(height: 24),
               _buildLessonsLearned(data),
             ],

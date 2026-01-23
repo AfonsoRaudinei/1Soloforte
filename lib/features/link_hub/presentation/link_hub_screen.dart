@@ -25,86 +25,83 @@ class _LinkHubScreenState extends State<LinkHubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [kGreyLight, Color(0xFFE5E5E7)],
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [kGreyLight, Color(0xFFE5E5E7)],
         ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 24,
-                    ),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate([
-                        _buildHeader(),
-                        const SizedBox(height: 24),
-                        _buildGlassCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('PREFERÊNCIAS', style: _sectionTitleStyle),
-                              const SizedBox(height: 16),
-                              _buildCompactDropdown(
-                                hint: 'Selecione o Modo',
-                                value: _selectedOption,
-                                items: _options,
-                                onChanged: (val) =>
-                                    setState(() => _selectedOption = val),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildNumberInput(
-                                label: 'Código (Max 7)',
-                                maxLength: 7,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildGlassCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('AÇÕES RÁPIDAS', style: _sectionTitleStyle),
-                              const SizedBox(height: 16),
-                              _buildPrimaryButton(
-                                label: 'Novo Relatório',
-                                onTap: () {},
-                              ),
-                              const SizedBox(height: 12),
-                              _buildSecondaryButton(
-                                label: 'Visualizar Dados',
-                                onTap: () {},
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildUploadArea(),
-                        // Space for floating button
-                        const SizedBox(height: 120),
-                      ]),
-                    ),
+      ),
+      child: SafeArea(
+        child: Stack(
+          children: [
+            CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
                   ),
-                ],
-              ),
-              Positioned(
-                bottom: 30,
-                right: 30,
-                child: _buildFloatingPrintButton(),
-              ),
-            ],
-          ),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildHeader(),
+                      const SizedBox(height: 24),
+                      _buildGlassCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('PREFERÊNCIAS', style: _sectionTitleStyle),
+                            const SizedBox(height: 16),
+                            _buildCompactDropdown(
+                              hint: 'Selecione o Modo',
+                              value: _selectedOption,
+                              items: _options,
+                              onChanged: (val) =>
+                                  setState(() => _selectedOption = val),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildNumberInput(
+                              label: 'Código (Max 7)',
+                              maxLength: 7,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildGlassCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('AÇÕES RÁPIDAS', style: _sectionTitleStyle),
+                            const SizedBox(height: 16),
+                            _buildPrimaryButton(
+                              label: 'Novo Relatório',
+                              onTap: () {},
+                            ),
+                            const SizedBox(height: 12),
+                            _buildSecondaryButton(
+                              label: 'Visualizar Dados',
+                              onTap: () {},
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildUploadArea(),
+                      // Space for floating button
+                      const SizedBox(height: 120),
+                    ]),
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              bottom: 30,
+              right: 30,
+              child: _buildFloatingPrintButton(),
+            ),
+          ],
         ),
       ),
     );
@@ -340,13 +337,7 @@ class _LinkHubScreenState extends State<LinkHubScreen> {
             decoration: BoxDecoration(
               color: kGreyLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: kBorder,
-                style: BorderStyle.solid,
-                // Dashed border is complex in Flutter without packages, sticking to solid or simple custom paint.
-                // Using solid for now as simple fallback or could use a package if available.
-                // Actually, let's just make it look like a dropzone.
-              ),
+              border: Border.all(color: kBorder, style: BorderStyle.solid),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

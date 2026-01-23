@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:xml/xml.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 import '../domain/geo_area.dart';
 import 'geometry_utils.dart';
 
@@ -22,7 +23,7 @@ class KmlService {
         return parseKmlContent(content);
       }
     } catch (e) {
-      debugPrint('Error picking/parsing KML: $e');
+      LoggerService.e('Error picking/parsing KML', error: e, tag: 'KML');
     }
     return [];
   }
@@ -62,7 +63,7 @@ class KmlService {
         // TODO: Handle LineString or Point if needed, though GeoArea is primarily Polygon/Circle for this app usage
       }
     } catch (e) {
-      debugPrint('Error parsing KML XML: $e');
+      LoggerService.e('Error parsing KML XML', error: e, tag: 'KML');
     }
     return areas;
   }
@@ -213,7 +214,7 @@ class KmlService {
         XFile(file.path),
       ], text: 'Áreas exportadas do SoloForte');
     } catch (e) {
-      debugPrint('Error sharing KML: $e');
+      LoggerService.e('Error sharing KML', error: e, tag: 'KML');
     }
   }
 
@@ -233,10 +234,4 @@ class KmlService {
 
     return buffer.toString();
   }
-}
-
-// Helper for logging
-void debugPrint(String msg) {
-  // ignore: avoid_print
-  print(msg);
 }

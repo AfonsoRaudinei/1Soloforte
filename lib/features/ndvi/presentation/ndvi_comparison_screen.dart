@@ -45,97 +45,94 @@ class _NDVIComparisonScreenState extends ConsumerState<NDVIComparisonScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(ndviComparisonControllerProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Comparativo de Áreas')),
-      body: Column(
-        children: [
-          // MAP (Top Half)
-          Expanded(
-            flex: 1,
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _getCenter(widget.areas),
-                initialZoom: 13.0, // Should calculate based on bounds
+    return Column(
+      children: [
+        // MAP (Top Half)
+        Expanded(
+          flex: 1,
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _getCenter(widget.areas),
+              initialZoom: 13.0,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.soloforte.app',
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.soloforte.app',
-                ),
-                PolygonLayer(
-                  polygons: widget.areas.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final area = entry.value;
-                    return Polygon(
-                      points: area.points,
-                      color: _areaColors[index % _areaColors.length]
-                          .withValues(alpha: 0.3),
-                      borderColor: _areaColors[index % _areaColors.length],
-                      borderStrokeWidth: 2,
-                      label: area.name,
-                      labelStyle: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-
-          // CHART & LEGEND (Bottom Half)
-          Expanded(
-            flex: 1,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.white,
-              child: state.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : state.errorMessage != null
-                  ? Center(child: Text(state.errorMessage!))
-                  : Column(
-                      children: [
-                        // Legend
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 4,
-                          children: widget.areas.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final area = entry.value;
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  color:
-                                      _areaColors[index % _areaColors.length],
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  area.name,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Evolução do Vigor (Média NDVI)',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 16),
-                        // Line Chart
-                        Expanded(child: _buildComparisonChart(state)),
-                      ],
+              PolygonLayer(
+                polygons: widget.areas.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final area = entry.value;
+                  return Polygon(
+                    points: area.points,
+                    color: _areaColors[index % _areaColors.length].withValues(
+                      alpha: 0.3,
                     ),
-            ),
+                    borderColor: _areaColors[index % _areaColors.length],
+                    borderStrokeWidth: 2,
+                    label: area.name,
+                    labelStyle: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+
+        // CHART & LEGEND (Bottom Half)
+        Expanded(
+          flex: 1,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            child: state.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : state.errorMessage != null
+                ? Center(child: Text(state.errorMessage!))
+                : Column(
+                    children: [
+                      // Legend
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 4,
+                        children: widget.areas.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final area = entry.value;
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                color: _areaColors[index % _areaColors.length],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                area.name,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Evolução do Vigor (Média NDVI)',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      // Line Chart
+                      Expanded(child: _buildComparisonChart(state)),
+                    ],
+                  ),
+          ),
+        ),
+      ],
     );
   }
 

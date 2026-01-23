@@ -41,55 +41,44 @@ class _ReportHistoryScreenState extends ConsumerState<ReportHistoryScreen>
   Widget build(BuildContext context) {
     final prefsAsync = ref.watch(sharedPreferencesProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Histórico de Relatórios'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(icon: Icon(Icons.history), text: 'Todos'),
-            Tab(icon: Icon(Icons.star), text: 'Favoritos'),
-            Tab(icon: Icon(Icons.schedule), text: 'Agendados'),
-          ],
-        ),
-      ),
-      body: prefsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Erro: $error')),
-        data: (_) {
-          return Column(
-            children: [
-              _buildSearchBar(),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildAllReportsTab(),
-                    _buildFavoritesTab(),
-                    _buildScheduledTab(),
-                  ],
-                ),
+    return prefsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('Erro: $error')),
+      data: (_) {
+        return Column(
+          children: [
+            // TabBar (movido do AppBar)
+            Container(
+              color: AppColors.primary,
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: Colors.white,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                tabs: const [
+                  Tab(icon: Icon(Icons.history), text: 'Todos'),
+                  Tab(icon: Icon(Icons.star), text: 'Favoritos'),
+                  Tab(icon: Icon(Icons.schedule), text: 'Agendados'),
+                ],
               ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Navegar para wizard de criação
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Abrindo wizard de criação...')),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Novo Relatório'),
-        backgroundColor: AppColors.primary,
-      ),
+            ),
+
+            _buildSearchBar(),
+
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildAllReportsTab(),
+                  _buildFavoritesTab(),
+                  _buildScheduledTab(),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

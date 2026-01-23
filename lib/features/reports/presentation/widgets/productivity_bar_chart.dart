@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/shared/widgets/app_card.dart';
+import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
+import 'package:soloforte_app/features/reports/application/telemetry_logger.dart';
 
 class ProductivityBarChart extends StatefulWidget {
   final List<ProductivityData>? data;
@@ -15,42 +17,6 @@ class ProductivityBarChart extends StatefulWidget {
 
 class _ProductivityBarChartState extends State<ProductivityBarChart> {
   int _touchedIndex = -1;
-
-  // Default mock data if none provided
-  List<ProductivityData> get _chartData =>
-      widget.data ??
-      [
-        ProductivityData(
-          label: 'T1',
-          value: 60,
-          details:
-              'Talhão 1: 60 sacas/ha\n120 ha plantados\nTotal: 7,200 sacas',
-        ),
-        ProductivityData(
-          label: 'T2',
-          value: 80,
-          details:
-              'Talhão 2: 80 sacas/ha\n135 ha plantados\nTotal: 10,800 sacas',
-        ),
-        ProductivityData(
-          label: 'T3',
-          value: 50,
-          details:
-              'Talhão 3: 50 sacas/ha\n150 ha plantados\nTotal: 7,500 sacas',
-        ),
-        ProductivityData(
-          label: 'T4',
-          value: 90,
-          details:
-              'Talhão 4: 90 sacas/ha\n105 ha plantados\nTotal: 9,450 sacas',
-        ),
-        ProductivityData(
-          label: 'T5',
-          value: 70,
-          details:
-              'Talhão 5: 70 sacas/ha\n120 ha plantados\nTotal: 8,400 sacas',
-        ),
-      ];
 
   void _showDetailSheet(ProductivityData data) {
     showModalBottomSheet(
@@ -146,6 +112,20 @@ class _ProductivityBarChartState extends State<ProductivityBarChart> {
 
   @override
   Widget build(BuildContext context) {
+    final chartData = widget.data ?? const <ProductivityData>[];
+    if (chartData.isEmpty) {
+      TelemetryLogger.logOnce(
+        'chart_empty_due_to_no_data',
+        context: {'chart': 'productivity'},
+      );
+      return const AppCard(
+        child: EmptyStateWidget(
+          title: 'Sem dados',
+          message: 'Nao ha dados de produtividade para exibir.',
+        ),
+      );
+    }
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +154,7 @@ class _ProductivityBarChartState extends State<ProductivityBarChart> {
                       Icon(Icons.touch_app, size: 14, color: Colors.blue[700]),
                       const SizedBox(width: 4),
                       Text(
-                        'Toque para detalhes',
+                        'Toque no grafico para detalhes',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.blue[700],
@@ -211,7 +191,7 @@ class _ProductivityBarChartState extends State<ProductivityBarChart> {
 
                       // Handle tap
                       if (event is FlTapUpEvent && _touchedIndex >= 0) {
-                        final data = _chartData[_touchedIndex];
+                        final data = chartData[_touchedIndex];
                         _showDetailSheet(data);
                         widget.onBarTap?.call(data);
                       }
@@ -236,31 +216,31 @@ class _ProductivityBarChartState extends State<ProductivityBarChart> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= _chartData.length) {
+                          if (value.toInt() >= chartData.length) {
                             return const SizedBox();
                           }
 
-                          final style = TextStyle(
-                            color: _touchedIndex == value.toInt()
-                                ? AppColors.primary
-                                : Colors.black,
-                            fontWeight: _touchedIndex == value.toInt()
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontSize: 12,
-                          );
+                        final style = TextStyle(
+                          color: _touchedIndex == value.toInt()
+                              ? AppColors.primary
+                              : Colors.black,
+                          fontWeight: _touchedIndex == value.toInt()
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 12,
+                        );
 
-                          return SideTitleWidget(
-                            meta: meta,
-                            space: 4,
-                            child: Text(
-                              _chartData[value.toInt()].label,
-                              style: style,
-                            ),
-                          );
-                        },
-                        reservedSize: 30,
-                      ),
+                        return SideTitleWidget(
+                          meta: meta,
+                          space: 4,
+                          child: Text(
+                            chartData[value.toInt()].label,
+                            style: style,
+                          ),
+                        );
+                      },
+                      reservedSize: 30,
+                    ),
                     ),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
@@ -291,13 +271,13 @@ class _ProductivityBarChartState extends State<ProductivityBarChart> {
                     horizontalInterval: 20,
                   ),
                   borderData: FlBorderData(show: false),
-                  barGroups: List.generate(_chartData.length, (index) {
+                  barGroups: List.generate(chartData.length, (index) {
                     final isTouched = index == _touchedIndex;
                     return BarChartGroupData(
                       x: index,
                       barRods: [
                         BarChartRodData(
-                          toY: _chartData[index].value,
+                          toY: chartData[index].value,
                           color: isTouched
                               ? AppColors.primary.withValues(alpha: 0.8)
                               : AppColors.primary,

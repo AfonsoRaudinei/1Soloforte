@@ -182,6 +182,9 @@ class MarketingPinMarker extends StatelessWidget {
   /// Optional callback when marker is tapped.
   final VoidCallback? onTap;
 
+  /// Whether this marker is the currently selected publication.
+  final bool isSelected;
+
   /// Canonical Constructor using MarketingPublication
   const MarketingPinMarker({
     super.key,
@@ -189,6 +192,7 @@ class MarketingPinMarker extends StatelessWidget {
     this.legacyPost,
     this.zoomConfig = const MarkerZoomConfig(),
     this.onTap,
+    this.isSelected = false,
   });
 
   /// Legacy Constructor (Dashboard Compatibility)
@@ -198,12 +202,14 @@ class MarketingPinMarker extends StatelessWidget {
     required MarketingMapPost post,
     MarkerZoomConfig zoomConfig = const MarkerZoomConfig(),
     VoidCallback? onTap,
+    bool isSelected = false,
   }) {
     return MarketingPinMarker(
       publication: null,
       legacyPost: post,
       zoomConfig: zoomConfig,
       onTap: onTap,
+      isSelected: isSelected,
     );
   }
 
@@ -245,10 +251,14 @@ class MarketingPinMarker extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: zoomConfig.cardOpacity,
-        child: _buildMarkerCard(level, config),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 150),
+        scale: isSelected ? 1.04 : 1.0,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: zoomConfig.cardOpacity,
+          child: _buildMarkerCard(level, config),
+        ),
       ),
     );
   }
@@ -256,7 +266,7 @@ class MarketingPinMarker extends StatelessWidget {
   /// Builds the unified RECTANGULAR marker card with image and text side by side.
   Widget _buildMarkerCard(String level, MarkerSizeConfig config) {
     final borderColor = _getBorderColor(level);
-    final shadow = _getCardShadow(level);
+    final shadow = _getCardShadow(level, isSelected: isSelected);
 
     // Content data with safe defaults
     final productivity = (_productivity ?? '').trim();
@@ -356,11 +366,11 @@ class MarketingPinMarker extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor, width: 2),
+        border: Border.all(color: borderColor, width: isSelected ? 3 : 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 4,
+            color: Colors.black.withValues(alpha: isSelected ? 0.2 : 0.15),
+            blurRadius: isSelected ? 6 : 4,
             offset: const Offset(0, 2),
           ),
         ],
@@ -460,20 +470,22 @@ class MarketingPinMarker extends StatelessWidget {
 
   /// Gets the unified card shadow for a given level.
   /// Single shadow for the entire card.
-  List<BoxShadow> _getCardShadow(String level) {
+  List<BoxShadow> _getCardShadow(String level, {required bool isSelected}) {
     switch (level) {
       case 'ouro':
         // Premium gold shadow - stronger and with golden tint
         return [
           BoxShadow(
-            color: const Color(0xFFD4AF37).withValues(alpha: 0.35),
-            blurRadius: 16,
-            spreadRadius: 2,
+            color: const Color(0xFFD4AF37).withValues(
+              alpha: isSelected ? 0.45 : 0.35,
+            ),
+            blurRadius: isSelected ? 18 : 16,
+            spreadRadius: isSelected ? 3 : 2,
             offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 12,
+            color: Colors.black.withValues(alpha: isSelected ? 0.16 : 0.12),
+            blurRadius: isSelected ? 14 : 12,
             offset: const Offset(0, 4),
           ),
         ];
@@ -481,9 +493,9 @@ class MarketingPinMarker extends StatelessWidget {
         // Medium shadow
         return [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            spreadRadius: 1,
+            color: Colors.black.withValues(alpha: isSelected ? 0.14 : 0.1),
+            blurRadius: isSelected ? 12 : 10,
+            spreadRadius: isSelected ? 2 : 1,
             offset: const Offset(0, 4),
           ),
         ];
@@ -491,8 +503,8 @@ class MarketingPinMarker extends StatelessWidget {
         // Bronze - subtle shadow
         return [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 6,
+            color: Colors.black.withValues(alpha: isSelected ? 0.12 : 0.08),
+            blurRadius: isSelected ? 8 : 6,
             offset: const Offset(0, 3),
           ),
         ];

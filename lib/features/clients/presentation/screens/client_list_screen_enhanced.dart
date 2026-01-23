@@ -37,33 +37,8 @@ class _ClientListScreenEnhancedState
   Widget build(BuildContext context) {
     final clientsAsync = ref.watch(clientsControllerProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Clientes / Produtores'),
-        actions: [
-          IconButton(
-            icon: Badge(
-              isLabelVisible: _filters.hasActiveFilters,
-              label: Text(_filters.activeFilterCount.toString()),
-              child: const Icon(Icons.filter_list),
-            ),
-            onPressed: _showFilters,
-          ),
-          IconButton(icon: const Icon(Icons.sort), onPressed: _showSort),
-          const SizedBox(width: 8),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Navegar para formulário
-          context.push('/map/clients/new');
-        },
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add),
-        label: const Text('Novo Cliente'),
-      ),
-      body: RefreshIndicator(
+    return SafeArea(
+      child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(clientsControllerProvider);
         },
@@ -71,6 +46,35 @@ class _ClientListScreenEnhancedState
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // Header with title and actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Clientes / Produtores',
+                    style: AppTypography.h3.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Badge(
+                          isLabelVisible: _filters.hasActiveFilters,
+                          label: Text(_filters.activeFilterCount.toString()),
+                          child: const Icon(Icons.filter_list),
+                        ),
+                        onPressed: _showFilters,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.sort),
+                        onPressed: _showSort,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               // Barra de busca
               CustomTextInput(
                 controller: _searchController,

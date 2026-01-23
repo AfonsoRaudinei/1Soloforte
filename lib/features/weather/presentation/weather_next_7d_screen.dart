@@ -12,67 +12,58 @@ class WeatherNext7dScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Previsão Semanal'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + AppSpacing.md,
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+        bottom: AppSpacing.md,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            ...forecast.daily.map((day) => _buildDayCard(day)),
+      child: Column(
+        children: [
+          ...forecast.daily.map((day) => _buildDayCard(day)),
 
-            const SizedBox(height: 16),
-            const Text(
-              '[Ver detalhes completos...]',
-              style: TextStyle(color: Colors.blue),
+          const SizedBox(height: 16),
+          const Text(
+            '[Ver detalhes completos...]',
+            style: TextStyle(color: Colors.blue),
+          ),
+          const SizedBox(height: 32),
+
+          // Tip Box
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.yellow.shade50,
+              border: Border.all(color: Colors.yellow.shade200),
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(height: 32),
-
-            // Tip Box
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.yellow.shade50,
-                border: Border.all(color: Colors.yellow.shade200),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.lightbulb,
-                        color: Colors.orange,
-                        size: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.lightbulb, color: Colors.orange, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Dica Agronômica:',
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Dica Agronômica:',
-                        style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '"Evite aplicações nos próximos 2 dias devido a previsão de chuvas acima de 20mm"',
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontStyle: FontStyle.italic,
                     ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '"Evite aplicações nos próximos 2 dias devido a previsão de chuvas acima de 20mm"',
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontStyle: FontStyle.italic,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

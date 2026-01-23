@@ -13,6 +13,7 @@ import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_
     as platform_image;
 import 'dart:ui' as ui;
 import 'package:intl/intl.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 import 'package:soloforte_app/features/map/application/drawing_controller.dart';
 import 'package:soloforte_app/features/map/application/geometry_utils.dart';
@@ -36,6 +37,9 @@ import 'package:soloforte_app/features/marketing/domain/marketing_map_post.dart'
 import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_pin_marker.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_cluster_marker.dart';
 import 'package:soloforte_app/features/marketing/services/pin_visibility_service.dart';
+import 'package:soloforte_app/features/marketing/presentation/providers/marketing_publication_sheet_provider.dart';
+import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_publication_sheet_listener.dart';
+import 'package:soloforte_app/features/marketing/presentation/services/marketing_interaction_tracker.dart';
 
 import 'widgets/map_layers/areas_layer.dart';
 import 'widgets/map_layers/occurrences_layer.dart';
@@ -362,7 +366,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             }
           });
     } catch (e) {
-      debugPrint('Erro ao obter localização: $e');
+      LoggerService.e('Erro ao obter localização', error: e, tag: 'GPS');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao obter localização: $e')),
@@ -393,234 +397,203 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final isDrawing = ref.watch(
       drawingControllerProvider.select((s) => s.isDrawing),
     );
+    final selectedPublicationId = ref.watch(
+      marketingPublicationSheetProvider.select(
+        (state) => state.selectedPublication?.id,
+      ),
+    );
     final drawingController = ref.read(drawingControllerProvider.notifier);
     final activeVisitAsync = ref.watch(visitControllerProvider);
 
     // Novo sistema unificado de modos
     final activeMode = dashboardState.activeMode;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // 1. Fullscreen Map (ALWAYS visible)
-          Positioned.fill(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: const LatLng(-23.5505, -46.6333),
-                initialZoom: kAgriculturalLocationZoom,
-                minZoom: kAgriculturalMinZoom,
-                maxZoom: kAgriculturalMaxZoom,
-                onPositionChanged: (camera, hasGesture) {
-                  if (hasGesture && _isFollowingUser) {
-                    setState(() => _isFollowingUser = false);
-                  }
-                },
-                onTap: (tapPosition, point) => _handleMapTap(
-                  point,
-                  dashboardState,
-                  dashboardCtrl,
-                  isDrawing,
-                  drawingController,
-                ),
-                onLongPress: (tapPosition, point) =>
-                    _handleMapLongPress(point, isDrawing, drawingController),
+    return Stack(
+      children: [
+        // 1. Fullscreen Map (ALWAYS visible)
+        Positioned.fill(
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: const LatLng(-23.5505, -46.6333),
+              initialZoom: kAgriculturalLocationZoom,
+              minZoom: kAgriculturalMinZoom,
+              maxZoom: kAgriculturalMaxZoom,
+              onPositionChanged: (camera, hasGesture) {
+                if (hasGesture && _isFollowingUser) {
+                  setState(() => _isFollowingUser = false);
+                }
+              },
+              onTap: (tapPosition, point) => _handleMapTap(
+                point,
+                dashboardState,
+                dashboardCtrl,
+                isDrawing,
+                drawingController,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: _getMapTileUrl(dashboardState.mapLayer),
-                  userAgentPackageName: 'com.soloforte.app',
-                  maxZoom: kAgriculturalMaxZoom,
-                ),
-                if (_shouldShowNdviOverlay(drawingState, ndviState))
-                  OverlayImageLayer(
-                    overlayImages: [
-                      OverlayImage(
-                        bounds: _getBounds(
-                          _resolveNdviArea(drawingState)!.points,
-                        ),
-                        imageProvider: MemoryImage(
-                          ndviState.currentImageBytes!,
-                        ),
-                        opacity: 0.8,
-                      ),
-                    ],
-                  ),
-                AreasLayer(clientId: widget.clientId, clientName: clientName),
-                OccurrencesLayer(
-                  clientId: widget.clientId,
-                  clientName: clientName,
-                ),
-                if (_marketingPosts.isNotEmpty)
-                  MarkerLayer(markers: _buildMarketingMarkers()),
-                // User Location Marker
-                if (_currentLocation != null)
-                  _buildUserLocationMarker(_currentLocation!),
-
-                // Temp Pin Marker
-                if (dashboardState.tempPin != null)
-                  _buildTempPinMarker(dashboardState.tempPin!),
-                const DrawingLayer(),
-              ],
+              onLongPress: (tapPosition, point) =>
+                  _handleMapLongPress(point, isDrawing, drawingController),
             ),
-          ),
+            children: [
+              TileLayer(
+                urlTemplate: _getMapTileUrl(dashboardState.mapLayer),
+                userAgentPackageName: 'com.soloforte.app',
+                maxZoom: kAgriculturalMaxZoom,
+              ),
+              if (_shouldShowNdviOverlay(drawingState, ndviState))
+                OverlayImageLayer(
+                  overlayImages: [
+                    OverlayImage(
+                      bounds: _getBounds(
+                        _resolveNdviArea(drawingState)!.points,
+                      ),
+                      imageProvider: MemoryImage(ndviState.currentImageBytes!),
+                      opacity: 0.8,
+                    ),
+                  ],
+                ),
+              AreasLayer(clientId: widget.clientId, clientName: clientName),
+              OccurrencesLayer(
+                clientId: widget.clientId,
+                clientName: clientName,
+              ),
+              if (_marketingPosts.isNotEmpty)
+                MarkerLayer(
+                  markers: _buildMarketingMarkers(
+                    selectedPublicationId: selectedPublicationId,
+                  ),
+                ),
+              // User Location Marker
+              if (_currentLocation != null)
+                _buildUserLocationMarker(_currentLocation!),
 
-          // 2. Custom Bottom AppBar (3 items: Ocorrência, Publicação, Menu)
-          _buildBottomAppBar(
+              // Temp Pin Marker
+              if (dashboardState.tempPin != null)
+                _buildTempPinMarker(dashboardState.tempPin!),
+              const DrawingLayer(),
+            ],
+          ),
+        ),
+        const MarketingPublicationSheetListener(),
+
+        // 2. Indicador de Modo Ativo (aparece quando há modo ativo)
+        if (activeMode.isActive) _buildModeIndicator(activeMode, dashboardCtrl),
+
+        // 3. Online Status Badge
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 16,
+          right: 16,
+          child: OnlineStatusBadge(),
+        ),
+
+        // 4. Weather Radar Overlay
+        if (dashboardState.isWeatherRadarVisible)
+          _buildWeatherRadarOverlay(dashboardCtrl),
+
+        // 5. Drawing Toolbar (when drawing mode active)
+        if (isDrawing) const DrawingToolbar(),
+
+        // 6. Active Visit Overlay
+        if (activeVisitAsync.hasValue && activeVisitAsync.value != null)
+          _buildActiveVisitOverlay(context, activeVisitAsync.value!),
+
+        // 7. Map controls (Right side: Check-in, Drawing, Layers, Weather, GPS)
+        _buildFloatingControls(
+          context,
+          dashboardCtrl,
+          isDrawing,
+          drawingController,
+          activeVisitAsync,
+          dashboardState.isWeatherRadarVisible,
+        ),
+
+        // 8. Ações rápidas do mapa (Left side: Ocorrência e Publicação - ÍCONES PUROS)
+        if (!isDrawing)
+          _buildQuickMapActions(
             context,
             dashboardCtrl,
             activeMode,
             drawingController,
-            isDrawing,
           ),
 
-          // 3. Indicador de Modo Ativo (aparece quando há modo ativo)
-          if (activeMode.isActive)
-            _buildModeIndicator(activeMode, dashboardCtrl),
-
-          // 4. Online Status Badge
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: OnlineStatusBadge(),
-          ),
-
-          // 5. Weather Radar Overlay
-          if (dashboardState.isWeatherRadarVisible)
-            _buildWeatherRadarOverlay(dashboardCtrl),
-
-          // 6. Drawing Toolbar (when drawing mode active)
-          if (isDrawing) const DrawingToolbar(),
-
-          // 7. Active Visit Overlay
-          if (activeVisitAsync.hasValue && activeVisitAsync.value != null)
-            _buildActiveVisitOverlay(context, activeVisitAsync.value!),
-
-          // 8. Map controls (Zoom + Layers + Drawing + GPS. And now Menu Button)
-          _buildFloatingControls(
-            context,
-            dashboardCtrl,
-            isDrawing,
-            drawingController,
-            activeVisitAsync,
-          ),
-          if (_shouldShowNdviOverlay(drawingState, ndviState))
-            _buildNdviLegend(),
-          if (_isNdviPanelOpen) _buildNdviPanel(),
-        ],
-      ),
+        if (_shouldShowNdviOverlay(drawingState, ndviState)) _buildNdviLegend(),
+        if (_isNdviPanelOpen) _buildNdviPanel(),
+      ],
     );
   }
 
   // =====================================================
-  // BOTTOM APPBAR (3 ITEMS)
+  // AÇÕES RÁPIDAS DO MAPA (ÍCONES PUROS - SEM TEXTO)
   // =====================================================
-  Widget _buildBottomAppBar(
+  Widget _buildQuickMapActions(
     BuildContext context,
     DashboardController dashboardCtrl,
     MapMode activeMode,
     DrawingController drawingController,
-    bool isDrawing,
   ) {
     final isOccurrenceActive = activeMode == MapMode.occurrence;
     final isMarketingActive = activeMode == MapMode.marketing;
 
     return Positioned(
-      bottom: MediaQuery.of(context).padding.bottom + 16,
       left: 16,
-      right: 16,
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // 🐞 Ocorrência
-            _buildBottomBarIcon(
-              icon: isOccurrenceActive
-                  ? Icons.bug_report
-                  : Icons.bug_report_outlined,
-              label: 'Ocorrência',
-              isActive: isOccurrenceActive,
-              activeColor: AppColors.warning,
-              onTap: () {
-                if (isDrawing) drawingController.stopDrawing();
+      bottom: MediaQuery.of(context).padding.bottom + 24,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 🐞 Ocorrência (ícone puro)
+          _buildQuickActionButton(
+            icon: isOccurrenceActive
+                ? Icons.bug_report
+                : Icons.bug_report_outlined,
+            isActive: isOccurrenceActive,
+            activeColor: AppColors.warning,
+            onTap: () {
+              if (isOccurrenceActive) {
+                dashboardCtrl.cancelPinSelection();
+              } else {
                 dashboardCtrl.startOccurrenceFlow();
-              },
-            ),
+              }
+            },
+          ),
+          const SizedBox(height: 12),
 
-            // 📣 Publicação (formerly Marketing)
-            _buildBottomBarIcon(
-              icon: isMarketingActive
-                  ? Icons.campaign
-                  : Icons.campaign_outlined,
-              label: 'Publicação',
-              isActive: isMarketingActive,
-              activeColor: AppColors.secondary,
-              onTap: () {
-                if (isDrawing) drawingController.stopDrawing();
-                if (isMarketingActive) {
-                  dashboardCtrl.cancelPinSelection();
-                  ref.read(marketingSelectionProvider.notifier).state =
-                      const MarketingSelectionState(isSelecting: false);
-                } else {
-                  dashboardCtrl.setMode(MapMode.marketing);
-                }
-              },
-            ),
-
-            // ☰ Menu
-            _buildBottomBarIcon(
-              icon: Icons.menu,
-              label: 'Menu',
-              isActive: false,
-              activeColor: AppColors.textPrimary,
-              onTap: () => Scaffold.of(context).openDrawer(),
-            ),
-          ],
-        ),
+          // 📣 Publicação (ícone puro)
+          _buildQuickActionButton(
+            icon: isMarketingActive ? Icons.campaign : Icons.campaign_outlined,
+            isActive: isMarketingActive,
+            activeColor: AppColors.secondary,
+            onTap: () {
+              if (isMarketingActive) {
+                dashboardCtrl.cancelPinSelection();
+                ref.read(marketingSelectionProvider.notifier).state =
+                    const MarketingSelectionState(isSelecting: false);
+              } else {
+                dashboardCtrl.setMode(MapMode.marketing);
+              }
+            },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBottomBarIcon({
+  Widget _buildQuickActionButton({
     required IconData icon,
-    required String label,
     required bool isActive,
     required Color activeColor,
     required VoidCallback onTap,
   }) {
-    final color = isActive ? activeColor : AppColors.textSecondary;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(32),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 26),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: color,
-              ),
-            ),
-          ],
-        ),
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: FloatingActionButton(
+        heroTag: null,
+        onPressed: onTap,
+        backgroundColor: isActive ? activeColor : Colors.white,
+        foregroundColor: isActive ? Colors.white : AppColors.textSecondary,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        child: Icon(icon, size: 26),
       ),
     );
   }
@@ -634,6 +607,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     bool isDrawing,
     DrawingController drawingController,
     AsyncValue<Visit?> activeVisitAsync,
+    bool isWeatherRadarVisible,
   ) {
     return Stack(
       children: [
@@ -691,6 +665,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               _buildMapControlButton(
                 icon: Icons.layers_outlined,
                 onTap: () => _showLayerSelector(dashboardCtrl),
+              ),
+              const SizedBox(height: 12),
+
+              // Weather Toggle
+              _buildMapControlButton(
+                icon: Icons.cloud_outlined,
+                onTap: dashboardCtrl.toggleWeatherRadar,
+                iconColor: isWeatherRadarVisible
+                    ? Colors.white
+                    : AppColors.textPrimary,
+                backgroundColor: isWeatherRadarVisible
+                    ? AppColors.primary
+                    : Colors.white,
               ),
               const SizedBox(height: 12),
 
@@ -770,7 +757,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   static const PinVisibilityService _pinVisibilityService =
       PinVisibilityService();
 
-  List<Marker> _buildMarketingMarkers() {
+  List<Marker> _buildMarketingMarkers({String? selectedPublicationId}) {
     // Obter zoom atual e centro do mapa
     final currentZoom = _mapController.camera.zoom;
     final mapCenter = _mapController.camera.center;
@@ -793,6 +780,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
 
     final markers = <Marker>[];
+    final selectedMarkers = <Marker>[];
 
     // 2️⃣ ADICIONAR PINS INDIVIDUAIS (zoom alto)
     for (final post in result.visiblePins) {
@@ -804,7 +792,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final zoomLevel = _pinVisibilityService.getMarkerZoomLevel(currentZoom);
       final zoomConfig = _getMarkerZoomConfig(zoomLevel);
 
-      markers.add(
+      final isSelected = post.id == selectedPublicationId;
+      final targetList = isSelected ? selectedMarkers : markers;
+      targetList.add(
         Marker(
           point: LatLng(post.latitude, post.longitude),
           width: zoomLevel == MarkerZoomLevel.simplified
@@ -817,11 +807,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ? SimplifiedMarketingMarker(
                   onTap: () => _showMarketingDetails(post),
                   color: _getMarkerColor(post.investmentLevel),
+                  isSelected: isSelected,
                 )
               : MarketingPinMarker.fromLegacy(
                   post: post,
                   zoomConfig: zoomConfig,
                   onTap: () => _showMarketingDetails(post),
+                  isSelected: isSelected,
                 ),
         ),
       );
@@ -843,6 +835,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
 
+    markers.addAll(selectedMarkers);
     return markers;
   }
 
@@ -888,11 +881,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   // which provides proper z-index hierarchy and zoom support.
 
   void _showMarketingDetails(MarketingMapPost post) {
-    // ✅ CORREÇÃO: Navegar para a rota de edição (FONTE DA VERDADE)
-    // Ao clicar no pin, abre a tela completa de edição
-    context.push('/map/marketing/edit?id=${post.id}').then((_) {
-      _loadMarketingPosts(); // Recarrega pins após retornar
-    });
+    _emitMarketingPublicationSelected(post);
+  }
+
+  void _emitMarketingPublicationSelected(MarketingMapPost post) {
+    MarketingInteractionTracker.pinOpened(publicationId: post.id);
+    ref
+        .read(marketingPublicationSheetProvider.notifier)
+        .selectById(post.id);
   }
 
   // DEPRECATED: Métodos obsoletos mantidos temporariamente para retrocompatibilidade
@@ -2552,9 +2548,10 @@ class _MarketingGalleryScreenState extends State<_MarketingGalleryScreen> {
   Widget build(BuildContext context) {
     final crossAxisCount = MediaQuery.of(context).size.width > 800 ? 4 : 3;
 
-    return Scaffold(
+    return Scaffold( // ci: allow-appbar
+      // ci: allow-appbar
       backgroundColor: Colors.black,
-      appBar: AppBar(
+      appBar: AppBar( // ci: allow-appbar
         backgroundColor: Colors.black,
         leading: IconButton(icon: const Icon(Icons.close), onPressed: _close),
         title: const Text('Fotos'),
@@ -2730,9 +2727,10 @@ class _MarketingPhotoViewerState extends State<_MarketingPhotoViewer> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Scaffold( // ci: allow-appbar
+      // ci: allow-appbar
       backgroundColor: Colors.black,
-      appBar: AppBar(
+      appBar: AppBar( // ci: allow-appbar
         backgroundColor: Colors.black,
         leading: IconButton(icon: const Icon(Icons.close), onPressed: _close),
         actions: [
@@ -2814,9 +2812,9 @@ class _MarketingEditScreenState extends State<_MarketingEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Scaffold( // ci: allow-appbar
       backgroundColor: Colors.white,
-      appBar: AppBar(
+      appBar: AppBar( // ci: allow-appbar
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),

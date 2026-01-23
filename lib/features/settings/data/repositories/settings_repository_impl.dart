@@ -4,6 +4,7 @@ import '../../domain/entities/app_settings.dart';
 import 'package:flutter/material.dart';
 import '../datasources/settings_remote_datasource.dart';
 import 'package:soloforte_app/core/services/security_service.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 class SettingsRepositoryImpl implements ISettingsRepository {
   final ISettingsLocalDataSource _localDataSource;
@@ -47,7 +48,7 @@ class SettingsRepositoryImpl implements ISettingsRepository {
         }
       } catch (e) {
         // Offline or error -> Fallback to local (which we already have in 'settings')
-        debugPrint('Sync failed: $e');
+        LoggerService.e('Sync failed', error: e, tag: 'SETTINGS');
       }
     }
 
@@ -151,7 +152,7 @@ class SettingsRepositoryImpl implements ISettingsRepository {
     try {
       await _remoteDataSource.saveSettings(userId, settings);
     } catch (e) {
-      debugPrint('Remote save failed: $e');
+      LoggerService.e('Remote save failed', error: e, tag: 'SETTINGS');
     }
   }
 

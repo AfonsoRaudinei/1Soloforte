@@ -81,14 +81,40 @@ class GlobalErrorHandler {
   /// Usage:
   /// ```dart
   /// void main() {
-  ///   GlobalErrorHandler.init();
-  ///   GlobalErrorHandler.runAppGuarded(() => runApp(MyApp()));
+  ///   GlobalErrorHandler.runAppGuarded(() async {
+  ///     WidgetsFlutterBinding.ensureInitialized();
+  ///     // ... other initialization
+  ///     runApp(MyApp());
+  ///   });
   /// }
   /// ```
-  static void runAppGuarded(void Function() appRunner) {
-    runZonedGuarded(appRunner, (error, stack) {
-      _handleZoneError(error, stack);
-    });
+  static void runAppGuarded(FutureOr<void> Function() appRunner) {
+    runZonedGuarded(
+      () async {
+        // Initialize error handling inside the zone
+        if (!_initialized) {
+          _initialized = true;
+
+          // Handle Flutter framework errors
+          FlutterError.onError = (FlutterErrorDetails details) {
+            _handleFlutterError(details);
+          };
+
+          // Handle errors outside Flutter (platform, isolates)
+          PlatformDispatcher.instance.onError = (error, stack) {
+            _handlePlatformError(error, stack);
+            return true; // Prevent default error handling
+          };
+
+          LoggerService.i('GlobalErrorHandler initialized', tag: 'ERROR');
+        }
+
+        await appRunner();
+      },
+      (error, stack) {
+        _handleZoneError(error, stack);
+      },
+    );
   }
 
   /// Handle errors caught by runZonedGuarded
