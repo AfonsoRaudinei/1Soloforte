@@ -42,7 +42,7 @@ void main() {
     // Stub currentUser
     when(mockAuth.currentUser).thenReturn(null);
 
-    authService = AuthService(auth: mockAuth, firestore: mockFirestore);
+    authService = AuthService();
   });
 
   group('AuthService Error Handling', () {

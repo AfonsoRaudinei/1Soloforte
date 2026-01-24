@@ -10,6 +10,7 @@ void main() {
       id: '1',
       name: 'Test Area',
       hectares: 50.5,
+      clientId: 'client-1',
       clienteNome: 'Test Client',
       fazendaNome: 'Test Farm',
       status: 'active',
