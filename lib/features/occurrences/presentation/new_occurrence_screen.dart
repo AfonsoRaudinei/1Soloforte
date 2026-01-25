@@ -490,7 +490,7 @@ class _NewOccurrenceScreenState extends ConsumerState<NewOccurrenceScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Colors.blue.withOpacity(0.05)
+                        ? Colors.blue.withValues(alpha: 0.05)
                         : Colors.white,
                     border: Border.all(
                       color: isSelected

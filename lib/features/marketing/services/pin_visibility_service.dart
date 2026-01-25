@@ -264,10 +264,12 @@ class PinVisibilityService {
       showIndividually.sort((a, b) {
         // Cliente ativo primeiro
         if (activeClientId != null) {
-          if (a.client == activeClientId && b.client != activeClientId)
+          if (a.client == activeClientId && b.client != activeClientId) {
             return -1;
-          if (b.client == activeClientId && a.client != activeClientId)
+          }
+          if (b.client == activeClientId && a.client != activeClientId) {
             return 1;
+          }
         }
         // Depois por data de criação (mais recentes primeiro)
         return b.createdAt.compareTo(a.createdAt);

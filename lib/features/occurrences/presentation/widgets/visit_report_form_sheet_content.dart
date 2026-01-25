@@ -15,10 +15,10 @@ class VisitReportFormSheetContent extends StatefulWidget {
   final VoidCallback onCancel;
 
   const VisitReportFormSheetContent({
-    Key? key,
+    super.key,
     required this.onSave,
     required this.onCancel,
-  }) : super(key: key);
+  });
 
   @override
   State<VisitReportFormSheetContent> createState() =>
@@ -476,7 +476,7 @@ class _VisitReportFormSheetContentState
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -669,10 +669,10 @@ class _VisitReportFormSheetContentState
           colors: [Color(0xFFFFFFFE), Color(0xFFF5F5F7)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -738,10 +738,10 @@ class _VisitReportFormSheetContentState
           colors: [Color(0xFFFFF8E1), Color(0xFFFFF3CD)],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFC107).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFFFFC107).withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF9800).withOpacity(0.08),
+            color: const Color(0xFFFF9800).withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -770,14 +770,14 @@ class _VisitReportFormSheetContentState
               margin: const EdgeInsets.only(bottom: 6),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(8),
                 border: const Border(
                   left: BorderSide(color: Color(0xFFFFC107), width: 3),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 3,
                     offset: const Offset(0, 1),
                   ),
@@ -788,7 +788,7 @@ class _VisitReportFormSheetContentState
                 style: const TextStyle(fontSize: 13, color: Color(0xFF856404)),
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -824,8 +824,7 @@ class _VisitReportFormSheetContentState
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: (category['color'] as Color).withOpacity(
-                              0.5,
+                            color: (category['color'] as Color).withValues(alpha: 0.5,
                             ),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
@@ -833,7 +832,7 @@ class _VisitReportFormSheetContentState
                         ]
                       : [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
+                            color: Colors.black.withValues(alpha: 0.12),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -886,7 +885,7 @@ class _VisitReportFormSheetContentState
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -909,7 +908,7 @@ class _VisitReportFormSheetContentState
                       gradient: LinearGradient(
                         colors: [
                           category['color'] as Color,
-                          (category['color'] as Color).withOpacity(0.8),
+                          (category['color'] as Color).withValues(alpha: 0.8),
                         ],
                       ),
                       shape: BoxShape.circle,
@@ -983,7 +982,7 @@ class _VisitReportFormSheetContentState
                       activeTrackColor: Colors.transparent,
                       inactiveTrackColor: Colors.transparent,
                       thumbColor: Colors.white,
-                      overlayColor: const Color(0xFF007AFF).withOpacity(0.1),
+                      overlayColor: const Color(0xFF007AFF).withValues(alpha: 0.1),
                     ),
                     child: Stack(
                       children: [

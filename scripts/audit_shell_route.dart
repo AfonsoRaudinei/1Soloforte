@@ -79,8 +79,9 @@ void main() async {
 
   for (final file in sourceFiles) {
     if (file.path.endsWith('dashboard_layout.dart')) continue;
-    if (file.path.endsWith('.g.dart') || file.path.endsWith('.freezed.dart'))
+    if (file.path.endsWith('.g.dart') || file.path.endsWith('.freezed.dart')) {
       continue;
+    }
 
     final content = await file.readAsString();
 
@@ -107,8 +108,9 @@ void main() async {
         }
 
         final trimmedLine = line.trim();
-        if (trimmedLine.startsWith('//') || trimmedLine.startsWith('import'))
+        if (trimmedLine.startsWith('//') || trimmedLine.startsWith('import')) {
           continue;
+        }
 
         if (trimmedLine.contains('Scaffold(') ||
             (trimmedLine.contains('AppBar(') &&

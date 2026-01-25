@@ -199,6 +199,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     try {
       final image = await _controller!.takePicture();
+      if (!mounted) return;
       // Start Analysis
       ref.read(scannerControllerProvider.notifier).analyzeImage(image.path);
     } catch (e) {

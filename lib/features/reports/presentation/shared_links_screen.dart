@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
-import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/reports/application/report_sharing_service.dart';
 import 'package:soloforte_app/shared/widgets/app_card.dart';
 import 'package:intl/intl.dart';

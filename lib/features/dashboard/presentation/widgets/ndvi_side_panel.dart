@@ -51,7 +51,7 @@ class _NdviSidePanelState extends ConsumerState<NdviSidePanel>
             decoration: BoxDecoration(
               color: AppColors.primary,
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4),
               ],
             ),
             child: Row(

@@ -32,6 +32,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     _event = widget.event;
   }
 
+  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: EdgeInsets.only(

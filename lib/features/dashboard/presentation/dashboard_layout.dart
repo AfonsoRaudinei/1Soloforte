@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/shared/widgets/contextual_floating_button.dart';
 import 'side_menu.dart';
 
@@ -60,7 +59,7 @@ class DashboardDrawerScope extends InheritedWidget {
   final ValueListenable<bool> isEndDrawerOpen;
   final VoidCallback openEndDrawer;
 
-  const DashboardDrawerScope({
+  const DashboardDrawerScope({super.key, 
     required this.isEndDrawerOpen,
     required this.openEndDrawer,
     required super.child,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/features/occurrences/presentation/widgets/occurrence_list_view.dart';
 
 class OccurrenceListScreen extends StatelessWidget {

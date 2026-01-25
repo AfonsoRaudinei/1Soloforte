@@ -146,7 +146,7 @@ class _ComparisonTabState extends ConsumerState<ComparisonTab> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isActive ? color.withOpacity(0.1) : Colors.white,
+        color: isActive ? color.withValues(alpha: 0.1) : Colors.white,
         border: Border.all(
           color: isActive ? color : Colors.grey.shade300,
           width: isActive ? 2 : 1,

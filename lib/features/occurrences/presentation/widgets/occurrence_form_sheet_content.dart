@@ -6,11 +6,11 @@ class OccurrenceFormSheetContent extends StatefulWidget {
   final VoidCallback onCancel;
 
   const OccurrenceFormSheetContent({
-    Key? key,
+    super.key,
     this.currentLocation = const {'lat': -23.5505, 'lng': -46.6333},
     required this.onSave,
     required this.onCancel,
-  }) : super(key: key);
+  });
 
   @override
   State<OccurrenceFormSheetContent> createState() =>
@@ -24,7 +24,7 @@ class _OccurrenceFormSheetContentState
   String _selectedSeverity = 'media';
   double _severityPercent = 50.0;
   String _notes = '';
-  List<String> _photos = []; // In a real app, this might be File paths or URLs
+  final List<String> _photos = []; // In a real app, this might be File paths or URLs
   bool _isSaving = false;
 
   // Data Definitions
@@ -228,7 +228,7 @@ class _OccurrenceFormSheetContentState
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: _severityColor.withOpacity(0.1),
+                          color: _severityColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -262,7 +262,7 @@ class _OccurrenceFormSheetContentState
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 2,
                                   offset: const Offset(0, 1),
                                 ),
@@ -283,7 +283,7 @@ class _OccurrenceFormSheetContentState
                             activeTrackColor: Colors.transparent,
                             inactiveTrackColor: Colors.transparent,
                             thumbColor: Colors.white,
-                            overlayColor: _severityColor.withOpacity(0.1),
+                            overlayColor: _severityColor.withValues(alpha: 0.1),
                           ),
                           child: Slider(
                             value: _severityPercent,
@@ -379,7 +379,7 @@ class _OccurrenceFormSheetContentState
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
@@ -460,7 +460,7 @@ class _OccurrenceFormSheetContentState
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      disabledBackgroundColor: _currentColor.withOpacity(0.6),
+                      disabledBackgroundColor: _currentColor.withValues(alpha: 0.6),
                     ),
                     child: _isSaving
                         ? const SizedBox(
@@ -520,12 +520,12 @@ class _OccurrenceFormSheetContentState
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: isSelected ? color : color.withOpacity(0.1),
+              color: isSelected ? color : color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: color.withOpacity(0.4),
+                        color: color.withValues(alpha: 0.4),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -605,7 +605,7 @@ class _OccurrenceFormSheetContentState
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? color.withOpacity(0.1)
+              ? color.withValues(alpha: 0.1)
               : const Color(0xFFF9FAFB), // gray-50
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -615,7 +615,7 @@ class _OccurrenceFormSheetContentState
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -662,7 +662,7 @@ class _OccurrenceFormSheetContentState
             style: BorderStyle.solid,
           ), // Dashed border needs CustomPainter, typically solid is fine for MVP or use package
           borderRadius: BorderRadius.circular(16),
-          color: Colors.grey[50]!.withOpacity(0.5),
+          color: Colors.grey[50]!.withValues(alpha: 0.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -704,7 +704,7 @@ class _OccurrenceFormSheetContentState
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.orange.withOpacity(0.3),
+                    color: Colors.orange.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -803,7 +803,7 @@ class _OccurrenceFormSheetContentState
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.close, color: Colors.white, size: 12),

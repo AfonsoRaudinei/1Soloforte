@@ -10,6 +10,7 @@ import 'package:soloforte_app/shared/widgets/primary_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:soloforte_app/shared/dialogs/confirmation_dialog.dart';
 import 'dart:io';
 
 class OccurrenceDetailScreen extends ConsumerWidget {
@@ -525,27 +526,13 @@ class OccurrenceDetailScreen extends ConsumerWidget {
         );
         break;
       case 'delete':
-        final confirm = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Excluir Ocorrência'),
-            content: const Text(
-              'Tem certeza que deseja excluir esta ocorrência?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text(
-                  'Excluir',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
+        final confirm = await ConfirmationDialog.show(
+          context,
+          title: 'Excluir Ocorrência',
+          message: 'Tem certeza que deseja excluir esta ocorrência?',
+          confirmLabel: 'Excluir',
+          isDestructive: true,
+          icon: Icons.delete_outline,
         );
 
         if (confirm == true) {

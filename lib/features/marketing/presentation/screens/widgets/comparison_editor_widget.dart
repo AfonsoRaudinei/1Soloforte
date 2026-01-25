@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'comparison_model.dart';
-import 'package:flutter/services.dart';
 
 class ComparisonEditorWidget extends StatefulWidget {
   final ComparisonModel model;

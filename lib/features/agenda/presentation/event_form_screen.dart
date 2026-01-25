@@ -248,6 +248,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     final durationHours =
         (_endTime.hour - _startTime.hour) +

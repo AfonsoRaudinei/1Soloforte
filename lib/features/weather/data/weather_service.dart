@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:soloforte_app/core/database/database_helper.dart';
 import '../domain/weather_model.dart';
 import 'package:soloforte_app/core/services/logger_service.dart';

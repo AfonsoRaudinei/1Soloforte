@@ -8,17 +8,31 @@ import '../../../core/services/security_service.dart';
 
 /// Authentication Service using Supabase Auth
 class AuthService implements IAuthService {
-  final SupabaseClient _supabase;
+  late final SupabaseClient? _supabase;
 
   // Stream Controller for unified Auth State
   final _authStateController = StreamController<app.AuthState?>.broadcast();
 
-  AuthService({SupabaseClient? supabase})
-    : _supabase = supabase ?? Supabase.instance.client {
+  AuthService({SupabaseClient? supabase}) {
+    if (supabase != null) {
+      _supabase = supabase;
+    } else {
+      try {
+        _supabase = Supabase.instance.client;
+      } catch (e) {
+        _supabase = null; // Mark as not initialized
+      }
+    }
     _init();
   }
 
   void _init() {
+    if (_supabase == null) {
+      // If Supabase is not available, try to check mock session immediately
+      _checkAndEmitSupabaseUser(null);
+      return;
+    }
+
     // Listen to Supabase Auth changes
     _supabase.auth.onAuthStateChange.listen((data) {
       _checkAndEmitSupabaseUser(data.session);
@@ -85,8 +99,10 @@ class AuthService implements IAuthService {
       window: const Duration(minutes: 1),
     );
 
+    if (_supabase == null) throw Exception('Serviço indisponível no momento.');
+
     try {
-      final response = await _supabase.auth.signInWithPassword(
+      final response = await _supabase!.auth.signInWithPassword(
         email: email,
         password: password,
       );
@@ -146,8 +162,9 @@ class AuthService implements IAuthService {
     String email,
     String password,
   ) async {
+    if (_supabase == null) throw Exception('Serviço indisponível no momento.');
     try {
-      final response = await _supabase.auth.signUp(
+      final response = await _supabase!.auth.signUp(
         email: email,
         password: password,
         data: {'name': name},
@@ -185,13 +202,19 @@ class AuthService implements IAuthService {
   // Logout using Supabase
   @override
   Future<void> logout() async {
-    final user = _supabase.auth.currentUser;
+    if (_supabase == null) {
+      await SecureStorageService.clearSession();
+      if (!_authStateController.isClosed) _authStateController.add(null);
+      return;
+    }
+
+    final user = _supabase!.auth.currentUser;
     if (user != null) {
       await SecurityService().logSecurityEvent(user.id, 'logout');
     }
 
     try {
-      await _supabase.auth.signOut();
+      await _supabase!.auth.signOut();
     } catch (e) {
       // Ignore
     }
@@ -202,8 +225,9 @@ class AuthService implements IAuthService {
   // Check current auth status
   @override
   Future<app.AuthState?> checkAuth() async {
+    if (_supabase == null) return _checkMockSession();
     try {
-      final session = _supabase.auth.currentSession;
+      final session = _supabase!.auth.currentSession;
       if (session != null) {
         return _getSupabaseAuthState(session);
       }
@@ -216,8 +240,9 @@ class AuthService implements IAuthService {
   // Forgot password using Supabase
   @override
   Future<void> forgotPassword(String email) async {
+    if (_supabase == null) throw Exception('Serviço indisponível.');
     try {
-      await _supabase.auth.resetPasswordForEmail(email);
+      await _supabase!.auth.resetPasswordForEmail(email);
     } on AuthException catch (e) {
       throw Exception(e.message);
     }
@@ -280,7 +305,8 @@ class AuthService implements IAuthService {
 
   @override
   Future<void> updatePassword(String newPassword) async {
-    final user = _supabase.auth.currentUser;
+    if (_supabase == null) throw Exception('Serviço indisponível.');
+    final user = _supabase!.auth.currentUser;
     if (user != null) {
       await SecurityService().validateAction(
         'change_password',
@@ -291,7 +317,7 @@ class AuthService implements IAuthService {
     }
 
     try {
-      final response = await _supabase.auth.updateUser(
+      final response = await _supabase!.auth.updateUser(
         UserAttributes(password: newPassword),
       );
       if (response.user == null) throw Exception('Update failed');
@@ -308,10 +334,11 @@ class AuthService implements IAuthService {
 
   @override
   Future<void> reauthenticate(String password) async {
+    if (_supabase == null) throw Exception('Serviço indisponível.');
     // Supabase doesn't have a direct "reauthenticate".
     // We simulate by trying to signIn with EMAIL (from current user) + Password.
     // If successful, it means password is correct.
-    final currentUser = _supabase.auth.currentUser;
+    final currentUser = _supabase!.auth.currentUser;
     if (currentUser == null || currentUser.email == null) {
       throw Exception('No active user to reauthenticate');
     }
@@ -325,7 +352,10 @@ class AuthService implements IAuthService {
 
     try {
       final email = currentUser.email!;
-      await _supabase.auth.signInWithPassword(email: email, password: password);
+      await _supabase!.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
       // If success, we are good. Session might refresh but that's fine.
     } on AuthException catch (_) {
       throw Exception('Senha incorreta.');

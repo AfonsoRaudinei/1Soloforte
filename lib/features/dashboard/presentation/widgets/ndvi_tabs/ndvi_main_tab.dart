@@ -110,7 +110,7 @@ class NdviMainTab extends ConsumerWidget {
           return Card(
             elevation: isSelected ? 2 : 0,
             color: isSelected
-                ? AppColors.primary.withOpacity(0.1)
+                ? AppColors.primary.withValues(alpha: 0.1)
                 : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),

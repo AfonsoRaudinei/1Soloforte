@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
+import '../core/services/logger_service.dart';
+
 import '../features/auth/presentation/login_screen.dart';
 import '../features/dashboard/presentation/dashboard_layout.dart';
 import '../features/dashboard/presentation/home_screen.dart';
@@ -80,30 +83,42 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     redirect: (context, state) {
-      // Loading state
-      if (authState.isLoading) {
-        return null; // Show loading or splash
-      }
-
-      final isAuthenticated = authState.value != null;
+      // 1. Determine Auth State (treating Loading and Error as Not Authenticated for routing safety)
+      final isAuthenticated = authState.valueOrNull != null;
       final currentPath = state.uri.path;
 
-      // Public routes
-      final publicRoutes = ['/', '/login', '/register', '/forgot-password'];
+      // 2. Identify Public Routes
+      final publicRoutes = [
+        '/',
+        '/login',
+        '/register',
+        '/forgot-password',
+        '/privacy-policy',
+      ];
       final isPublicRoute = publicRoutes.contains(currentPath);
 
-      // Redirect logic
+      // 3. Handle Loading State
+      // If still loading, do not redirect unless necessary.
+      // If we are already on a public route, let it be.
+      if (authState.isLoading) {
+        return null;
+      }
+
+      // 4. Redirect Logic
+
+      // If not authenticated and trying to access a protected route -> /login
       if (!isAuthenticated && !isPublicRoute) {
-        // Not logged in, trying to access protected route
         return '/login';
       }
 
+      // If authenticated and trying to access a public route (like /login) -> /map
+      // EXCEPT for root '/' which might be a landing page we still want to show or redirect.
+      // Here we redirect all public routes to /map once authenticated.
       if (isAuthenticated && isPublicRoute) {
-        // Logged in, redirect to map
         return '/map';
       }
 
-      return null; // No redirect needed
+      return null; // Stay on the current path
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const LandingScreen()),
@@ -183,6 +198,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/map/marketing/edit',
             builder: (context, state) {
+              if (kDebugMode) {
+                LoggerService.d(
+                  '[ROUTER] PublicationEditorScreen builder executing',
+                  tag: 'ROUTER',
+                );
+                LoggerService.d(
+                  '[ROUTER] Path: ${state.uri.path}',
+                  tag: 'ROUTER',
+                );
+                LoggerService.d(
+                  '[ROUTER] Query params: ${state.uri.queryParameters}',
+                  tag: 'ROUTER',
+                );
+              }
+
               final extra = state.extra as Map<String, dynamic>?;
               return PublicationEditorScreen(
                 publicationId: state.uri.queryParameters['id'],

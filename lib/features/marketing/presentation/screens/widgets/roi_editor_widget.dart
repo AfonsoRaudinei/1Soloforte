@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'roi_calculator.dart';
 
 class RoiEditorWidget extends StatefulWidget {
@@ -80,7 +79,7 @@ class _RoiEditorWidgetState extends State<RoiEditorWidget> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Icon(Icons.close, size: 18, color: Colors.white),
@@ -124,7 +123,7 @@ class _RoiEditorWidgetState extends State<RoiEditorWidget> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -158,7 +157,7 @@ class _RoiEditorWidgetState extends State<RoiEditorWidget> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -169,7 +168,7 @@ class _RoiEditorWidgetState extends State<RoiEditorWidget> {
           style: const TextStyle(fontSize: 15, color: Color(0xFF1C1C1E)),
           decoration: InputDecoration(
             hintText: '0.00',
-            fillColor: Colors.white.withOpacity(0.95),
+            fillColor: Colors.white.withValues(alpha: 0.95),
             filled: true,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),

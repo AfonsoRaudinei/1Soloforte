@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
 
 /// Side Menu (Drawer) - Acesso administrativo e sistêmico
 /// Contém apenas:
@@ -99,7 +101,21 @@ class SideMenu extends ConsumerWidget {
                   icon: Icons.campaign_outlined,
                   label: 'Publicação',
                   isSelected: location.startsWith('/map/marketing'),
-                  onTap: () => context.go('/map/marketing'),
+                  onTap: () {
+                    if (kDebugMode) {
+                      LoggerService.d('[MENU] Publicação clicked', tag: 'MENU');
+                      LoggerService.d(
+                        '[MENU] Current location: $location',
+                        tag: 'MENU',
+                      );
+                      LoggerService.d(
+                        '[MENU] Navigating to: /map/marketing/edit',
+                        tag: 'MENU',
+                      );
+                    }
+
+                    context.go('/map/marketing/edit');
+                  },
                 ),
                 _DrawerItem(
                   icon: Icons.bar_chart_outlined,

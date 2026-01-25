@@ -8,6 +8,7 @@ import 'package:soloforte_app/features/settings/domain/entities/app_settings.dar
 import 'package:soloforte_app/features/settings/domain/entities/marketing_plan.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
+import 'package:soloforte_app/shared/dialogs/confirmation_dialog.dart';
 
 // Removido _BaseSettingsPage - todas as subpáginas agora retornam conteúdo direto
 
@@ -526,7 +527,7 @@ class _MarketingPlansSettingsScreenState
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -712,36 +713,22 @@ class StorageSettingsScreen extends StatelessWidget {
                   side: const BorderSide(color: Colors.red),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Limpar Cache?'),
-                      content: const Text(
+                onPressed: () async {
+                  final confirm = await ConfirmationDialog.show(
+                    context,
+                    title: 'Limpar Cache?',
+                    message:
                         'Isso removerá dados temporários e mapas salvos offline.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Cancelar'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Cache limpo com sucesso!'),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Limpar',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
+                    confirmLabel: 'Limpar',
+                    isDestructive: true,
+                    icon: Icons.delete_outline,
                   );
+
+                  if (confirm == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Cache limpo com sucesso!')),
+                    );
+                  }
                 },
               ),
             ),
@@ -877,7 +864,6 @@ class _BaseSettingsPage extends StatelessWidget {
   final Widget? floatingActionButton;
 
   const _BaseSettingsPage({
-    super.key,
     required this.title,
     required this.body,
     this.floatingActionButton,

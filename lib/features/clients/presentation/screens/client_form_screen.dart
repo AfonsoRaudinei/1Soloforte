@@ -273,8 +273,7 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
         email: _emailController.text,
         phone: _phoneController.text,
         cpfCnpj: _cpfCnpjController.text,
-        address: _addressController
-            .text, // Not in form in new layout? I'll keep it empty or use city/state
+        address: _addressController.text,
         city: _cityController.text,
         state: _stateController.text,
         type: _selectedType,
@@ -284,16 +283,20 @@ class _ClientFormScreenState extends ConsumerState<ClientFormScreen> {
       );
 
       final controller = ref.read(clientsControllerProvider.notifier);
+      final messenger = ScaffoldMessenger.of(context);
+      final navigator = context.pop;
+
       if (isEditing) {
         await controller.updateClient(client);
       } else {
         await controller.addClient(client);
       }
+
       if (!mounted) return;
       ref.invalidate(clientsControllerProvider);
 
-      context.pop();
-      ScaffoldMessenger.of(context).showSnackBar(
+      navigator();
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Produtor salvo!'),
           backgroundColor: Colors.green,

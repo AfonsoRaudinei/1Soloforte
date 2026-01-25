@@ -36,11 +36,7 @@ class _RadialMenuState extends State<RadialMenu>
       label: 'Agenda',
       route: '/map/calendar',
     ),
-    _MenuItem(
-      icon: Icons.campaign,
-      label: 'Marketing',
-      route: '/map/marketing',
-    ),
+    _MenuItem(icon: Icons.campaign, label: 'Marketing', route: '/map'),
     _MenuItem(
       icon: Icons.bar_chart,
       label: 'Relatórios',

@@ -16,7 +16,9 @@ NC='\033[0m' # No Color
 # ==========================================
 dev() {
     echo -e "${BLUE}🔧 Building for DEVELOPMENT...${NC}"
-    flutter run \
+    flutter run -d chrome \
+        --web-port=5000 \
+        --web-renderer html \
         --dart-define=ENV=dev \
         --dart-define=API_KEY=dev_key_12345
 }

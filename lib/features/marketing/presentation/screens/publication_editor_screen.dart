@@ -4,16 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
-import 'package:soloforte_app/core/theme/app_colors.dart';
-import 'package:soloforte_app/core/theme/app_spacing.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_publication.dart';
 import 'package:soloforte_app/features/marketing/data/marketing_publication_repository.dart';
-// Compatibilidade com modelo legado
 import 'package:soloforte_app/features/marketing/data/marketing_repository.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_map_post.dart';
 
 /// Tela de edição completa de publicação de marketing
-/// Rota: /#/map/marketing/edit?id=XYZ (edição) ou /#/map/marketing/edit (criação)
+/// Visual atualizado conforme design HTML fornecido.
 class PublicationEditorScreen extends ConsumerStatefulWidget {
   final String? publicationId;
   final double? initialLatitude;
@@ -32,80 +29,113 @@ class PublicationEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _PublicationEditorScreenState
-    extends ConsumerState<PublicationEditorScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+    extends ConsumerState<PublicationEditorScreen> {
   MarketingPublication? _publication;
   bool _isLoading = true;
   bool _isSaving = false;
-  bool _hasChanges = false;
+
+  // Estado visual
+  String _selectedType = 'resultado'; // resultado, antes-depois, avaliacao
+  String _selectedInvestmentLevel = 'silver'; // bronze, silver, gold
+
+  // Controle de Seções Extras do modo Avaliação
+  bool _showConclusion = false;
+  bool _showROI = false;
 
   // Controllers para campos de texto
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _productController = TextEditingController();
-  final _campaignController = TextEditingController();
-  final _clientNameController = TextEditingController();
-  final _areaNameController = TextEditingController();
-  final _sellerNameController = TextEditingController();
-  final _sellerPhoneController = TextEditingController();
-  final _companyNameController = TextEditingController();
-  final _notesController = TextEditingController();
+  // -- Título/Talhão/Info
+  final _talhaoNameController =
+      TextEditingController(); // Usado para nome talhão ou título
+  final _talhaoSizeController = TextEditingController();
+  final _produtorController = TextEditingController(); // clientName
+  final _produtoController = TextEditingController(); // product
+  final _localController = TextEditingController(); // areaName
+
+  // -- Produtividade
+  final _productivityValueController = TextEditingController();
+  String _productivityUnit = 'sc/ha';
+
+  // -- Ganhos (Antes/Depois)
+  final _ganhoProdutividadeController = TextEditingController();
+  final _economiaADController = TextEditingController();
+
+  // -- Resultado
+  final _qtyProduzidaController = TextEditingController();
+  final _economiaResultadoController = TextEditingController();
+
+  // -- Vendedor e Descrição
+  final _vendedorNomeController = TextEditingController(); // sellerName
+  final _vendedorTelController = TextEditingController(); // sellerPhone
+  final _descricaoController = TextEditingController(); // description
+
+  // -- ROI
+  final _roiInvestimentoController = TextEditingController();
+  final _roiRetornoController = TextEditingController();
+  String _roiResult = '0%';
+
+  // -- Conclusão
+  final _conclusionController = TextEditingController();
 
   // Controllers para comparações (dinâmicos)
-  final Map<String, TextEditingController> _labelControllers = {};
-  final Map<String, TextEditingController> _productivityControllers = {};
-  final Map<String, TextEditingController> _ndviControllers = {};
-  final Map<String, TextEditingController> _biomassControllers = {};
+  // Mapeia comparison.id -> Controller
+  final Map<String, TextEditingController> _compLabelControllers = {};
+  final Map<String, TextEditingController> _compObsControllers = {};
+  // Unused fields removed
 
-  String _selectedInvestmentLevel = 'prata';
-  String _highlightMetric = 'productivity';
-  bool _showPercentage = true;
+  // Cores personalizadas do design
+  static const Color kPrimary = Color(0xFF0057FF);
+  static const Color kGray100 = Color(0xFFF5F5F7);
+  static const Color kGray200 = Color(0xFFE5E5EA);
+  static const Color kGray400 = Color(0xFFAEAEB2);
+  static const Color kGray600 = Color(0xFF8E8E93);
+  static const Color kGray900 = Color(0xFF1C1C1E);
+  static const Color kBronze = Color(0xFFCD7F32);
+  static const Color kSilver = Color(0xFFC0C0C0);
+  static const Color kGold = Color(0xFFFFD700);
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     _loadPublication();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _productController.dispose();
-    _campaignController.dispose();
-    _clientNameController.dispose();
-    _areaNameController.dispose();
-    _sellerNameController.dispose();
-    _sellerPhoneController.dispose();
-    _companyNameController.dispose();
-    _notesController.dispose();
-    _labelControllers.values.forEach((c) => c.dispose());
-    _productivityControllers.values.forEach((c) => c.dispose());
-    _ndviControllers.values.forEach((c) => c.dispose());
-    _biomassControllers.values.forEach((c) => c.dispose());
+    _talhaoNameController.dispose();
+    _talhaoSizeController.dispose();
+    _produtorController.dispose();
+    _produtoController.dispose();
+    _localController.dispose();
+    _productivityValueController.dispose();
+    _ganhoProdutividadeController.dispose();
+    _economiaADController.dispose();
+    _qtyProduzidaController.dispose();
+    _economiaResultadoController.dispose();
+    _vendedorNomeController.dispose();
+    _vendedorTelController.dispose();
+    _descricaoController.dispose();
+    _roiInvestimentoController.dispose();
+    _roiRetornoController.dispose();
+    _conclusionController.dispose();
+    for (var c in _compLabelControllers.values) c.dispose();
+    for (var c in _compObsControllers.values) c.dispose();
     super.dispose();
   }
 
   Future<void> _loadPublication() async {
     final repository = ref.read(marketingPublicationRepositoryProvider);
-    final legacyRepository = MarketingRepository();
 
     if (widget.publicationId != null) {
-      // Modo edição: carregar publicação existente
       var publication = await repository.getById(widget.publicationId!);
 
-      // Fallback: buscar no repositório legado e converter
+      // Fallback para legado se não encontrar
       if (publication == null) {
-        final legacyPosts = await legacyRepository.getMapPosts();
+        final legacyRepo = MarketingRepository();
+        final legacyPosts = await legacyRepo.getMapPosts();
         final legacyPost = legacyPosts
             .where((p) => p.id == widget.publicationId)
             .firstOrNull;
-
         if (legacyPost != null) {
-          // Converter MarketingMapPost legado para MarketingPublication
           publication = _convertFromLegacy(legacyPost);
         }
       }
@@ -114,13 +144,13 @@ class _PublicationEditorScreenState
         _publication = publication;
         _populateFields(publication);
       }
-    } else if (widget.initialLatitude != null &&
-        widget.initialLongitude != null) {
-      // Modo criação: criar nova publicação
+    } else {
+      // Nova publicação
       _publication = MarketingPublication.create(
-        latitude: widget.initialLatitude!,
-        longitude: widget.initialLongitude!,
+        latitude: widget.initialLatitude ?? 0.0,
+        longitude: widget.initialLongitude ?? 0.0,
       );
+      _selectedType = 'resultado';
       _initializeComparisonControllers();
     }
 
@@ -129,21 +159,8 @@ class _PublicationEditorScreenState
     });
   }
 
-  /// Converte um MarketingMapPost legado para MarketingPublication
   MarketingPublication _convertFromLegacy(MarketingMapPost legacy) {
-    // Converter fotos
-    final photos = legacy.photos
-        .map(
-          (p) => PublicationPhoto(
-            id: p.path.hashCode.toString(),
-            path: p.path,
-            caption: p.caption,
-            isCover: p.isCover,
-          ),
-        )
-        .toList();
-
-    // Determinar tipo
+    // Lógica de conversão mantida
     final type = legacy.type == 'resultado'
         ? PublicationType.resultado
         : legacy.type == 'antes-depois'
@@ -156,1132 +173,1210 @@ class _PublicationEditorScreenState
       longitude: legacy.longitude,
       title: legacy.title,
       clientName: legacy.client,
-      areaName: legacy.area,
+      areaName: legacy.area, // Local
       notes: legacy.notes,
       product: legacy.product,
-      investmentLevel: legacy.investmentLevel ?? 'prata',
+      investmentLevel: legacy.investmentLevel ?? 'silver',
       type: type,
-      photos: photos,
+      photos: legacy.photos
+          .map(
+            (p) => PublicationPhoto(
+              id: p.path.hashCode.toString(),
+              path: p.path,
+              isCover: p.isCover,
+            ),
+          )
+          .toList(),
       createdAt: legacy.createdAt,
-      comparisons: [
-        ComparisonEntry.create(label: 'Antes', order: 0),
-        ComparisonEntry.create(label: 'Depois', order: 1),
-      ],
+      comparisons: [],
     );
   }
 
-  void _populateFields(MarketingPublication publication) {
-    _titleController.text = publication.title ?? '';
-    _descriptionController.text = publication.description ?? '';
-    _productController.text = publication.product ?? '';
-    _campaignController.text = publication.campaign ?? '';
-    _clientNameController.text = publication.clientName ?? '';
-    _areaNameController.text = publication.areaName ?? '';
-    _sellerNameController.text = publication.sellerName ?? '';
-    _sellerPhoneController.text = publication.sellerPhone ?? '';
-    _companyNameController.text = publication.companyName ?? '';
-    _notesController.text = publication.notes ?? '';
-    _selectedInvestmentLevel = publication.investmentLevel;
-    _highlightMetric = publication.highlightMetric ?? 'productivity';
-    _showPercentage = publication.showPercentage;
+  void _populateFields(MarketingPublication pub) {
+    // Popular campos básicos
+    _selectedType = _getTypeString(pub.type);
+    _selectedInvestmentLevel = pub.investmentLevel;
 
+    _produtorController.text = pub.clientName ?? '';
+    _produtoController.text = pub.product ?? '';
+    _localController.text = pub.areaName ?? ''; // Usando areaName como Local
+
+    // Tentar extrair dados extras das notas ou usar campos padrões
+    // Assumindo que pub.title guarda o "Nome do Talhão" no modo Avaliação
+    _talhaoNameController.text = pub.title ?? '';
+    _vendedorNomeController.text = pub.sellerName ?? '';
+    _vendedorTelController.text = pub.sellerPhone ?? '';
+    _descricaoController.text = pub.description ?? '';
+    _conclusionController.text = pub.notes ?? '';
+
+    // Configurar comparações
     _initializeComparisonControllers();
+  }
+
+  String _getTypeString(PublicationType type) {
+    switch (type) {
+      case PublicationType.resultado:
+        return 'resultado';
+      case PublicationType.antesDepois:
+        return 'antes-depois';
+      case PublicationType.caseSucesso:
+      default:
+        return 'avaliacao';
+    }
   }
 
   void _initializeComparisonControllers() {
     if (_publication == null) return;
-
-    for (final comparison in _publication!.comparisons) {
-      _labelControllers[comparison.id] = TextEditingController(
-        text: comparison.label,
-      );
-      _productivityControllers[comparison.id] = TextEditingController(
-        text: comparison.productivity?.toString() ?? '',
-      );
-      _ndviControllers[comparison.id] = TextEditingController(
-        text: comparison.ndvi?.toString() ?? '',
-      );
-      _biomassControllers[comparison.id] = TextEditingController(
-        text: comparison.biomass?.toString() ?? '',
-      );
+    for (final c in _publication!.comparisons) {
+      _compLabelControllers[c.id] = TextEditingController(text: c.label);
+      // Aqui poderíamos ter mais campos no ComparisonEntry para guardar obs, cultura, etc.
+      // Por enquanto, vamos manter simples ou usar campos existentes
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_publication == null)
+      return const Scaffold(
+        body: Center(child: Text("Publicação não encontrada")),
+      );
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 100),
+              child: Column(
+                children: [
+                  _buildTypeSection(),
+                  _buildVisibilitySection(),
+
+                  // Seção Dinâmica baseada no Tipo
+                  if (_selectedType == 'antes-depois') ...[
+                    _buildPhotosSectionAntesDepois(),
+                  ] else if (_selectedType == 'resultado') ...[
+                    _buildResultPhotoSection(),
+                  ] else if (_selectedType == 'avaliacao') ...[
+                    _buildAvaliacaoSection(),
+                  ],
+
+                  if (_selectedType !=
+                      'avaliacao') // No visual original o avaliacao esconde produtividade
+                    _buildProductivitySection(),
+
+                  if (_selectedType == 'antes-depois') ...[
+                    _buildGainsSection(),
+                  ],
+
+                  if (_selectedType == 'resultado') ...[
+                    _buildResultFieldsSection(),
+                  ],
+
+                  _buildInfoSection(),
+
+                  _buildSellerSection(),
+                  _buildDescriptionSection(),
+                ],
+              ),
+            ),
+          ),
+          _buildFooter(),
+        ],
+      ),
+    );
+  }
+
+  // --- WIDGETS DE SEÇÃO ---
+
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        bottom: 16,
+        left: 20,
+        right: 20,
+      ),
+      decoration: const BoxDecoration(
+        color: Color.fromRGBO(255, 255, 255, 0.95),
+        border: Border(bottom: BorderSide(color: kGray200, width: 0.5)),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close, color: kPrimary),
+                onPressed: () => context.pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
+              ),
+              const SizedBox(width: 40), // Spacer placeholder
+            ],
+          ),
+          const Text(
+            'Novo Case',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.4,
+              color: kGray900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection({
+    required String title,
+    required Widget child,
+    bool hidden = false,
+  }) {
+    if (hidden) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: kGray200, width: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: kGray600,
+              letterSpacing: -0.08,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeSection() {
+    return _buildSection(
+      title: 'Tipo',
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: kGray100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _selectedType,
+            isExpanded: true,
+            icon: const Icon(Icons.keyboard_arrow_down, color: kGray400),
+            items: const [
+              DropdownMenuItem(value: 'resultado', child: Text('Resultado')),
+              DropdownMenuItem(
+                value: 'antes-depois',
+                child: Text('Antes/Depois'),
+              ),
+              DropdownMenuItem(
+                value: 'avaliacao',
+                child: Text('Avaliação/Campo'),
+              ),
+            ],
+            onChanged: (val) {
+              if (val != null) setState(() => _selectedType = val);
+            },
+            style: const TextStyle(
+              fontSize: 17,
+              color: kGray900,
+              fontFamily: 'SF Pro Display',
+            ),
+            dropdownColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVisibilitySection() {
+    return _buildSection(
+      title: 'Visibilidade',
+      child: Row(
+        children: [
+          _buildSizeBtn('Bronze', 'bronze', kBronze),
+          const SizedBox(width: 10),
+          _buildSizeBtn('Prata', 'silver', kSilver),
+          const SizedBox(width: 10),
+          _buildSizeBtn('Ouro', 'gold', kGold),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSizeBtn(String label, String value, Color activeColor) {
+    final isActive = _selectedInvestmentLevel == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedInvestmentLevel = value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          decoration: BoxDecoration(
+            color: isActive ? activeColor : kGray100,
+            borderRadius: BorderRadius.circular(14),
+            gradient: isActive
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [activeColor, activeColor.withValues(alpha: 0.8)],
+                  )
+                : null,
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
+          ),
+          transform: isActive
+              ? Matrix4.diagonal3Values(1.05, 1.05, 1)
+              : Matrix4.identity(),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: isActive
+                    ? (value == 'silver' || value == 'gold'
+                          ? const Color(0xFF2C2C2C)
+                          : Colors.white)
+                    : kGray600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- SEÇÕES DE FOTO ---
+
+  Widget _buildPhotosSectionAntesDepois() {
+    // Pegar fotos 0 e 1, ou placeholders
+    PublicationPhoto? photoAntes = _getPhotoByOrder(0);
+    PublicationPhoto? photoDepois = _getPhotoByOrder(1);
+
+    return _buildSection(
+      title: 'Fotos',
+      child: Row(
+        children: [
+          Expanded(child: _buildPhotoBox('Antes', photoAntes, 0)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildPhotoBox('Depois', photoDepois, 1)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultPhotoSection() {
+    PublicationPhoto? photoResult = _getPhotoByOrder(0);
+    return _buildSection(
+      title: 'Foto',
+      child: _buildPhotoBox('Adicionar foto', photoResult, 0, isTall: true),
+    );
+  }
+
+  Widget _buildPhotoBox(
+    String label,
+    PublicationPhoto? photo,
+    int order, {
+    bool isTall = false,
+  }) {
+    return GestureDetector(
+      onTap: () => _pickPhoto(order),
+      child: AspectRatio(
+        aspectRatio: isTall ? 9 / 16 : 1,
+        child: Container(
+          constraints: isTall ? const BoxConstraints(maxHeight: 280) : null,
+          decoration: BoxDecoration(
+            color: kGray100,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: photo != null
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.file(
+                      File(photo.path),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.broken_image),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () => _removePhoto(order),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (!isTall)
+                      Positioned(
+                        bottom: 8,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              label.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      size: 48,
+                      color: kGray900.withValues(alpha: 0.3),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: kGray600,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  PublicationPhoto? _getPhotoByOrder(int order) {
+    if (_publication == null) return null;
+    try {
+      return _publication!.photos.firstWhere(
+        (p) => _publication!.photos.indexOf(p) == order,
+      ); // Simplificação, ideal ter campo order
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _pickPhoto(int index) async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+      final newPhoto = PublicationPhoto.create(path: path);
+
+      setState(() {
+        final currentPhotos = List<PublicationPhoto>.from(_publication!.photos);
+        if (index < currentPhotos.length) {
+          currentPhotos[index] = newPhoto;
+        } else {
+          currentPhotos.add(newPhoto); // Append simple logic
+        }
+        _publication = _publication!.copyWith(photos: currentPhotos);
+      });
+    }
+  }
+
+  void _removePhoto(int index) {
+    setState(() {
+      final currentPhotos = List<PublicationPhoto>.from(_publication!.photos);
+      if (index < currentPhotos.length) {
+        currentPhotos.removeAt(index);
+        _publication = _publication!.copyWith(photos: currentPhotos);
+      }
+    });
+  }
+
+  // --- SEÇÃO AVALIAÇÃO ---
+
+  Widget _buildAvaliacaoSection() {
+    return _buildSection(
+      title: 'Talhão',
+      child: Column(
+        children: [
+          _buildInput(
+            _talhaoNameController,
+            label: 'Nome do Talhão',
+            placeholder: 'Ex: Talhão Norte',
+          ),
+          const SizedBox(height: 16),
+          _buildInput(
+            _talhaoSizeController,
+            label: 'Tamanho (ha)',
+            placeholder: '0.00',
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 20),
+
+          // Lista de Comparações
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _publication!.comparisons.length,
+            itemBuilder: (_, index) {
+              return _buildComparisonItem(index);
+            },
+          ),
+
+          if (_showConclusion) _buildConclusionItem(),
+
+          if (_showROI) _buildROIItem(),
+
+          // Botão Adicionar
+          const SizedBox(height: 16),
+          _buildAddMenuBtn(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddMenuBtn() {
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        if (value == 'avaliacao') _addComparison();
+        if (value == 'conclusao') setState(() => _showConclusion = true);
+        if (value == 'roi') setState(() => _showROI = true);
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: kGray200,
+            style: BorderStyle.none,
+          ), // Simplificado
+        ),
+        // Custom dashed border implementation is tricky in standard flutter without packages,
+        // using simple outline for now or custom painter if strict.
+        // Using Dashed Border placeholder style:
+        foregroundDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: kGray400,
+            style: BorderStyle.none,
+          ), // Placeholder
+          // To maintain design fidelity, standard border dashed is not native.
+        ),
+        child: const Center(
+          child: Text(
+            '+ Adicionar',
+            style: TextStyle(color: kPrimary, fontSize: 17),
+          ),
+        ),
+      ),
+      itemBuilder: (context) => [
+        const PopupMenuItem(value: 'avaliacao', child: Text('Avaliação')),
+        const PopupMenuItem(value: 'conclusao', child: Text('Conclusão')),
+        const PopupMenuItem(value: 'roi', child: Text('ROI')),
+      ],
+    );
+  }
+
+  void _addComparison() {
+    final newItem = ComparisonEntry.create(
+      label: 'Avaliação',
+      order: _publication!.comparisons.length,
+    );
+    setState(() {
+      _publication = _publication!.copyWith(
+        comparisons: [..._publication!.comparisons, newItem],
+      );
+    });
+  }
+
+  Widget _buildComparisonItem(int index) {
+    // Layout logic: 1 or 2 photos.
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kGray100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Avaliação ${index + 1}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () {
+                      setState(() {
+                        var list = List<ComparisonEntry>.from(
+                          _publication!.comparisons,
+                        );
+                        list.removeAt(index);
+                        _publication = _publication!.copyWith(
+                          comparisons: list,
+                        );
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Grid 2 Columns
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildSmallLabel('Produto A'),
+                    const SizedBox(height: 8),
+                    _buildPhotoBoxSimple('Foto A'),
+                    const SizedBox(height: 8),
+                    _buildDropdownSmall(['Soja', 'Milho'], 'Cultura'),
+                    const SizedBox(height: 8),
+                    _buildTextAreaSimple('Observações...'),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildSmallLabel('Produto B'),
+                    const SizedBox(height: 8),
+                    _buildPhotoBoxSimple('Foto B'),
+                    const SizedBox(height: 8),
+                    _buildDropdownSmall(['Soja', 'Milho'], 'Cultura'),
+                    const SizedBox(height: 8),
+                    _buildTextAreaSimple('Observações...'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConclusionItem() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [kPrimary, Color(0xFF0046CC)]),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Conclusão',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => setState(() => _showConclusion = false),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _conclusionController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              fillColor: Colors.white.withValues(alpha: 0.95),
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              hintText: 'Digite a conclusão do case...',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildROIItem() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF34C759), Color(0xFF30D158)],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'ROI',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => setState(() => _showROI = false),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Investimento (R\$)',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    _buildInputSmall(_roiInvestimentoController),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Retorno (R\$)',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    _buildInputSmall(_roiRetornoController),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  children: [
+                    const Text(
+                      'ROI',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _roiResult,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- COMPONENTES AUXILIARES ---
+
+  Widget _buildSmallLabel(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: kGray600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoBoxSimple(String label) {
+    return Container(
+      height: 120,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kGray200, style: BorderStyle.solid),
+      ),
+      child: Center(
+        child: Text(label, style: const TextStyle(color: kGray400)),
+      ),
+    );
+  }
+
+  Widget _buildDropdownSmall(List<String> items, String hint) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kGray200),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          hint: Text(hint, style: const TextStyle(fontSize: 13)),
+          items: items
+              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+              .toList(),
+          onChanged: (v) {},
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextAreaSimple(String hint) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kGray200),
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: hint,
+          border: InputBorder.none,
+          hintStyle: const TextStyle(fontSize: 13, color: kGray400),
+        ),
+        maxLines: 3,
+        minLines: 2,
+      ),
+    );
+  }
+
+  Widget _buildInputSmall(TextEditingController ctrl) {
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: TextField(
+        controller: ctrl,
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(border: InputBorder.none),
+        onChanged: (_) {
+          // Calc ROI
+          double i = double.tryParse(_roiInvestimentoController.text) ?? 0;
+          double r = double.tryParse(_roiRetornoController.text) ?? 0;
+          if (i > 0) {
+            setState(
+              () => _roiResult = '${(((r - i) / i) * 100).toStringAsFixed(1)}%',
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  // --- OUTRAS SEÇÕES (Informações, Produtividade...) ---
+
+  Widget _buildInfoSection() {
+    return _buildSection(
+      title: 'Informações',
+      child: Column(
+        children: [
+          _buildInput(
+            _produtorController,
+            label: 'Produtor / Fazenda',
+            placeholder: 'Ex: Fazenda Santa Rita',
+          ),
+          const SizedBox(height: 16),
+          _buildInput(
+            _produtoController,
+            label: 'Produto Utilizado',
+            placeholder: 'Ex: Soja Olimpo',
+          ),
+          const SizedBox(height: 16),
+          _buildInput(
+            _localController,
+            label: 'Localização',
+            placeholder: 'Jataizinho - PR',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductivitySection() {
+    return _buildSection(
+      title: 'Produtividade',
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: _buildInput(
+              _productivityValueController,
+              label: 'Valor',
+              placeholder: '80',
+              keyboardType: TextInputType.number,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 1,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Unidade',
+                  style: TextStyle(fontSize: 13, color: kGray600),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: kGray100,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _productivityUnit,
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(value: 'sc/ha', child: Text('sc/ha')),
+                        DropdownMenuItem(
+                          value: 'ton/ha',
+                          child: Text('ton/ha'),
+                        ),
+                        DropdownMenuItem(value: 'kg/ha', child: Text('kg/ha')),
+                      ],
+                      onChanged: (v) => setState(() => _productivityUnit = v!),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGainsSection() {
+    return _buildSection(
+      title: 'Ganhos',
+      child: Column(
+        children: [
+          _buildInput(
+            _ganhoProdutividadeController,
+            label: 'Ganho de Produtividade',
+            placeholder: '+38%',
+          ),
+          const SizedBox(height: 16),
+          _buildInput(
+            _economiaADController,
+            label: 'Economia Gerada',
+            placeholder: 'R\$ 22.000',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultFieldsSection() {
+    return _buildSection(
+      title: 'Resultado',
+      child: Column(
+        children: [
+          _buildInput(
+            _qtyProduzidaController,
+            label: 'Quantidade Produzida',
+            placeholder: '120',
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          _buildInput(
+            _economiaResultadoController,
+            label: 'Economia (opcional)',
+            placeholder: 'R\$ 22.000',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSellerSection() {
+    return _buildSection(
+      title: 'Vendedor',
+      child: Column(
+        children: [
+          _buildInput(
+            _vendedorNomeController,
+            label: 'Nome',
+            placeholder: 'Carlos Silva',
+          ),
+          const SizedBox(height: 16),
+          _buildInput(
+            _vendedorTelController,
+            label: 'Telefone',
+            placeholder: '(43) 99876-5432',
+            keyboardType: TextInputType.phone,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescriptionSection() {
+    return _buildSection(
+      title: 'Descrição (opcional)',
+      child: TextField(
+        controller: _descricaoController,
+        maxLines: 4,
+        decoration: const InputDecoration(
+          filled: true,
+          fillColor: kGray100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide.none,
+          ),
+          hintText: 'Descreva o case...',
+          hintStyle: TextStyle(color: kGray400),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInput(
+    TextEditingController controller, {
+    required String label,
+    String? placeholder,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, color: kGray600)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: kGray100,
+            border: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderSide: BorderSide.none,
+            ),
+            hintText: placeholder,
+            hintStyle: const TextStyle(color: kGray400),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+          ),
+          style: const TextStyle(fontSize: 17, color: kGray900),
+        ),
+      ],
+    );
+  }
+
+  // --- FOOTER ---
+
+  Widget _buildFooter() {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 16,
+        bottom: MediaQuery.of(context).padding.bottom + 16,
+      ),
+      decoration: const BoxDecoration(
+        color: Color.fromRGBO(255, 255, 255, 0.95),
+        border: Border(top: BorderSide(color: kGray200, width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextButton(
+              onPressed: _isSaving ? null : _save,
+              style: TextButton.styleFrom(
+                backgroundColor: kGray100,
+                foregroundColor: kGray900,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              child: const Text(
+                'Salvar',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextButton(
+              onPressed: _isSaving
+                  ? null
+                  : () {
+                      // Publicar action
+                      _save();
+                    },
+              style: TextButton.styleFrom(
+                backgroundColor: kPrimary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      'Publicar',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- ACTIONS ---
+
   Future<void> _save() async {
     if (_publication == null) return;
-
-    setState(() {
-      _isSaving = true;
-    });
+    setState(() => _isSaving = true);
 
     try {
-      // Atualizar campos da publicação
-      final updatedComparisons = _publication!.comparisons.map((c) {
-        return c.copyWith(
-          label: _labelControllers[c.id]?.text ?? c.label,
-          productivity: double.tryParse(
-            _productivityControllers[c.id]?.text ?? '',
-          ),
-          ndvi: double.tryParse(_ndviControllers[c.id]?.text ?? ''),
-          biomass: double.tryParse(_biomassControllers[c.id]?.text ?? ''),
-        );
-      }).toList();
+      // Map controllers back to object
+      PublicationType type = PublicationType.resultado;
+      if (_selectedType == 'antes-depois') type = PublicationType.antesDepois;
+      if (_selectedType == 'avaliacao') type = PublicationType.caseSucesso;
 
       _publication = _publication!.copyWith(
-        title: _titleController.text.isNotEmpty ? _titleController.text : null,
-        description: _descriptionController.text.isNotEmpty
-            ? _descriptionController.text
-            : null,
-        product: _productController.text.isNotEmpty
-            ? _productController.text
-            : null,
-        campaign: _campaignController.text.isNotEmpty
-            ? _campaignController.text
-            : null,
-        clientName: _clientNameController.text.isNotEmpty
-            ? _clientNameController.text
-            : null,
-        areaName: _areaNameController.text.isNotEmpty
-            ? _areaNameController.text
-            : null,
-        sellerName: _sellerNameController.text.isNotEmpty
-            ? _sellerNameController.text
-            : null,
-        sellerPhone: _sellerPhoneController.text.isNotEmpty
-            ? _sellerPhoneController.text
-            : null,
-        companyName: _companyNameController.text.isNotEmpty
-            ? _companyNameController.text
-            : null,
-        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        type: type,
+        clientName: _produtorController.text,
+        product: _produtoController.text,
+        areaName: _localController.text,
+        sellerName: _vendedorNomeController.text,
+        sellerPhone: _vendedorTelController.text,
+        description: _descricaoController.text,
         investmentLevel: _selectedInvestmentLevel,
-        highlightMetric: _highlightMetric,
-        showPercentage: _showPercentage,
-        comparisons: updatedComparisons,
+        // Persistir campos extras em Notes ou Campos adequados se o backend permitir
+        // Como o backend pode não ter todos, usamos os campos padrões.
+        title: _talhaoNameController.text.isNotEmpty
+            ? _talhaoNameController.text
+            : null,
       );
 
       final repository = ref.read(marketingPublicationRepositoryProvider);
       await repository.save(_publication!);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Publicação salva com sucesso'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('✅ Salvo com sucesso!')));
         context.pop(_publication);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Erro ao salvar: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSaving = false;
-        });
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
-  }
-
-  Future<void> _delete() async {
-    if (_publication == null || widget.publicationId == null) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir Publicação'),
-        content: const Text(
-          'Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      final repository = ref.read(marketingPublicationRepositoryProvider);
-      await repository.delete(_publication!.id);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('🗑️ Publicação excluída'),
-            backgroundColor: AppColors.warning,
-          ),
-        );
-        context.pop(null);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Erro ao excluir: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _pickPhotosForComparison(int index) async {
-    if (_publication == null) return;
-
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: true,
-    );
-
-    if (result == null || result.files.isEmpty) return;
-
-    final newPhotos = result.files
-        .where((f) => f.path != null)
-        .map(
-          (f) => PublicationPhoto.create(
-            path: f.path!,
-            order: _publication!.comparisons[index].photos.length,
-          ),
-        )
-        .toList();
-
-    setState(() {
-      final comparison = _publication!.comparisons[index];
-      final updatedComparison = comparison.copyWith(
-        photos: [...comparison.photos, ...newPhotos],
-      );
-      final updatedList = List<ComparisonEntry>.from(_publication!.comparisons);
-      updatedList[index] = updatedComparison;
-      _publication = _publication!.copyWith(comparisons: updatedList);
-      _hasChanges = true;
-    });
-  }
-
-  void _removePhotoFromComparison(int compIndex, int photoIndex) {
-    if (_publication == null) return;
-
-    setState(() {
-      final comparison = _publication!.comparisons[compIndex];
-      final updatedPhotos = List<PublicationPhoto>.from(comparison.photos)
-        ..removeAt(photoIndex);
-      final updatedComparison = comparison.copyWith(photos: updatedPhotos);
-      final updatedList = List<ComparisonEntry>.from(_publication!.comparisons);
-      updatedList[compIndex] = updatedComparison;
-      _publication = _publication!.copyWith(comparisons: updatedList);
-      _hasChanges = true;
-    });
-  }
-
-  void _addComparison() {
-    if (_publication == null) return;
-
-    final newComparison = ComparisonEntry.create(
-      label: 'Item ${_publication!.comparisons.length + 1}',
-      order: _publication!.comparisons.length,
-    );
-
-    _labelControllers[newComparison.id] = TextEditingController(
-      text: newComparison.label,
-    );
-    _productivityControllers[newComparison.id] = TextEditingController();
-    _ndviControllers[newComparison.id] = TextEditingController();
-    _biomassControllers[newComparison.id] = TextEditingController();
-
-    setState(() {
-      _publication = _publication!.copyWith(
-        comparisons: [..._publication!.comparisons, newComparison],
-      );
-      _hasChanges = true;
-    });
-  }
-
-  void _removeComparison(int index) {
-    if (_publication == null || _publication!.comparisons.length <= 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Mínimo de 2 itens para comparação')),
-      );
-      return;
-    }
-
-    final compId = _publication!.comparisons[index].id;
-    _labelControllers[compId]?.dispose();
-    _labelControllers.remove(compId);
-    _productivityControllers[compId]?.dispose();
-    _productivityControllers.remove(compId);
-    _ndviControllers[compId]?.dispose();
-    _ndviControllers.remove(compId);
-    _biomassControllers[compId]?.dispose();
-    _biomassControllers.remove(compId);
-
-    setState(() {
-      final updatedList = List<ComparisonEntry>.from(_publication!.comparisons)
-        ..removeAt(index);
-      _publication = _publication!.copyWith(comparisons: updatedList);
-      _hasChanges = true;
-    });
-  }
-
-  Widget build(BuildContext context) {
-    final isNewPublication = widget.publicationId == null;
-
-    return _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : _publication == null
-        ? _buildErrorState()
-        : Column(
-            children: [
-              // Header com ações (movido do AppBar)
-              Container(
-                color: Colors.white,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 8,
-                  left: 16,
-                  right: 16,
-                  bottom: 8,
-                ),
-                child: Row(
-                  children: [
-                    if (!isNewPublication)
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.error,
-                        ),
-                        onPressed: _delete,
-                      ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: _isSaving ? null : _save,
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text(
-                              'Salvar',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-              // TabBar (movido do AppBar)
-              Container(
-                color: Colors.white,
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: AppColors.textSecondary,
-                  indicatorColor: AppColors.primary,
-                  tabs: const [
-                    Tab(text: 'Dados'),
-                    Tab(text: 'Comparativo'),
-                    Tab(text: 'Resultado'),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildDadosTab(),
-                    _buildComparativoTab(),
-                    _buildResultadoTab(),
-                  ],
-                ),
-              ),
-            ],
-          );
-  }
-
-  Widget _buildErrorState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 64, color: AppColors.error),
-          const SizedBox(height: 16),
-          const Text('Publicação não encontrada'),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context.pop(),
-            child: const Text('Voltar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDadosTab() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Seção: Informações do Case
-          _buildSectionCard(
-            title: 'Informações do Case',
-            icon: Icons.info_outline,
-            children: [
-              _buildTextField(
-                controller: _titleController,
-                label: 'Título',
-                hint: 'Ex: Case de Sucesso - Fazenda São João',
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Descrição',
-                hint: 'Descreva o case...',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _productController,
-                label: 'Produto',
-                hint: 'Ex: SoloForte Premium',
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _campaignController,
-                label: 'Campanha/Safra',
-                hint: 'Ex: Safra 2024/25',
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Seção: Cliente e Área
-          _buildSectionCard(
-            title: 'Cliente e Área',
-            icon: Icons.location_on_outlined,
-            children: [
-              _buildTextField(
-                controller: _clientNameController,
-                label: 'Nome do Produtor/Cliente',
-                hint: 'Ex: José da Silva',
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _areaNameController,
-                label: 'Local/Talhão',
-                hint: 'Ex: Talhão Norte - 50ha',
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.gps_fixed, color: AppColors.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Lat: ${_publication?.latitude.toStringAsFixed(6)}\nLng: ${_publication?.longitude.toStringAsFixed(6)}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Seção: Vendedor/Consultor
-          _buildSectionCard(
-            title: 'Vendedor/Consultor',
-            icon: Icons.person_outline,
-            children: [
-              _buildTextField(
-                controller: _sellerNameController,
-                label: 'Nome',
-                hint: 'Ex: Maria Consultora',
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _sellerPhoneController,
-                label: 'Telefone',
-                hint: 'Ex: (11) 99999-9999',
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _companyNameController,
-                label: 'Empresa',
-                hint: 'Ex: Agro Solutions',
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Seção: Configurações
-          _buildSectionCard(
-            title: 'Configurações do Card',
-            icon: Icons.settings_outlined,
-            children: [
-              const Text(
-                'Nível de Destaque',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildInvestmentSelector(),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Seção: Observações
-          _buildSectionCard(
-            title: 'Observações',
-            icon: Icons.note_outlined,
-            children: [
-              _buildTextField(
-                controller: _notesController,
-                label: 'Notas internas',
-                hint: 'Anotações adicionais...',
-                maxLines: 4,
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildComparativoTab() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header com botão de adicionar
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Itens de Comparação',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _addComparison,
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('Adicionar'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Adicione itens para comparar (ex: Antes/Depois, Testemunha/Tratamento)',
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 20),
-
-          // Lista de comparações
-          if (_publication != null)
-            ...List.generate(
-              _publication!.comparisons.length,
-              (index) => _buildComparisonCard(index),
-            ),
-
-          const SizedBox(height: 40),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildComparisonCard(int index) {
-    final comparison = _publication!.comparisons[index];
-    final canRemove = _publication!.comparisons.length > 2;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _labelControllers[comparison.id],
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Nome do item...',
-                      isDense: true,
-                    ),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    onChanged: (_) => _hasChanges = true,
-                  ),
-                ),
-                if (canRemove)
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    color: AppColors.error,
-                    onPressed: () => _removeComparison(index),
-                  ),
-              ],
-            ),
-          ),
-
-          // Fotos
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Fotos',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildPhotoGrid(comparison.photos, index),
-              ],
-            ),
-          ),
-
-          // Métricas
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Métricas',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricField(
-                        controller: _productivityControllers[comparison.id]!,
-                        label: 'Produtividade',
-                        suffix: 'sc/ha',
-                        icon: Icons.trending_up,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildMetricField(
-                        controller: _ndviControllers[comparison.id]!,
-                        label: 'NDVI',
-                        suffix: '',
-                        icon: Icons.satellite_alt,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _buildMetricField(
-                  controller: _biomassControllers[comparison.id]!,
-                  label: 'Biomassa',
-                  suffix: 't/ha',
-                  icon: Icons.grass,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPhotoGrid(List<PublicationPhoto> photos, int compIndex) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        // Fotos existentes
-        ...photos.asMap().entries.map((entry) {
-          final photoIndex = entry.key;
-          final photo = entry.value;
-          return _buildPhotoTile(photo, compIndex, photoIndex);
-        }),
-        // Botão de adicionar
-        _buildAddPhotoButton(() => _pickPhotosForComparison(compIndex)),
-      ],
-    );
-  }
-
-  Widget _buildPhotoTile(
-    PublicationPhoto photo,
-    int compIndex,
-    int photoIndex,
-  ) {
-    return Stack(
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            image: DecorationImage(
-              image: FileImage(File(photo.path)),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: GestureDetector(
-            onTap: () => _removePhotoFromComparison(compIndex, photoIndex),
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.close, size: 12, color: Colors.white),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAddPhotoButton(VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.primary.withOpacity(0.3),
-            style: BorderStyle.solid,
-          ),
-        ),
-        child: const Icon(
-          Icons.add_photo_alternate_outlined,
-          color: AppColors.primary,
-          size: 32,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResultadoTab() {
-    if (_publication == null || _publication!.comparisons.length < 2) {
-      return const Center(
-        child: Text('Adicione pelo menos 2 itens de comparação'),
-      );
-    }
-
-    final gain = _publication!.calculateProductivityGain();
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Preview do resultado
-          _buildSectionCard(
-            title: 'Preview do Card',
-            icon: Icons.preview_outlined,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary,
-                      AppColors.primary.withOpacity(0.8),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      _showPercentage
-                          ? '${gain >= 0 ? '+' : ''}${gain.toStringAsFixed(1)}%'
-                          : '${_publication!.comparisons.last.productivity ?? 0} sc/ha',
-                      style: const TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _highlightMetric == 'productivity'
-                          ? 'Ganho de Produtividade'
-                          : _highlightMetric == 'ndvi'
-                          ? 'Variação NDVI'
-                          : 'Variação Biomassa',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildComparisonLabel(
-                          _publication!.comparisons.first.label,
-                          _publication!.comparisons.first.productivity,
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Icon(Icons.arrow_forward, color: Colors.white),
-                        ),
-                        _buildComparisonLabel(
-                          _publication!.comparisons.last.label,
-                          _publication!.comparisons.last.productivity,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Configurações de exibição
-          _buildSectionCard(
-            title: 'Configurações de Exibição',
-            icon: Icons.tune_outlined,
-            children: [
-              // Métrica destacada
-              const Text(
-                'Métrica Principal',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildMetricSelector(),
-              const SizedBox(height: 16),
-
-              // Toggle percentual
-              SwitchListTile(
-                title: const Text('Mostrar percentual'),
-                subtitle: const Text('Exibir ganho em % vs valor absoluto'),
-                value: _showPercentage,
-                activeColor: AppColors.primary,
-                contentPadding: EdgeInsets.zero,
-                onChanged: (value) {
-                  setState(() {
-                    _showPercentage = value;
-                    _hasChanges = true;
-                  });
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildComparisonLabel(String label, double? value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        if (value != null)
-          Text(
-            '${value.toStringAsFixed(0)} sc/ha',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 12,
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildMetricSelector() {
-    return SegmentedButton<String>(
-      segments: const [
-        ButtonSegment(
-          value: 'productivity',
-          label: Text('Produtividade'),
-          icon: Icon(Icons.trending_up, size: 18),
-        ),
-        ButtonSegment(
-          value: 'ndvi',
-          label: Text('NDVI'),
-          icon: Icon(Icons.satellite_alt, size: 18),
-        ),
-        ButtonSegment(
-          value: 'biomass',
-          label: Text('Biomassa'),
-          icon: Icon(Icons.grass, size: 18),
-        ),
-      ],
-      selected: {_highlightMetric},
-      onSelectionChanged: (values) {
-        setState(() {
-          _highlightMetric = values.first;
-          _hasChanges = true;
-        });
-      },
-    );
-  }
-
-  Widget _buildSectionCard({
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(icon, color: AppColors.primary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    String? hint,
-    int maxLines = 1,
-    TextInputType? keyboardType,
-  }) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-      ),
-      onChanged: (_) => _hasChanges = true,
-    );
-  }
-
-  Widget _buildMetricField({
-    required TextEditingController controller,
-    required String label,
-    required String suffix,
-    required IconData icon,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(
-        labelText: label,
-        suffixText: suffix,
-        prefixIcon: Icon(icon, size: 20, color: AppColors.textSecondary),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        isDense: true,
-        filled: true,
-        fillColor: Colors.grey.shade50,
-      ),
-      onChanged: (_) => _hasChanges = true,
-    );
-  }
-
-  Widget _buildInvestmentSelector() {
-    final levels = [
-      {'key': 'bronze', 'label': 'Bronze', 'color': const Color(0xFFCD7F32)},
-      {'key': 'prata', 'label': 'Prata', 'color': const Color(0xFFC0C0C0)},
-      {'key': 'ouro', 'label': 'Ouro', 'color': const Color(0xFFFFD700)},
-      {
-        'key': 'diamante',
-        'label': 'Diamante',
-        'color': const Color(0xFFB9F2FF),
-      },
-    ];
-
-    return Wrap(
-      spacing: 8,
-      children: levels.map((level) {
-        final isSelected = _selectedInvestmentLevel == level['key'];
-        return ChoiceChip(
-          label: Text(level['label'] as String),
-          selected: isSelected,
-          onSelected: (selected) {
-            if (selected) {
-              setState(() {
-                _selectedInvestmentLevel = level['key'] as String;
-                _hasChanges = true;
-              });
-            }
-          },
-          selectedColor: (level['color'] as Color).withOpacity(0.3),
-          avatar: Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: level['color'] as Color,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  void _showDiscardDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Descartar alterações?'),
-        content: const Text(
-          'Você tem alterações não salvas. Deseja descartá-las?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Continuar editando'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Descartar'),
-          ),
-        ],
-      ),
-    );
   }
 }

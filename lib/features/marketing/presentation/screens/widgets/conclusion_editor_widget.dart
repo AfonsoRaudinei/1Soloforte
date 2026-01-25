@@ -47,7 +47,7 @@ class ConclusionEditorWidget extends StatelessWidget {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Icon(Icons.close, size: 18, color: Colors.white),
@@ -62,7 +62,7 @@ class ConclusionEditorWidget extends StatelessWidget {
             style: const TextStyle(fontSize: 15, color: Color(0xFF1C1C1E)),
             decoration: InputDecoration(
               hintText: 'Digite a conclusão do case...',
-              fillColor: Colors.white.withOpacity(0.95),
+              fillColor: Colors.white.withValues(alpha: 0.95),
               filled: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),

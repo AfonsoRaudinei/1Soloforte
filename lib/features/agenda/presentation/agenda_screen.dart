@@ -9,6 +9,7 @@ import 'package:soloforte_app/core/theme/app_typography.dart';
 import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
 import 'package:soloforte_app/features/agenda/presentation/weekly_planning_screen.dart';
+import 'package:soloforte_app/shared/widgets/premium_card.dart';
 
 class AgendaScreen extends ConsumerStatefulWidget {
   final String? clientId;
@@ -237,59 +238,6 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
     );
   }
 
-  void _showFilterDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Consumer(
-          builder: (context, ref, _) {
-            final filterState = ref.watch(agendaFilterProvider);
-            return AlertDialog(
-              title: const Text('Filtrar Status'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: EventStatus.values.map((status) {
-                    return CheckboxListTile(
-                      title: Text(_getStatusLabel(status)),
-                      value: filterState.isStatusSelected(status),
-                      onChanged: (_) {
-                        ref
-                            .read(agendaFilterProvider.notifier)
-                            .toggleStatus(status);
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  String _getStatusLabel(EventStatus status) {
-    switch (status) {
-      case EventStatus.scheduled:
-        return 'Planejado';
-      case EventStatus.inProgress:
-        return 'Em Andamento';
-      case EventStatus.completed:
-        return 'Concluído';
-      case EventStatus.cancelled:
-        return 'Cancelado';
-      case EventStatus.rescheduled:
-        return 'Reagendado';
-    }
-  }
-
   Widget _buildMonthNavigator() {
     final title = DateFormat('MMMM yyyy', 'pt_BR').format(_focusedDay);
     return Padding(
@@ -407,8 +355,9 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
     //  │  │ [Iniciar] [Ver Detalhes]  │  │
     //  │  └───────────────────────────┘  │
 
-    return CustomCard(
+    return PremiumCard(
       margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -526,34 +475,6 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
           style: AppTypography.bodyMedium.copyWith(color: Colors.grey),
         ),
       ),
-    );
-  }
-}
-
-// Helper Widget for specific Card style
-class CustomCard extends StatelessWidget {
-  final Widget child;
-  final EdgeInsetsGeometry? margin;
-  const CustomCard({super.key, required this.child, this.margin});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: margin,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
     );
   }
 }

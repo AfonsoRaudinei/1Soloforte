@@ -172,7 +172,7 @@ class DashboardSidePanel extends ConsumerWidget {
           'Marketing',
           Icons.campaign,
           AppColors.purple500,
-          () => context.go('/map/marketing'),
+          () => context.go('/map'),
         ),
         _buildQuickAction(
           context,
