@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_map_post.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_publication.dart';
 
@@ -41,81 +40,52 @@ class MarkerZoomConfig {
 
 /// Unified RECTANGULAR card size configuration based on investment level.
 ///
-/// Each level (Bronze, Prata, Ouro) has distinct visual characteristics:
+/// Each level has distinct visual characteristics:
 /// - Card size (width, height)
-/// - Image size (rectangular, NOT circular)
-/// - Font sizes
-/// - Shadow intensity
+/// - Border width
+/// - Border radius
 class MarkerSizeConfig {
-  /// Size of the rectangular image area (square, but with rounded corners)
-  final double imageSize;
-
   /// Width of the entire card
   final double cardWidth;
 
-  /// Padding inside the card
-  final double cardPadding;
-
-  /// Font size for the main text (e.g., "65 sc/ha")
-  final double titleFontSize;
-
-  /// Font size for the secondary text (e.g., "Produto: X")
-  final double subtitleFontSize;
+  /// Height of the entire card
+  final double cardHeight;
 
   /// Border radius for the card corners
   final double borderRadius;
 
-  /// Border radius for the image corners
-  final double imageBorderRadius;
-
-  /// Border width (for gold level)
+  /// Border width
   final double borderWidth;
 
   const MarkerSizeConfig({
-    required this.imageSize,
     required this.cardWidth,
-    required this.cardPadding,
-    required this.titleFontSize,
-    required this.subtitleFontSize,
+    required this.cardHeight,
     required this.borderRadius,
-    required this.imageBorderRadius,
     this.borderWidth = 0,
   });
 
-  /// Gold level - Largest card with premium appearance (~92-100px height)
+  /// Gold level (alcance ampliado) - Largest card (+10-15%)
   static const gold = MarkerSizeConfig(
-    imageSize: 72.0,
-    cardWidth: 220.0,
-    cardPadding: 12.0,
-    titleFontSize: 15.0,
-    subtitleFontSize: 12.0,
-    borderRadius: 14.0,
-    imageBorderRadius: 10.0,
-    borderWidth: 3.5,
-  );
-
-  /// Silver level - Medium card (~72-76px height)
-  static const silver = MarkerSizeConfig(
-    imageSize: 52.0,
     cardWidth: 180.0,
-    cardPadding: 10.0,
-    titleFontSize: 13.0,
-    subtitleFontSize: 10.0,
+    cardHeight: 102.0,
     borderRadius: 12.0,
-    imageBorderRadius: 8.0,
-    borderWidth: 2.5,
+    borderWidth: 3.0,
   );
 
-  /// Bronze level - Smallest card (~56-60px height)
-  static const bronze = MarkerSizeConfig(
-    imageSize: 40.0,
-    cardWidth: 150.0,
-    cardPadding: 8.0,
-    titleFontSize: 11.0,
-    subtitleFontSize: 9.0,
+  /// Silver level (alcance regional) - Standard card
+  static const silver = MarkerSizeConfig(
+    cardWidth: 160.0,
+    cardHeight: 90.0,
     borderRadius: 10.0,
-    imageBorderRadius: 6.0,
     borderWidth: 2.0,
+  );
+
+  /// Bronze level (alcance local) - Smallest card
+  static const bronze = MarkerSizeConfig(
+    cardWidth: 140.0,
+    cardHeight: 80.0,
+    borderRadius: 10.0,
+    borderWidth: 1.0,
   );
 
   /// Get configuration for a given investment level.
@@ -133,12 +103,7 @@ class MarkerSizeConfig {
   }
 
   /// Calculate total marker height (horizontal layout).
-  /// Height is: imageSize + 2 * cardPadding + extra space for badge
-  /// This ensures text + badge fits within the row
-  double get totalHeight {
-    // Image size + padding + extra 8px for badge area
-    return imageSize + cardPadding * 2 + 10;
-  }
+  double get totalHeight => cardHeight;
 
   /// Calculate total marker width.
   double get totalWidth => cardWidth;
@@ -146,29 +111,11 @@ class MarkerSizeConfig {
 
 /// A unified marketing pin marker displayed as a SINGLE RECTANGULAR card.
 ///
-/// ## Design Architecture (HORIZONTAL Marker Card)
-///
-/// ```
-/// ┌─────────────────────────────────────────────┐
-/// │ ┌─────────┐  │  80 sc/ha                   │
-/// │ │  LOGO/  │  │  Produto: Coach             │ ← Card container (single shadow)
-/// │ │  FOTO   │  │  [Ouro] badge               │
-/// │ └─────────┘  │                              │
-/// └─────────────────────────────────────────────┘
-/// ```
-///
-/// ## Visual Hierarchy
-/// - Bronze: Smaller card, lighter shadow, subtle appearance
-/// - Prata: Medium card, medium shadow
-/// - Ouro: Larger card, stronger shadow, gold border accent
-///
-/// ## Key Features
-/// - SINGLE RECTANGULAR card container
-/// - Image with ROUNDED CORNERS (NOT circular)
-/// - Image and text side by side (horizontal layout)
-/// - Single unified shadow for entire card
-/// - No overflow issues
-/// - NO CircleAvatar, NO BoxShape.circle, NO ClipOval
+/// ## Visual Contract
+/// - Full-bleed image (no internal padding)
+/// - Simple external border only
+/// - Level-based size and border weight
+/// - No labels or badges
 class MarketingPinMarker extends StatelessWidget {
   /// The new standard data source.
   final MarketingPublication? publication;
@@ -218,11 +165,6 @@ class MarketingPinMarker extends StatelessWidget {
   String get _investmentLevel =>
       publication?.investmentLevel ?? legacyPost?.investmentLevel ?? 'prata';
 
-  String? get _productivity =>
-      publication?.highlightValue?.toString() ?? legacyPost?.productivity;
-
-  String? get _product => publication?.product ?? legacyPost?.product;
-
   dynamic get _coverPhoto {
     if (publication != null) return publication!.coverPhoto;
     return legacyPost?.coverPhoto;
@@ -249,6 +191,8 @@ class MarketingPinMarker extends StatelessWidget {
       );
     }
 
+    final levelOpacity = _getLevelOpacity(level);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
@@ -256,7 +200,7 @@ class MarketingPinMarker extends StatelessWidget {
         scale: isSelected ? 1.04 : 1.0,
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 200),
-          opacity: zoomConfig.cardOpacity,
+          opacity: zoomConfig.cardOpacity * levelOpacity,
           child: _buildMarkerCard(level, config),
         ),
       ),
@@ -266,92 +210,21 @@ class MarketingPinMarker extends StatelessWidget {
   /// Builds the unified RECTANGULAR marker card with image and text side by side.
   Widget _buildMarkerCard(String level, MarkerSizeConfig config) {
     final borderColor = _getBorderColor(level);
-    final shadow = _getCardShadow(level, isSelected: isSelected);
-
-    // Content data with safe defaults
-    final productivity = (_productivity ?? '').trim();
-    final product = (_product ?? '').trim();
-    final line1 = productivity.isEmpty ? 'Resultado' : productivity;
-    final line2 = product.isEmpty ? '' : product;
-
-    return Container(
+    return SizedBox(
       width: config.cardWidth,
-      constraints: BoxConstraints(
-        minHeight: config.imageSize + config.cardPadding * 2,
-      ),
-      padding: EdgeInsets.all(config.cardPadding),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFCFCFC), // Off-white background
-        borderRadius: BorderRadius.circular(config.borderRadius),
-        border: Border.all(color: borderColor, width: config.borderWidth),
-        boxShadow: shadow, // Single unified shadow
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // ══════════════════════════════════════════
-          // LEFT SECTION: Rectangular Image with rounded corners
-          // ══════════════════════════════════════════
-          Container(
-            width: config.imageSize,
-            height: config.imageSize,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(config.imageBorderRadius),
-              border: Border.all(
-                color: borderColor.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(config.imageBorderRadius - 1),
-              child: _buildCoverImage(config.imageSize),
-            ),
+      height: config.cardHeight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(config.borderRadius),
+          border: Border.all(color: borderColor, width: config.borderWidth),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(config.borderRadius - 1),
+          child: _buildCoverImage(
+            config.cardWidth,
+            config.cardHeight,
           ),
-
-          SizedBox(width: config.cardPadding),
-
-          // ══════════════════════════════════════════
-          // RIGHT SECTION: Text Content + Badge (compact layout)
-          // ══════════════════════════════════════════
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Line 1: Productivity (bold) - always shown
-                Text(
-                  line1,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: config.titleFontSize,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1D1D1F),
-                    height: 1.1,
-                  ),
-                ),
-                // Line 2: Product - only show if not empty
-                if (line2.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    line2,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: config.subtitleFontSize,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF6B7280),
-                      height: 1.1,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -359,56 +232,36 @@ class MarketingPinMarker extends StatelessWidget {
   /// Builds a simplified RECTANGULAR marker for extreme zoom-out.
   Widget _buildSimplifiedMarker(String level, MarkerSizeConfig config) {
     final borderColor = _getBorderColor(level);
-    final smallSize = config.imageSize * 0.6;
+    final smallWidth = config.cardWidth * 0.6;
+    final smallHeight = config.cardHeight * 0.6;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor, width: isSelected ? 3 : 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isSelected ? 0.2 : 0.15),
-            blurRadius: isSelected ? 6 : 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.campaign, color: borderColor, size: smallSize * 0.5),
-          const SizedBox(width: 4),
-          Text(
-            'Case',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: borderColor,
-            ),
-          ),
-        ],
+    return SizedBox(
+      width: smallWidth,
+      height: smallHeight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor, width: config.borderWidth),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(7),
+          child: _buildCoverImage(smallWidth, smallHeight),
+        ),
       ),
     );
   }
 
   /// Builds the cover image widget with rectangular bounds.
   /// Uses platform-specific implementation to handle Web vs Mobile.
-  Widget _buildCoverImage(double size) {
+  Widget _buildCoverImage(double width, double height) {
     // Dynamic type: can be MarketingPhoto or PublicationPhoto
     final cover = _coverPhoto;
 
     if (cover == null) {
       return Container(
-        width: size,
-        height: size,
-        color: const Color(0xFFF5F5F5),
-        child: Icon(
-          Icons.campaign,
-          color: AppColors.primary.withValues(alpha: 0.6),
-          size: size * 0.5,
-        ),
+        width: width,
+        height: height,
+        color: const Color(0xFFF2F2F2),
       );
     }
 
@@ -418,10 +271,10 @@ class MarketingPinMarker extends StatelessWidget {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return Image.network(
         path,
-        width: size,
-        height: size,
+        width: width,
+        height: height,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildImagePlaceholder(size),
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(width, height),
       );
     }
 
@@ -429,10 +282,10 @@ class MarketingPinMarker extends StatelessWidget {
     if (path.startsWith('blob:') || path.startsWith('data:')) {
       return Image.network(
         path,
-        width: size,
-        height: size,
+        width: width,
+        height: height,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildImagePlaceholder(size),
+        errorBuilder: (_, __, ___) => _buildImagePlaceholder(width, height),
       );
     }
 
@@ -440,74 +293,40 @@ class MarketingPinMarker extends StatelessWidget {
     // On Web, this will show fallback; on Mobile, uses Image.file
     return platform.buildLocalImage(
       path: path,
-      width: size,
-      height: size,
+      width: width,
+      height: height,
       fit: BoxFit.cover,
-      errorBuilder: () => _buildImagePlaceholder(size),
+      errorBuilder: () => _buildImagePlaceholder(width, height),
     );
   }
 
   /// Builds image placeholder for errors.
-  Widget _buildImagePlaceholder(double size) {
+  Widget _buildImagePlaceholder(double width, double height) {
     return Container(
-      color: const Color(0xFFF5F5F5),
-      child: Icon(
-        Icons.image_not_supported,
-        color: Colors.grey.withValues(alpha: 0.5),
-        size: size * 0.4,
-      ),
+      color: const Color(0xFFF2F2F2),
     );
   }
 
   /// Gets the accent/border color for a given level.
   Color _getBorderColor(String level) {
-    return level == 'ouro'
-        ? const Color(0xFFD4AF37) // Gold
-        : level == 'prata'
-        ? const Color(0xFFB0B0B0) // Silver
-        : const Color(0xFFCD7F32); // Bronze
-  }
-
-  /// Gets the unified card shadow for a given level.
-  /// Single shadow for the entire card.
-  List<BoxShadow> _getCardShadow(String level, {required bool isSelected}) {
     switch (level) {
       case 'ouro':
-        // Premium gold shadow - stronger and with golden tint
-        return [
-          BoxShadow(
-            color: const Color(0xFFD4AF37).withValues(
-              alpha: isSelected ? 0.45 : 0.35,
-            ),
-            blurRadius: isSelected ? 18 : 16,
-            spreadRadius: isSelected ? 3 : 2,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isSelected ? 0.16 : 0.12),
-            blurRadius: isSelected ? 14 : 12,
-            offset: const Offset(0, 4),
-          ),
-        ];
+        return const Color(0xFF5E646B); // Neutral dark gray
       case 'prata':
-        // Medium shadow
-        return [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isSelected ? 0.14 : 0.1),
-            blurRadius: isSelected ? 12 : 10,
-            spreadRadius: isSelected ? 2 : 1,
-            offset: const Offset(0, 4),
-          ),
-        ];
+        return const Color(0xFF8E959B); // Neutral medium gray
       default:
-        // Bronze - subtle shadow
-        return [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isSelected ? 0.12 : 0.08),
-            blurRadius: isSelected ? 8 : 6,
-            offset: const Offset(0, 3),
-          ),
-        ];
+        return const Color(0xFFBFC4C9); // Neutral light gray
+    }
+  }
+
+  double _getLevelOpacity(String level) {
+    switch (level) {
+      case 'ouro':
+        return 1.0;
+      case 'prata':
+        return 1.0;
+      default:
+        return 0.85;
     }
   }
 

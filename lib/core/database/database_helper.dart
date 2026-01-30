@@ -1,10 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static const _databaseName = "soloforte.db";
-  static const _databaseVersion = 8; // Incremented version to 8
 
   static const tableVisits = 'visits';
   static const tableAreas = 'areas';
@@ -13,6 +11,7 @@ class DatabaseHelper {
   static const tableMarketingPosts = 'marketing_posts';
   static const tableMarketingPlans = 'marketing_plans';
   static const tableMarketingPublications = 'marketing_publications';
+  static const tableTechnicalReports = 'technical_reports';
   static const tableClients = 'clients';
   static const tableAgendaEvents = 'agenda_events';
 
@@ -27,16 +26,10 @@ class DatabaseHelper {
     return _database!;
   }
 
-  bool get isOpen => _database?.isOpen ?? false;
+  static const _databaseVersion = 9; // Incremented version to 9
 
   Future<Database> _initDatabase() async {
-    String path;
-    if (kIsWeb) {
-      path = _databaseName; // On web, the factory handles the path
-    } else {
-      path = join(await getDatabasesPath(), _databaseName);
-    }
-
+    final path = join(await getDatabasesPath(), _databaseName);
     return await openDatabase(
       path,
       version: _databaseVersion,
@@ -53,6 +46,7 @@ class DatabaseHelper {
     await _createMarketingPostsTable(db);
     await _createMarketingPlansTable(db);
     await _createMarketingPublicationsTable(db);
+    await _createTechnicalReportsTable(db);
     await _createClientsTable(db);
     await _createAgendaEventsTable(db);
   }
@@ -92,6 +86,22 @@ class DatabaseHelper {
     if (oldVersion < 8) {
       await _createMarketingPublicationsTable(db);
     }
+
+    if (oldVersion < 9) {
+      await _createTechnicalReportsTable(db);
+    }
+  }
+
+  Future _createTechnicalReportsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableTechnicalReports (
+        id TEXT PRIMARY KEY,
+        visit_id TEXT NOT NULL,
+        client_id TEXT NOT NULL,
+        generated_at INTEGER NOT NULL,
+        json_data TEXT NOT NULL
+      )
+    ''');
   }
 
   Future _createVisitsTable(Database db) async {

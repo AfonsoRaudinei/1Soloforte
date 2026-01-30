@@ -1,0 +1,260 @@
+Analyzing soloforte_app...                                      
+
+   info • 'DatabaseServiceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/core/database/database_provider.dart:9:34 • deprecated_member_use_from_same_package
+   info • 'LocationServiceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/core/services/location/location_service.dart:49:33 • deprecated_member_use_from_same_package
+   info • 'AgendaRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/agenda/data/agenda_repository.dart:33:35 • deprecated_member_use_from_same_package
+warning • The declaration '_showFilterDialog' isn't referenced • lib/features/agenda/presentation/agenda_screen.dart:240:8 • unused_element
+   info • Unnecessary use of multiple underscores • lib/features/analysis/presentation/analysis_wizard_screen.dart:213:35 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/analysis/presentation/analysis_wizard_screen.dart:275:31 • unnecessary_underscores
+warning • The annotation 'JsonKey.new' can only be used on fields or getters • lib/features/areas/data/dtos/area_dto.dart:34:6 • invalid_annotation_target
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/areas/data/dtos/area_dto.freezed.dart:32:54 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/areas/data/dtos/area_dto.freezed.dart:301:14 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/areas/data/dtos/area_dto.freezed.dart:303:14 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/areas/data/dtos/area_dto.freezed.dart:421:33 • duplicate_ignore
+   info • 'AreasRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/areas/data/repositories/areas_repository_impl.dart:36:33 • deprecated_member_use_from_same_package
+warning • The annotation 'JsonKey.new' can only be used on fields or getters • lib/features/areas/domain/area_model.dart:12:6 • invalid_annotation_target
+   info • Unnecessary use of multiple underscores • lib/features/areas/presentation/widgets/areas_list_horizontal.dart:37:28 • unnecessary_underscores
+warning • The declaration '_isSupabaseReady' isn't referenced • lib/features/auth/data/auth_service.dart:29:12 • unused_element
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:39:14 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:107:39 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:169:39 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:213:27 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:219:22 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:232:32 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:247:22 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:311:27 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:322:39 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:343:34 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/features/auth/data/auth_service.dart:357:22 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/auth/presentation/login_screen.dart:373:58 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/auth/presentation/login_screen.dart:432:58 • use_build_context_synchronously
+   info • 'ClientHistoryRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/clients/data/client_history_repository.dart:76:3 • deprecated_member_use_from_same_package
+   info • 'ClientByIdRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/clients/presentation/client_detail_controller.dart:12:28 • deprecated_member_use_from_same_package
+   info • 'ClientFarmsRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/clients/presentation/client_detail_controller.dart:22:32 • deprecated_member_use_from_same_package
+   info • 'ClientHistoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/clients/presentation/client_detail_controller.dart:28:3 • deprecated_member_use_from_same_package
+   info • 'ClientStatsRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/clients/presentation/client_detail_controller.dart:38:33 • deprecated_member_use_from_same_package
+   info • Unnecessary use of multiple underscores • lib/features/dashboard/presentation/home_screen.dart:182:25 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/dashboard/presentation/home_screen.dart:182:29 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/dashboard/presentation/home_screen.dart:190:25 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/dashboard/presentation/home_screen.dart:190:29 • unnecessary_underscores
+warning • The declaration '_buildNdviPlaceholder' isn't referenced • lib/features/dashboard/presentation/home_screen.dart:1479:10 • unused_element
+   info • Unnecessary use of multiple underscores • lib/features/dashboard/presentation/home_screen.dart:1551:35 • unnecessary_underscores
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/dashboard/presentation/home_screen.dart:1557:17 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/dashboard/presentation/home_screen.dart:1558:17 • deprecated_member_use
+warning • The declaration '_MarketingPostDetailSheet' isn't referenced • lib/features/dashboard/presentation/home_screen.dart:2330:7 • unused_element
+warning • The declaration '_setCover' isn't referenced • lib/features/dashboard/presentation/home_screen.dart:2465:8 • unused_element
+warning • The declaration '_deletePhoto' isn't referenced • lib/features/dashboard/presentation/home_screen.dart:2479:8 • unused_element
+warning • The declaration '_editCaption' isn't referenced • lib/features/dashboard/presentation/home_screen.dart:2496:16 • unused_element
+   info • Unnecessary use of multiple underscores • lib/features/dashboard/presentation/widgets/map_layers/occurrences_layer.dart:77:18 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/ndvi_side_panel.dart:54:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/ndvi_tabs/comparison_tab.dart:149:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/ndvi_tabs/evolution_tab.dart:119:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/dashboard/presentation/widgets/ndvi_tabs/ndvi_main_tab.dart:113:37 • deprecated_member_use
+   info • 'FarmsRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/farms/data/farms_repository.dart:106:33 • deprecated_member_use_from_same_package
+   info • 'FarmsByClientRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/farms/presentation/farms_controller.dart:58:34 • deprecated_member_use_from_same_package
+   info • 'FarmByIdRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/farms/presentation/farms_controller.dart:63:24 • deprecated_member_use_from_same_package
+   info • Unnecessary use of multiple underscores • lib/features/harvests/presentation/harvest_list_screen.dart:55:35 • unnecessary_underscores
+warning • Dead code • lib/features/map/application/drawing_controller.dart:251:32 • dead_code
+warning • The left operand can't be null, so the right operand is never executed • lib/features/map/application/drawing_controller.dart:251:35 • dead_null_aware_expression
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/map/application/export_service.dart:158:15 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/map/application/export_service.dart:158:21 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/map/application/export_service.dart:189:15 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/map/application/export_service.dart:189:21 • deprecated_member_use
+   info • 'text' is deprecated and shouldn't be used. Use [value] to access the textual content of this node, or [innerText] to access the textual content of its descendants • lib/features/map/application/kml_service.dart:40:57 • deprecated_member_use
+   info • 'text' is deprecated and shouldn't be used. Use [value] to access the textual content of this node, or [innerText] to access the textual content of its descendants • lib/features/map/application/kml_service.dart:42:64 • deprecated_member_use
+   info • 'text' is deprecated and shouldn't be used. Use [value] to access the textual content of this node, or [innerText] to access the textual content of its descendants • lib/features/map/application/kml_service.dart:51:62 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/map/application/kml_service.dart:213:13 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/map/application/kml_service.dart:213:19 • deprecated_member_use
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/map/domain/geo_area.freezed.dart:26:54 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/map/domain/geo_area.freezed.dart:385:14 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/map/domain/geo_area.freezed.dart:387:14 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/map/domain/geo_area.freezed.dart:551:31 • duplicate_ignore
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/map/presentation/widgets/export_areas_bottom_sheet.dart:224:49 • deprecated_member_use
+warning • The value of the field '_availableColors' isn't used • lib/features/map/presentation/widgets/save_area_bottom_sheet.dart:51:21 • unused_field
+   info • Statements in an if should be enclosed in a block • lib/features/map/presentation/widgets/saved_areas_list_sheet.dart:234:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/map/presentation/widgets/saved_areas_list_sheet.dart:236:7 • curly_braces_in_flow_control_structures
+   info • Unnecessary use of '??' with 'null' • lib/features/marketing/domain/comparison_item.g.dart:18:67 • unnecessary_null_in_if_null_operators
+   info • Unnecessary use of '??' with 'null' • lib/features/marketing/domain/comparison_item.g.dart:19:51 • unnecessary_null_in_if_null_operators
+   info • Unnecessary use of '??' with 'null' • lib/features/marketing/domain/comparison_item.g.dart:20:57 • unnecessary_null_in_if_null_operators
+   info • Unnecessary use of '??' with 'null' • lib/features/marketing/domain/comparison_item.g.dart:23:42 • unnecessary_null_in_if_null_operators
+   info • Unnecessary use of '??' with 'null' • lib/features/marketing/domain/comparison_item.g.dart:24:42 • unnecessary_null_in_if_null_operators
+   info • Unnecessary use of '??' with 'null' • lib/features/marketing/domain/comparison_item.g.dart:49:42 • unnecessary_null_in_if_null_operators
+   info • Unnecessary use of '??' with 'null' • lib/features/marketing/domain/comparison_item.g.dart:50:42 • unnecessary_null_in_if_null_operators
+   info • Statements in a for should be enclosed in a block • lib/features/marketing/presentation/screens/publication_editor_screen.dart:120:49 • curly_braces_in_flow_control_structures
+   info • Statements in a for should be enclosed in a block • lib/features/marketing/presentation/screens/publication_editor_screen.dart:121:47 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/marketing/presentation/screens/publication_editor_screen.dart:240:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/marketing/presentation/screens/publication_editor_screen.dart:242:7 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/publication_editor_screen.dart:439:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/publication_editor_screen.dart:445:43 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/screens/publication_editor_screen.dart:525:41 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/screens/publication_editor_screen.dart:525:45 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/publication_editor_screen.dart:536:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/publication_editor_screen.dart:559:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/publication_editor_screen.dart:581:39 • deprecated_member_use
+warning • The value of the local variable 'item' isn't used • lib/features/marketing/presentation/screens/publication_editor_screen.dart:738:11 • unused_local_variable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/publication_editor_screen.dart:848:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/publication_editor_screen.dart:932:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/publication_editor_screen.dart:1036:29 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/features/marketing/presentation/screens/publication_editor_screen.dart:1376:9 • curly_braces_in_flow_control_structures
+warning • The value of the field '_primary' isn't used • lib/features/marketing/presentation/screens/widgets/comparison_editor_widget.dart:29:16 • unused_field
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/screens/widgets/comparison_editor_widget.dart:245:41 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/screens/widgets/comparison_editor_widget.dart:245:45 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/widgets/conclusion_editor_widget.dart:50:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/widgets/conclusion_editor_widget.dart:65:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/widgets/roi_editor_widget.dart:82:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/widgets/roi_editor_widget.dart:126:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/widgets/roi_editor_widget.dart:160:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/marketing/presentation/screens/widgets/roi_editor_widget.dart:171:37 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/create_post/image_picker_section.dart:38:39 • unnecessary_underscores
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/marketing/presentation/widgets/create_post/scheduling_section.dart:44:11 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/marketing/presentation/widgets/create_post/scheduling_section.dart:45:11 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/marketing/presentation/widgets/create_post/scheduling_section.dart:51:11 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/marketing/presentation/widgets/create_post/scheduling_section.dart:52:11 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_pin_marker.dart:424:27 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_pin_marker.dart:424:31 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_pin_marker.dart:435:27 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_pin_marker.dart:435:31 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_pin_marker_io.dart:19:23 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_pin_marker_io.dart:19:27 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_pin_marker_web.dart:23:25 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_pin_marker_web.dart:23:29 • unnecessary_underscores
+   info • Dangling library doc comment • lib/features/marketing/presentation/widgets/marketing_publication_bottom_sheet.dart:1:1 • dangling_library_doc_comments
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_publication_bottom_sheet.dart:184:27 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/marketing/presentation/widgets/marketing_publication_bottom_sheet.dart:184:31 • unnecessary_underscores
+   info • Dangling library doc comment • lib/features/marketing/presentation/widgets/marketing_publication_sheet_listener.dart:1:1 • dangling_library_doc_comments
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/marketing/services/social_share_service.dart:12:13 • deprecated_member_use
+   info • 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/marketing/services/social_share_service.dart:12:19 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/marketing/services/social_share_service.dart:15:13 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/marketing/services/social_share_service.dart:15:19 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/marketing/services/social_share_service.dart:52:13 • deprecated_member_use
+   info • 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/marketing/services/social_share_service.dart:52:19 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/marketing/services/social_share_service.dart:60:11 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/marketing/services/social_share_service.dart:60:17 • deprecated_member_use
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/ndvi/data/models/sentinel_token.freezed.dart:24:14 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/ndvi/data/models/sentinel_token.freezed.dart:26:76 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/ndvi/data/models/sentinel_token.freezed.dart:159:14 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/ndvi/data/models/sentinel_token.freezed.dart:163:14 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/ndvi/data/models/sentinel_token.freezed.dart:218:14 • duplicate_ignore
+warning • The diagnostic 'invalid_annotation_target' doesn't need to be ignored here because it's already being ignored • lib/features/ndvi/data/models/sentinel_token.freezed.dart:221:38 • duplicate_ignore
+   info • Unnecessary use of multiple underscores • lib/features/ndvi/presentation/ndvi_history_screen.dart:51:29 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/notifications/presentation/providers/notifications_provider.dart:24:20 • unnecessary_underscores
+warning • The declaration '_getMocks' isn't referenced • lib/features/occurrences/data/data_sources/occurrence_local_data_source.dart:73:23 • unused_element
+warning • The annotation 'JsonKey.new' can only be used on fields or getters • lib/features/occurrences/data/dtos/occurrence_dto.dart:19:6 • invalid_annotation_target
+   info • 'OccurrenceRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/occurrences/data/repositories/occurrence_repository_impl.dart:78:43 • deprecated_member_use_from_same_package
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/new_occurrence_screen.dart:493:39 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/occurrences/presentation/new_occurrence_screen.dart:733:23 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/occurrences/presentation/new_occurrence_screen.dart:735:23 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/occurrences/presentation/new_occurrence_screen.dart:742:23 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/occurrences/presentation/new_occurrence_screen.dart:744:23 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/features/occurrences/presentation/new_occurrence_screen.dart:1046:27 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/occurrences/presentation/new_occurrence_screen.dart:1046:31 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/occurrences/presentation/new_occurrence_screen.dart:1060:25 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/occurrences/presentation/new_occurrence_screen.dart:1060:29 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/occurrences/presentation/new_occurrence_screen.dart:1073:25 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/occurrences/presentation/new_occurrence_screen.dart:1073:29 • unnecessary_underscores
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/occurrences/presentation/occurrence_detail_screen.dart:519:9 • deprecated_member_use
+   info • 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/occurrences/presentation/occurrence_detail_screen.dart:519:15 • deprecated_member_use
+   info • 'OccurrenceDetailRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/occurrences/presentation/providers/occurrence_detail_provider.dart:8:38 • deprecated_member_use_from_same_package
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:231:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:265:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:286:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:382:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:463:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:523:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:528:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:608:23 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:618:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:665:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:707:42 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:794:37 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:794:41 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/occurrence_form_sheet_content.dart:806:41 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/features/occurrences/presentation/widgets/occurrence_report_modal.dart:178:38 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/features/occurrences/presentation/widgets/occurrence_report_modal.dart:179:46 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:479:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:672:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:675:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:741:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:744:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:773:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:780:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:827:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:836:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:889:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:912:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/occurrences/presentation/widgets/visit_report_form_sheet_content.dart:986:61 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/features/reports/application/report_service.dart:1553:11 • curly_braces_in_flow_control_structures
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/reports/application/report_sharing_service.dart:31:28 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/reports/application/report_sharing_service.dart:31:34 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/reports/application/report_sharing_service.dart:65:28 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/reports/application/report_sharing_service.dart:65:34 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/reports/application/report_sharing_service.dart:163:28 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/reports/application/report_sharing_service.dart:163:34 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/features/reports/presentation/reports_list_screen.dart:171:29 • unnecessary_underscores
+warning • The declaration '_exportCurrentReport' isn't referenced • lib/features/reports/presentation/reports_screen.dart:46:16 • unused_element
+   info • Unnecessary use of multiple underscores • lib/features/reports/presentation/reports_screen.dart:146:47 • unnecessary_underscores
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/reports/presentation/visit_report_screen.dart:537:17 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/reports/presentation/visit_report_screen.dart:538:17 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/reports/presentation/widgets/schedule_report_modal.dart:252:13 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/reports/presentation/widgets/schedule_report_modal.dart:253:13 • deprecated_member_use
+   info • Missing type annotation • lib/features/reports/presentation/wizard/configuration_step.dart:257:31 • strict_top_level_inference
+   info • Missing type annotation • lib/features/reports/presentation/wizard/configuration_step.dart:323:31 • strict_top_level_inference
+   info • Missing type annotation • lib/features/reports/presentation/wizard/personalization_step.dart:229:32 • strict_top_level_inference
+   info • Missing type annotation • lib/features/reports/presentation/wizard/personalization_step.dart:314:25 • strict_top_level_inference
+   info • Unnecessary use of multiple underscores • lib/features/scanner/presentation/scan_history_screen.dart:81:31 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/scanner/presentation/scanner_home_screen.dart:147:37 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/scanner/presentation/scanner_home_screen.dart:154:24 • unnecessary_underscores
+   info • 'SettingsLocalDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/settings/presentation/providers/settings_provider.dart:17:3 • deprecated_member_use_from_same_package
+   info • 'SettingsRemoteDataSourceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/settings/presentation/providers/settings_provider.dart:24:3 • deprecated_member_use_from_same_package
+   info • 'SettingsRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/settings/presentation/providers/settings_provider.dart:30:40 • deprecated_member_use_from_same_package
+   info • Unnecessary use of multiple underscores • lib/features/settings/presentation/settings_subpages.dart:252:35 • unnecessary_underscores
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:262:19 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:277:19 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/features/settings/presentation/settings_subpages.dart:376:20 • unnecessary_underscores
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:779:15 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:780:15 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:788:15 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:789:15 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:825:15 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:826:15 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:834:15 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:835:15 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:843:15 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/features/settings/presentation/settings_subpages.dart:844:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/settings/presentation/widgets/settings_widgets.dart:122:13 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/widgets/settings_widgets.dart:144:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/widgets/settings_widgets.dart:226:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/support/presentation/help_center_screen.dart:50:33 • deprecated_member_use
+   info • 'VisitRepositoryRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/visits/data/repositories/visit_repository_impl.dart:40:33 • deprecated_member_use_from_same_package
+   info • 'CalculateDapRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/visits/domain/usecases/calculate_dap.dart:13:27 • deprecated_member_use_from_same_package
+   info • 'GetActiveVisitRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/visits/domain/usecases/get_active_visit.dart:19:31 • deprecated_member_use_from_same_package
+   info • 'SaveVisitRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/visits/domain/usecases/save_visit.dart:20:21 • deprecated_member_use_from_same_package
+   info • Unnecessary use of multiple underscores • lib/features/visits/presentation/widgets/check_in_modal.dart:185:26 • unnecessary_underscores
+   info • 'WeatherServiceRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/weather/application/weather_provider.dart:10:31 • deprecated_member_use_from_same_package
+   info • 'WeatherForecastRef' is deprecated and shouldn't be used. Will be removed in 3.0. Use Ref instead • lib/features/weather/application/weather_provider.dart:17:3 • deprecated_member_use_from_same_package
+   info • Unnecessary use of multiple underscores • lib/features/weather/presentation/weather_next_24h_screen.dart:36:37 • unnecessary_underscores
+warning • The declaration '_searchLocation' isn't referenced • lib/features/weather/presentation/weather_screen.dart:98:16 • unused_element
+   info • Unnecessary use of multiple underscores • lib/features/weather/presentation/widgets/hourly_forecast.dart:31:35 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/features/weather/presentation/widgets/weather_alerts.dart:46:35 • unnecessary_underscores
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:8:3 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:15:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:20:3 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:37:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:62:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:64:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:70:3 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:135:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:138:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:140:7 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:142:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:143:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:144:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:145:5 • avoid_print
+   info • Don't invoke 'print' in production code • scripts/audit_shell_route.dart:148:5 • avoid_print
+warning • The value of the local variable 'mockFirestore' isn't used • test/unit/features/auth/auth_service_test.dart:22:30 • unused_local_variable
+   info • 'setMockMethodCallHandler' is deprecated and shouldn't be used. Use tester.binding.defaultBinaryMessenger.setMockMethodCallHandler or TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler instead. Pass the channel as the first argument. This feature was deprecated after v3.9.0-19.0.pre • test/unit/features/auth/auth_service_test.dart:30:7 • deprecated_member_use
+warning • The value of the local variable 'name' isn't used • test/unit/features/auth/auth_service_test.dart:81:15 • unused_local_variable
+warning • The diagnostic 'must_be_immutable' doesn't need to be ignored here because it's already being ignored • test/unit/features/auth/auth_service_test.mocks.dart:1219:12 • duplicate_ignore
+warning • The diagnostic 'must_be_immutable' doesn't need to be ignored here because it's already being ignored • test/unit/features/auth/auth_service_test.mocks.dart:1631:12 • duplicate_ignore
+
+256 issues found. (ran in 3.3s)

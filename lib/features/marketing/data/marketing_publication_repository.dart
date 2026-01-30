@@ -235,6 +235,7 @@ class MarketingPublicationRepository {
       'investmentLevel': publication.investmentLevel,
       'isVisible': publication.isVisible,
       'notes': publication.notes,
+      'createdBy': publication.createdBy, // ADICIONADO: Persistência da autoria
       'createdAt': publication.createdAt.toIso8601String(),
       'updatedAt': publication.updatedAt?.toIso8601String(),
       'publishedAt': publication.publishedAt?.toIso8601String(),
@@ -339,6 +340,7 @@ class MarketingPublicationRepository {
         investmentLevel: data['investmentLevel'] as String? ?? 'prata',
         isVisible: data['isVisible'] as bool? ?? true,
         notes: data['notes'] as String?,
+        createdBy: data['createdBy'] as String?, // ADICIONADO: Persistência
         createdAt: DateTime.parse(data['createdAt'] as String),
         updatedAt: data['updatedAt'] != null
             ? DateTime.tryParse(data['updatedAt'])

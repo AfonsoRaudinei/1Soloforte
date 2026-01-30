@@ -6,4 +6,5 @@ abstract class OccurrenceRepository {
   Future<void> createOccurrence(Occurrence occurrence);
   Future<void> updateOccurrence(Occurrence occurrence);
   Future<void> deleteOccurrence(String id);
+  Future<List<Occurrence>> getOccurrencesByVisitId(String visitId);
 }

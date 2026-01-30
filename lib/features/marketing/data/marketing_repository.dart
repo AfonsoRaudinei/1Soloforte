@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:soloforte_app/core/services/logger_service.dart';
+import 'package:soloforte_app/core/config/platform_capabilities.dart';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:soloforte_app/core/database/database_helper.dart';
@@ -19,9 +20,12 @@ class MarketingRepository implements MarketingRepositoryBase {
   // Rollback flag: set false to restore in-memory behavior immediately.
   static bool usePersistentMarketingRepository = true;
 
-  final MarketingRepositoryBase _delegate = usePersistentMarketingRepository
-      ? PersistentMarketingRepository()
-      : InMemoryMarketingRepository();
+  final MarketingRepositoryBase _delegate =
+      !PlatformCapabilities.supportsLocalDatabase
+      ? InMemoryMarketingRepository()
+      : (usePersistentMarketingRepository
+            ? PersistentMarketingRepository()
+            : InMemoryMarketingRepository());
 
   @override
   Future<void> savePost(Post post) => _delegate.savePost(post);
@@ -83,6 +87,10 @@ class InMemoryMarketingRepository implements MarketingRepositoryBase {
 
   @override
   Future<List<MarketingMapPost>> getMapPosts() async {
+    if (!PlatformCapabilities.supportsLocalDatabase) {
+      return List<MarketingMapPost>.from(_mapPosts);
+    }
+
     final db = await _dbHelper.database;
     final rows = await db.query(
       DatabaseHelper.tableMarketingPosts,
@@ -100,6 +108,17 @@ class InMemoryMarketingRepository implements MarketingRepositoryBase {
 
   @override
   Future<void> saveMapPost(MarketingMapPost post) async {
+    if (!PlatformCapabilities.supportsLocalDatabase) {
+      final normalized = post.ensureCover();
+      final index = _mapPosts.indexWhere((p) => p.id == normalized.id);
+      if (index >= 0) {
+        _mapPosts[index] = normalized;
+      } else {
+        _mapPosts.add(normalized);
+      }
+      return;
+    }
+
     final db = await _dbHelper.database;
     final normalized = post.ensureCover();
     await db.insert(
@@ -117,6 +136,11 @@ class InMemoryMarketingRepository implements MarketingRepositoryBase {
 
   @override
   Future<void> deleteMapPost(String id) async {
+    if (!PlatformCapabilities.supportsLocalDatabase) {
+      _mapPosts.removeWhere((p) => p.id == id);
+      return;
+    }
+
     final db = await _dbHelper.database;
     await db.delete(
       DatabaseHelper.tableMarketingPosts,

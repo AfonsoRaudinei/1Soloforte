@@ -76,64 +76,63 @@ class _CustomerSupportScreenState extends ConsumerState<CustomerSupportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 24,
-        left: 24,
-        right: 24,
-        bottom: 24,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Envie sua mensagem e nossa equipe responderá em breve.',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-            const SizedBox(height: 24),
-
-            // Assunto
-            TextFormField(
-              controller: _subjectController,
-              decoration: _inputDecoration('Assunto'),
-              validator: (v) =>
-                  v?.isNotEmpty == true ? null : 'Informe o assunto',
-            ),
-            const SizedBox(height: 16),
-
-            // Mensagem
-            TextFormField(
-              controller: _messageController,
-              maxLines: 5,
-              decoration: _inputDecoration(
-                'Mensagem',
-              ).copyWith(alignLabelWithHint: true),
-              validator: (v) =>
-                  v?.isNotEmpty == true ? null : 'Escreva sua mensagem',
-            ),
-            const SizedBox(height: 32),
-
-            // Botão Enviar
-            FilledButton(
-              onPressed: _isLoading ? null : _submit,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: AppColors.primary,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
+      appBar: AppBar(title: const Text('Falar com Suporte'), centerTitle: true),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Envie sua mensagem e nossa equipe responderá em breve.',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Enviar Mensagem'),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // Assunto
+              TextFormField(
+                controller: _subjectController,
+                decoration: _inputDecoration('Assunto'),
+                validator: (v) =>
+                    v?.isNotEmpty == true ? null : 'Informe o assunto',
+              ),
+              const SizedBox(height: 16),
+
+              // Mensagem
+              TextFormField(
+                controller: _messageController,
+                maxLines: 5,
+                decoration: _inputDecoration(
+                  'Mensagem',
+                ).copyWith(alignLabelWithHint: true),
+                validator: (v) =>
+                    v?.isNotEmpty == true ? null : 'Escreva sua mensagem',
+              ),
+              const SizedBox(height: 32),
+
+              // Botão Enviar
+              FilledButton(
+                onPressed: _isLoading ? null : _submit,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: AppColors.primary,
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Enviar Mensagem'),
+              ),
+            ],
+          ),
         ),
       ),
     );

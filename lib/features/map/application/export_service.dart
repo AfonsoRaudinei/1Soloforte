@@ -1,7 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:io';
 import 'package:soloforte_app/core/services/logger_service.dart';
-import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:soloforte_app/core/config/platform_capabilities.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:soloforte_app/features/map/domain/geo_area.dart';
@@ -148,7 +149,7 @@ class ExportService {
     required String mimeType,
   }) async {
     // 1. Write to temporary file
-    if (!kIsWeb) {
+    if (!PlatformCapabilities.isWeb) {
       try {
         final dir = await getTemporaryDirectory();
         final file = File('${dir.path}/$filename');

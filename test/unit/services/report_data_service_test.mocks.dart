@@ -89,6 +89,16 @@ class MockOccurrenceRepository extends _i1.Mock
             returnValueForMissingStub: _i3.Future<void>.value(),
           )
           as _i3.Future<void>);
+
+  @override
+  _i3.Future<List<_i4.Occurrence>> getOccurrencesByVisitId(String? visitId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getOccurrencesByVisitId, [visitId]),
+            returnValue: _i3.Future<List<_i4.Occurrence>>.value(
+              <_i4.Occurrence>[],
+            ),
+          )
+          as _i3.Future<List<_i4.Occurrence>>);
 }
 
 /// A class which mocks [HarvestRepository].

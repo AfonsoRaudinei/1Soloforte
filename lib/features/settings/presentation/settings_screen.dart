@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/core/theme/app_typography.dart';
+import 'package:soloforte_app/core/theme/theme_provider.dart';
 import 'package:soloforte_app/features/settings/presentation/widgets/settings_widgets.dart';
 import 'providers/settings_provider.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
@@ -13,6 +14,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsControllerProvider);
+    final currentTheme = ref.watch(themeIdProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
@@ -35,20 +37,13 @@ class SettingsScreen extends ConsumerWidget {
                       _buildManagementSection(context),
                       const SizedBox(height: 24),
 
-                      _buildVisualStyleSection(
-                        context,
-                        ref,
-                        settings.visualStyle,
-                      ),
-                      const SizedBox(height: 24),
-
                       _buildNotificationsSection(context, ref, settings),
                       const SizedBox(height: 24),
 
                       _buildMapsDataSection(context, ref, settings),
                       const SizedBox(height: 24),
 
-                      _buildAppearanceSection(context),
+                      _buildAppearanceSection(context, ref, currentTheme),
                       const SizedBox(height: 24),
 
                       _buildSupportSection(context),
@@ -100,28 +95,14 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => context.push('/map/settings/integrations'),
             ),
             const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
+
             SettingsNavigableRow(
-              icon: Icons.campaign_outlined,
-              iconGradient: _greenGradient,
-              title: 'Marketing',
-              subtitle: 'Planos comerciais e regras',
-              onTap: () => context.push('/map/settings/marketing-plans'),
-            ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
-            SettingsNavigableRow(
-              icon: Icons.newspaper_outlined,
-              iconGradient: _orangeGradient,
-              title: 'Notícias',
-              subtitle: 'Atualizações do setor',
-              onTap: () => context.push('/map/settings/news'),
-            ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
-            SettingsNavigableRow(
-              icon: Icons.link,
+              icon: Icons.description_outlined,
               iconGradient: _defaultGradient,
-              title: 'LinkHub',
-              subtitle: 'Acesso rápido',
-              onTap: () => context.push('/map/settings/link-hub'),
+              title: 'Documentação',
+              subtitle: 'Guias e referências do sistema',
+              onTap: () =>
+                  context.push('/consultoria/comunicacao/documentacao'),
             ),
           ],
         ),
@@ -253,54 +234,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildVisualStyleSection(
-    BuildContext context,
-    WidgetRef ref,
-    String currentStyle,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SettingsSectionLabel('ESTILO VISUAL'),
-        Row(
-          children: [
-            Expanded(
-              child: SettingsStyleOption(
-                id: 'ios',
-                title: 'Clean iOS',
-                subtitle: 'Minimalista e fluido',
-                icon: Icons.phone_iphone,
-                gradient: _defaultGradient,
-                selectedId: currentStyle,
-                onSelected: (id) {
-                  ref
-                      .read(settingsControllerProvider.notifier)
-                      .updateSetting(visualStyle: id);
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SettingsStyleOption(
-                id: 'material',
-                title: 'Material 3',
-                subtitle: 'Padrão Android',
-                icon: Icons.android,
-                gradient: _greenGradient,
-                selectedId: currentStyle,
-                onSelected: (id) {
-                  ref
-                      .read(settingsControllerProvider.notifier)
-                      .updateSetting(visualStyle: id);
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildNotificationsSection(
     BuildContext context,
     WidgetRef ref,
@@ -410,11 +343,63 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAppearanceSection(BuildContext context) {
+  Widget _buildAppearanceSection(
+    BuildContext context,
+    WidgetRef ref,
+    String currentTheme,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SettingsSectionLabel('APARÊNCIA'),
+        // Três opções de tema lado a lado
+        Row(
+          children: [
+            Expanded(
+              child: SettingsStyleOption(
+                id: 'blue',
+                title: 'Clean iOS',
+                subtitle: 'Azul Samsung',
+                icon: Icons.phone_iphone,
+                gradient: const [Color(0xFF0057FF), Color(0xFF2563EB)],
+                selectedId: currentTheme,
+                onSelected: (id) async {
+                  await ref.setTheme(id);
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SettingsStyleOption(
+                id: 'green',
+                title: 'Material 3',
+                subtitle: 'Verde iOS',
+                icon: Icons.android,
+                gradient: const [Color(0xFF10B981), Color(0xFF059669)],
+                selectedId: currentTheme,
+                onSelected: (id) async {
+                  await ref.setTheme(id);
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SettingsStyleOption(
+                id: 'dark',
+                title: 'Tema Escuro',
+                subtitle: 'Black Gold',
+                icon: Icons.dark_mode,
+                gradient: const [Color(0xFF1E1E1E), Color(0xFF000000)],
+                selectedId: currentTheme,
+                onSelected: (id) async {
+                  await ref.setTheme(id);
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Idioma ainda separado
         SettingsCardContainer(
           children: [
             SettingsNavigableRow(
@@ -423,14 +408,6 @@ class SettingsScreen extends ConsumerWidget {
               title: 'Idioma',
               subtitle: 'Português (BR)',
               onTap: () => context.push('/map/settings/language'),
-            ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
-            SettingsNavigableRow(
-              icon: Icons.dark_mode_outlined,
-              iconGradient: [Colors.black87, Colors.black54],
-              title: 'Tema Escuro',
-              subtitle: 'Sistema',
-              onTap: () => context.push('/map/settings/theme'),
             ),
           ],
         ),

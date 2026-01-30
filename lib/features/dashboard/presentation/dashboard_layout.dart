@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:soloforte_app/core/config/platform_capabilities.dart';
 import 'package:soloforte_app/shared/widgets/contextual_floating_button.dart';
+import 'package:go_router/go_router.dart';
+import 'package:soloforte_app/features/dashboard/presentation/widgets/web_dashboard_gate.dart';
 import 'side_menu.dart';
 
 class DashboardLayout extends StatefulWidget {
   final Widget child;
-  const DashboardLayout({super.key, required this.child});
+  final bool isPublicPreview;
+  const DashboardLayout({
+    super.key,
+    required this.child,
+    required this.isPublicPreview,
+  });
 
   @override
   State<DashboardLayout> createState() => _DashboardLayoutState();
@@ -23,9 +31,36 @@ class _DashboardLayoutState extends State<DashboardLayout> {
 
   @override
   Widget build(BuildContext context) {
+    // 🧱 GATE DE WEB (OBRIGATÓRIO)
+    // Impede que o Dashboard/Mapa execute lógica pesada de storage no primeiro frame
+    // Retorna a UI simplificada se estiver no Web e na rota principal
+    // 🧱 GATE DE WEB (REMOVIDO A PEDIDO - "MODO NORMAL")
+    // O usuário solicitou ver o app completo mesmo no web/preview.
+    /*
+    if (PlatformCapabilities.isWeb) {
+      final String location = GoRouterState.of(context).uri.path;
+      // Rotas pesadas que devem ser bloqueadas no Web
+      // '/map' e '/' usam HomeScreen que tem init pesado
+      if (location == '/map' || location == '/') {
+        return const WebDashboardGate();
+      }
+    }
+    */
+
+    final isPublicPreview = widget.isPublicPreview;
+    final shouldRenderInternalUi = !isPublicPreview;
+    assert(
+      !(isPublicPreview && shouldRenderInternalUi),
+      'UI interna renderizada em modo publico',
+    );
+
     return DashboardDrawerScope(
       isEndDrawerOpen: _isEndDrawerOpen,
-      openEndDrawer: () => _scaffoldKey.currentState?.openEndDrawer(),
+      openEndDrawer: () {
+        if (shouldRenderInternalUi) {
+          _scaffoldKey.currentState?.openEndDrawer();
+        }
+      },
       child: Stack(
         children: [
           // Scaffold principal
@@ -33,8 +68,8 @@ class _DashboardLayoutState extends State<DashboardLayout> {
             key: _scaffoldKey,
             extendBodyBehindAppBar: true,
             appBar: null, // Sem AppBar no ShellRoute (Hard Mode)
-            endDrawer: const SideMenu(),
-            endDrawerEnableOpenDragGesture: true,
+            endDrawer: shouldRenderInternalUi ? const SideMenu() : null,
+            endDrawerEnableOpenDragGesture: shouldRenderInternalUi,
             drawerScrimColor: Colors.black.withValues(alpha: 0.4),
             onEndDrawerChanged: (isOpen) => _isEndDrawerOpen.value = isOpen,
             body: widget.child,
@@ -44,11 +79,12 @@ class _DashboardLayoutState extends State<DashboardLayout> {
           // ✅ CORREÇÃO ESTRUTURAL DE Z-ORDER:
           // Botão Flutuante Contextual posicionado FORA do Scaffold
           // para garantir que NUNCA seja coberto pelo Drawer.
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: const ContextualFloatingButton(),
-          ),
+          if (shouldRenderInternalUi)
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: const ContextualFloatingButton(),
+            ),
         ],
       ),
     );
@@ -59,7 +95,8 @@ class DashboardDrawerScope extends InheritedWidget {
   final ValueListenable<bool> isEndDrawerOpen;
   final VoidCallback openEndDrawer;
 
-  const DashboardDrawerScope({super.key, 
+  const DashboardDrawerScope({
+    super.key,
     required this.isEndDrawerOpen,
     required this.openEndDrawer,
     required super.child,

@@ -9,7 +9,6 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/dashboard/presentation/dashboard_layout.dart';
 import '../features/dashboard/presentation/home_screen.dart';
 // import '../features/map/presentation/map_screen.dart';
-import '../features/landing/presentation/landing_screen.dart';
 
 import '../features/analysis/presentation/analysis_wizard_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
@@ -32,7 +31,6 @@ import '../features/support/presentation/create_ticket_screen.dart';
 import '../features/support/domain/ticket_model.dart';
 
 import '../features/scanner/presentation/scanner_screen.dart';
-import '../features/occurrences/presentation/occurrence_list_screen.dart';
 import '../features/occurrences/presentation/occurrence_detail_screen.dart';
 import '../features/occurrences/presentation/new_occurrence_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
@@ -51,6 +49,7 @@ import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'package:latlong2/latlong.dart';
 import '../features/settings/presentation/settings_subpages.dart';
+import '../core/storage/presentation/storage_management_screen.dart';
 import '../features/feedback/presentation/feedback_screen.dart';
 import 'package:soloforte_app/features/scanner/presentation/scan_result_screen.dart';
 import 'package:soloforte_app/features/scanner/domain/scan_result_model.dart';
@@ -76,15 +75,17 @@ import '../features/consultancy/communication/presentation/screens/system_docume
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 // Router Provider with Auth Guards
-final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+final routerProvider = FutureProvider<GoRouter>((ref) async {
+  final authState = await ref.watch(authStateProvider.future);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/',
+    initialLocation: '/login',
     redirect: (context, state) {
-      // 1. Determine Auth State (treating Loading and Error as Not Authenticated for routing safety)
-      final isAuthenticated = authState.valueOrNull != null;
+      // 1. Determine Auth State
+      // Since we awaited the future, we have the current state.
+      // If the provider rebuilds (new auth state), a new router is created with the new closure.
+      final isAuthenticated = authState != null;
       final currentPath = state.uri.path;
 
       // 2. Identify Public Routes
@@ -98,11 +99,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPublicRoute = publicRoutes.contains(currentPath);
 
       // 3. Handle Loading State
-      // If still loading, do not redirect unless necessary.
-      // If we are already on a public route, let it be.
-      if (authState.isLoading) {
-        return null;
-      }
+      // FutureProvider handles the initial loading.
+      // This redirect logic runs when the router is already built.
 
       // 4. Redirect Logic
 
@@ -114,14 +112,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       // If authenticated and trying to access a public route (like /login) -> /map
       // EXCEPT for root '/' which might be a landing page we still want to show or redirect.
       // Here we redirect all public routes to /map once authenticated.
-      if (isAuthenticated && isPublicRoute) {
+      if (isAuthenticated && isPublicRoute && currentPath != '/') {
         return '/map';
       }
 
       return null; // Stay on the current path
     },
     routes: [
-      GoRoute(path: '/', builder: (context, state) => const LandingScreen()),
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const DashboardLayout(
+          isPublicPreview: true,
+          child: HomeScreen(isPublicPreview: true),
+        ),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
@@ -138,7 +142,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Map Shell Route (formerly Dashboard)
       ShellRoute(
         builder: (context, state, child) {
-          return DashboardLayout(child: child);
+          return DashboardLayout(isPublicPreview: false, child: child);
         },
         routes: [
           GoRoute(
@@ -153,13 +157,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                 location = extra['location'] as LatLng?;
                 clientId = extra['clientId'] as String?;
               }
-              return HomeScreen(initialLocation: location, clientId: clientId);
+              return HomeScreen(
+                initialLocation: location,
+                clientId: clientId,
+                isPublicPreview: false,
+              );
             },
           ),
           // Sub-routes for /map
           GoRoute(
             path: '/map/occurrences',
-            builder: (context, state) => const OccurrenceListScreen(),
+            redirect: (context, state) => '/map',
           ),
           GoRoute(
             path: '/map/reports',
@@ -287,7 +295,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'storage',
             parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) => const StorageSettingsScreen(),
+            builder: (context, state) => const StorageManagementScreen(),
           ),
           GoRoute(
             path: 'language',
@@ -416,6 +424,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             initialLongitude: extras?['longitude'],
             recurrentFrom: extras?['recurrentFrom'] as Occurrence?,
             clientId: extras?['clientId'] as String?,
+            visitId: extras?['visitId'] as String?,
           );
         },
       ),

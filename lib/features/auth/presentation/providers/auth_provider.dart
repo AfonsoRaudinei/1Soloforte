@@ -9,9 +9,16 @@ final authServiceProvider = Provider<IAuthService>((ref) {
 });
 
 // Auth State Provider
-final authStateProvider = StreamProvider<app.AuthState?>((ref) {
+final authStateProvider = StreamProvider<app.AuthState?>((ref) async* {
   final authService = ref.watch(authServiceProvider);
-  return authService.authStateChanges;
+
+  // Yield initial state immediately to avoid missing the first event
+  // in case the broadcast stream emitted before we started listening.
+  final current = await authService.checkAuth();
+  yield current;
+
+  // Listen for subsequent changes
+  yield* authService.authStateChanges;
 });
 
 // Auth Controller Provider

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:soloforte_app/core/theme/app_colors.dart';
 
 /// A premium, reusable card with SoloForte aesthetics.
 class PremiumCard extends StatelessWidget {

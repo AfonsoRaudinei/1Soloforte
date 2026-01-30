@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:soloforte_app/core/config/platform_capabilities.dart';
 import 'dart:io'
     show
         Platform; // Conditional import would be better but this works if guarded
@@ -12,7 +12,7 @@ class SecurityChecker {
 
   /// Check if device is rooted/jailbroken
   static Future<bool> isDeviceRooted() async {
-    if (kIsWeb) return false;
+    if (!PlatformCapabilities.supportsDeviceSecurityChecks) return false;
     try {
       return await FlutterJailbreakDetection.jailbroken;
     } catch (e) {
@@ -22,7 +22,7 @@ class SecurityChecker {
 
   /// Check if device is in developer mode
   static Future<bool> isDeveloperMode() async {
-    if (kIsWeb) return false;
+    if (!PlatformCapabilities.supportsDeviceSecurityChecks) return false;
     try {
       return await FlutterJailbreakDetection.developerMode;
     } catch (e) {
@@ -40,7 +40,7 @@ class SecurityChecker {
 
   /// Check if running on emulator
   static Future<bool> isEmulator() async {
-    if (kIsWeb) return false;
+    if (!PlatformCapabilities.supportsDeviceSecurityChecks) return false;
     if (Platform.isAndroid) {
       return await _isAndroidEmulator();
     } else if (Platform.isIOS) {
@@ -50,7 +50,7 @@ class SecurityChecker {
   }
 
   static Future<bool> _isAndroidEmulator() async {
-    if (kIsWeb) return false;
+    if (!PlatformCapabilities.supportsDeviceSecurityChecks) return false;
     try {
       final androidInfo = await _deviceInfo.androidInfo;
 
@@ -64,7 +64,7 @@ class SecurityChecker {
   }
 
   static Future<bool> _isIOSSimulator() async {
-    if (kIsWeb) return false;
+    if (!PlatformCapabilities.supportsDeviceSecurityChecks) return false;
     try {
       final iosInfo = await _deviceInfo.iosInfo;
       return !iosInfo.isPhysicalDevice;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
+import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_sheet_provider.dart';
 
 class OccurrencesLayer extends ConsumerWidget {
   final String? clientId;
@@ -39,37 +39,39 @@ class OccurrencesLayer extends ConsumerWidget {
       data: (occurrences) {
         var filteredOccurrences = occurrences;
         if (shouldFilter) {
-          filteredOccurrences =
-              occurrences.where((occ) => occ.clientId == clientId).toList();
+          filteredOccurrences = occurrences
+              .where((occ) => occ.clientId == clientId)
+              .toList();
         }
         return MarkerLayer(
           markers: filteredOccurrences.map((occ) {
-          return Marker(
-            point: LatLng(occ.latitude, occ.longitude),
-            width: 40,
-            height: 40,
-            child: GestureDetector(
-              onTap: () => context.push('/occurrences/detail/${occ.id}'),
-              child: Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  _getOccurrenceIcon(occ.type),
-                  color: _getSeverityColor(occ.severity),
-                  size: 24,
+            return Marker(
+              point: LatLng(occ.latitude, occ.longitude),
+              width: 40,
+              height: 40,
+              child: GestureDetector(
+                onTap: () =>
+                    ref.read(occurrenceSheetProvider.notifier).select(occ),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _getOccurrenceIcon(occ.type),
+                    color: _getSeverityColor(occ.severity),
+                    size: 24,
+                  ),
                 ),
               ),
-            ),
-          );
+            );
           }).toList(),
         );
       },

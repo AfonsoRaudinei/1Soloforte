@@ -3,6 +3,9 @@ import 'package:geolocator/geolocator.dart';
 import '../domain/entities/visit.dart';
 import '../data/repositories/visit_repository_impl.dart';
 import '../../clients/domain/client_model.dart';
+import 'package:soloforte_app/core/services/logger_service.dart';
+import 'package:soloforte_app/features/reports/domain/usecases/generate_report_use_case.dart';
+import 'package:soloforte_app/features/reports/presentation/providers/technical_report_providers.dart';
 
 part 'visit_controller.g.dart';
 
@@ -89,6 +92,29 @@ class VisitController extends _$VisitController {
       );
 
       await ref.read(visitRepositoryProvider).saveVisit(completedVisit);
+
+      // Auto-generate Technical Report
+      try {
+        await ref
+            .read(generateReportUseCaseProvider)
+            .call(
+              GenerateReportParams(
+                visitId: completedVisit.id,
+                technicalResponsible: 'Eng. Agrônomo (Usuário)',
+              ),
+            );
+        LoggerService.i(
+          'Technical Report auto-generated for visit ${completedVisit.id}',
+        );
+      } catch (e, s) {
+        LoggerService.e(
+          'Failed to auto-generate Technical Report',
+          error: e,
+          stackTrace: s,
+        );
+        // Continue to finish checkout even if report fails
+      }
+
       state = const AsyncData(null); // Clear active visit
     } catch (e, stack) {
       state = AsyncError(e, stack);

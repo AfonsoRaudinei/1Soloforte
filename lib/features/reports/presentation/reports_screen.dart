@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/features/reports/presentation/tabs/crop_summary_tab.dart';
 import 'package:soloforte_app/features/reports/presentation/tabs/custom_report_tab.dart';
+import 'package:soloforte_app/features/reports/presentation/tabs/marketing_tab.dart';
 import 'package:soloforte_app/features/reports/presentation/tabs/ndvi_analysis_tab.dart';
 import 'package:soloforte_app/features/reports/presentation/tabs/pest_report_tab.dart';
 import 'package:soloforte_app/features/reports/presentation/tabs/weekly_report_tab.dart';
@@ -34,7 +35,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
   }
 
   @override
@@ -51,27 +52,27 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
       final currentIndex = _tabController.index;
 
       switch (currentIndex) {
-        case 2: // Semanal
+        case 3: // Semanal
           final range = ref.read(dateFilterProvider).dateRange;
           await exporter.exportByTemplate(
             template: ReportTemplate.weekly,
             weeklyRange: DateTimeRange(start: range.start, end: range.end),
           );
           break;
-        case 3: // NDVI
+        case 4: // NDVI
           final drawingState = ref.read(drawingControllerProvider);
           await exporter.exportByTemplate(
             template: ReportTemplate.ndvi,
             areas: drawingState.savedAreas,
           );
           break;
-        case 4: // Safra
+        case 5: // Safra
           await exporter.exportByTemplate(template: ReportTemplate.cropSummary);
           break;
-        case 5: // Pragas
+        case 6: // Pragas
           await exporter.exportByTemplate(template: ReportTemplate.pest);
           break;
-        case 6: // Personalizado
+        case 7: // Personalizado
           final prefs = ref.read(report_layout.sharedPreferencesProvider).value;
           if (prefs == null) {
             throw Exception('Preferências ainda não carregadas.');
@@ -121,6 +122,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
               tabs: [
                 const Tab(text: 'Histórico'),
                 const Tab(text: 'Ocorrências'),
+                const Tab(text: 'Marketing'),
                 const Tab(text: 'Semanal'),
                 const Tab(text: 'NDVI'),
                 const Tab(text: 'Safra'),
@@ -183,6 +185,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                         },
                       ),
                 const OccurrenceListView(),
+                const MarketingTab(),
                 const WeeklyReportTab(),
                 const NdviAnalysisTab(),
                 const CropSummaryTab(),

@@ -41,6 +41,10 @@ import 'package:soloforte_app/features/marketing/presentation/providers/marketin
 import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_publication_sheet_listener.dart';
 import 'package:soloforte_app/features/marketing/presentation/services/marketing_interaction_tracker.dart';
 
+import 'package:soloforte_app/features/occurrences/presentation/widgets/occurrence_sheet_listener.dart';
+import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_sheet_provider.dart';
+import 'package:soloforte_app/features/occurrences/domain/entities/occurrence.dart';
+
 import 'widgets/map_layers/areas_layer.dart';
 import 'widgets/map_layers/occurrences_layer.dart';
 import 'widgets/map_layers/drawing_layer.dart';
@@ -53,8 +57,14 @@ import 'package:soloforte_app/features/clients/presentation/client_detail_contro
 class HomeScreen extends ConsumerStatefulWidget {
   final LatLng? initialLocation;
   final String? clientId;
+  final bool isPublicPreview;
 
-  const HomeScreen({super.key, this.initialLocation, this.clientId});
+  const HomeScreen({
+    super.key,
+    this.initialLocation,
+    this.clientId,
+    this.isPublicPreview = false,
+  });
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -213,6 +223,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   final MapController _mapController = MapController();
   StreamSubscription<Position>? _positionStreamSubscription;
+  Timer? _markerRefreshDebounce;
   bool _isFollowingUser = false;
   LatLng? _currentLocation; // Track user location for marker
   late final TabController _ndviTabController;
@@ -227,6 +238,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   final MarketingRepository _marketingRepository = MarketingRepository();
   List<MarketingMapPost> _marketingPosts = [];
   bool _hasAppliedClientFocus = false;
+  static const Duration _markerRefreshDelay = Duration(milliseconds: 220);
 
   @override
   void initState() {
@@ -237,6 +249,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // Focus on initial location if provided (e.g., from "Ver no Mapa")
     if (widget.initialLocation != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         _mapController.move(widget.initialLocation!, kAgriculturalLocationZoom);
       });
     }
@@ -245,6 +258,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void dispose() {
     _positionStreamSubscription?.cancel();
+    _markerRefreshDebounce?.cancel();
     _ndviTabController.dispose();
     super.dispose();
   }
@@ -351,20 +365,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               accuracy: LocationAccuracy.best,
               distanceFilter: 2, // Update every 2 meters
             ),
-          ).listen((pos) {
-            if (mounted) {
-              setState(() {
-                _currentLocation = LatLng(pos.latitude, pos.longitude);
-              });
+          ).listen(
+            (pos) {
+              if (mounted) {
+                setState(() {
+                  _currentLocation = LatLng(pos.latitude, pos.longitude);
+                });
 
-              if (_isFollowingUser) {
-                _mapController.move(
-                  _currentLocation!,
-                  _mapController.camera.zoom,
-                );
+                if (_isFollowingUser) {
+                  _mapController.move(
+                    _currentLocation!,
+                    _mapController.camera.zoom,
+                  );
+                }
               }
-            }
-          });
+            },
+            onError: (e) {
+              LoggerService.e(
+                'Erro no stream de localização',
+                error: e,
+                tag: 'GPS',
+              );
+            },
+          );
     } catch (e) {
       LoggerService.e('Erro ao obter localização', error: e, tag: 'GPS');
       if (mounted) {
@@ -377,6 +400,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isPublicPreview) {
+      return _buildPublicPreview(context);
+    }
+
     final dashboardState = ref.watch(dashboardControllerProvider);
     final dashboardCtrl = ref.read(dashboardControllerProvider.notifier);
     final drawingState = ref.watch(drawingControllerProvider);
@@ -393,6 +420,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       clientId: widget.clientId,
       clientName: clientName,
     );
+
+    // HARDENING: Fallbacks visuais obrigatórios para estados críticos
+    if (areasAsync.isLoading && !areasAsync.hasValue) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (areasAsync.hasError && !areasAsync.hasValue) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              const SizedBox(height: 16),
+              const Text(
+                'Falha ao carregar áreas',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => ref.refresh(areasControllerProvider),
+                child: const Text('Tentar Novamente'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     final isDrawing = ref.watch(
       drawingControllerProvider.select((s) => s.isDrawing),
@@ -423,6 +478,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 if (hasGesture && _isFollowingUser) {
                   setState(() => _isFollowingUser = false);
                 }
+                _scheduleMarketingVisibilityRefresh();
               },
               onTap: (tapPosition, point) => _handleMapTap(
                 point,
@@ -475,6 +531,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
         ),
         const MarketingPublicationSheetListener(),
+        const OccurrenceSheetListener(),
 
         // 2. Indicador de Modo Ativo (aparece quando há modo ativo)
         if (activeMode.isActive) _buildModeIndicator(activeMode, dashboardCtrl),
@@ -520,6 +577,83 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         if (_isNdviPanelOpen) _buildNdviPanel(),
       ],
     );
+  }
+
+  Widget _buildPublicPreview(BuildContext context) {
+    final selectedPublicationId = ref.watch(
+      marketingPublicationSheetProvider.select(
+        (state) => state.selectedPublication?.id,
+      ),
+    );
+    final publicPosts = _publicPreviewPosts();
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter:
+                  widget.initialLocation ?? const LatLng(-14.2350, -51.9253),
+              initialZoom: widget.initialLocation != null
+                  ? kAgriculturalLocationZoom
+                  : kAgriculturalMinZoom,
+              minZoom: kAgriculturalMinZoom,
+              maxZoom: kAgriculturalMaxZoom,
+              onPositionChanged: (camera, hasGesture) {
+                if (hasGesture && _isFollowingUser) {
+                  setState(() => _isFollowingUser = false);
+                }
+                _scheduleMarketingVisibilityRefresh();
+              },
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: _getMapTileUrl('standard'),
+                userAgentPackageName: 'com.soloforte.app',
+                maxZoom: kAgriculturalMaxZoom,
+              ),
+              if (publicPosts.isNotEmpty)
+                MarkerLayer(
+                  markers: _buildMarketingMarkers(
+                    selectedPublicationId: selectedPublicationId,
+                    posts: publicPosts,
+                  ),
+                ),
+              if (_currentLocation != null)
+                _buildUserLocationMarker(_currentLocation!),
+            ],
+          ),
+        ),
+        const MarketingPublicationSheetListener(isPublicPreview: true),
+        Positioned(
+          right: 16,
+          bottom: 100,
+          child: _buildMapControlButton(
+            icon: _isFollowingUser ? Icons.gps_fixed : Icons.gps_not_fixed,
+            onTap: _toggleUserTracking,
+            iconColor: _isFollowingUser
+                ? AppColors.primary
+                : AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<MarketingMapPost> _publicPreviewPosts() {
+    // UI-only guard; backend must enforce public visibility and fields.
+    return _marketingPosts.where(_isPublicPreviewLevel).toList();
+  }
+
+  bool _isPublicPreviewLevel(MarketingMapPost post) {
+    final level = (post.investmentLevel ?? '').toLowerCase();
+    return level == 'ouro' ||
+        level == 'premium' ||
+        level == 'ampliado' ||
+        level == 'prata' ||
+        level == 'medio' ||
+        level == 'regional';
   }
 
   // =====================================================
@@ -738,10 +872,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Future<void> _loadMarketingPosts() async {
-    final posts = await _marketingRepository.getMapPosts();
-    if (!mounted) return;
-    setState(() {
-      _marketingPosts = posts;
+    try {
+      final posts = await _marketingRepository.getMapPosts();
+      if (!mounted) return;
+      setState(() {
+        _marketingPosts = posts;
+      });
+    } catch (e, s) {
+      LoggerService.e(
+        'Falha ao carregar posts de marketing',
+        error: e,
+        stackTrace: s,
+        tag: 'Dashboard',
+      );
+      // Fail silently for user, but log it. Markers just won't appear.
+    }
+  }
+
+  void _scheduleMarketingVisibilityRefresh() {
+    if (_marketingPosts.isEmpty) return;
+    _markerRefreshDebounce?.cancel();
+    _markerRefreshDebounce = Timer(_markerRefreshDelay, () {
+      if (!mounted) return;
+      setState(() {});
     });
   }
 
@@ -757,10 +910,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   static const PinVisibilityService _pinVisibilityService =
       PinVisibilityService();
 
-  List<Marker> _buildMarketingMarkers({String? selectedPublicationId}) {
+  List<Marker> _buildMarketingMarkers({
+    String? selectedPublicationId,
+    List<MarketingMapPost>? posts,
+  }) {
+    final marketingPosts = posts ?? _marketingPosts;
+    if (marketingPosts.isEmpty) {
+      return [];
+    }
     // Obter zoom atual e centro do mapa
     final currentZoom = _mapController.camera.zoom;
     final mapCenter = _mapController.camera.center;
+    final mapBounds = _mapController.camera.visibleBounds;
 
     // 1️⃣ REGRA DE ZOOM MÍNIMO - Não mostrar nada em zoom regional
     if (currentZoom < PinVisibilityConfig.zoomMinCluster) {
@@ -772,9 +933,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     // Filtrar e agrupar pins com sistema de visibilidade
     final result = _pinVisibilityService.filterAndClusterPins(
-      allPins: _marketingPosts,
+      allPins: marketingPosts,
       currentZoom: currentZoom,
       mapCenter: mapCenter,
+      mapBounds: mapBounds,
       activeClientId: clientId,
       activeFarmCenter: null, // TODO: pegar do talhão selecionado se houver
     );
@@ -783,7 +945,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final selectedMarkers = <Marker>[];
 
     // 2️⃣ ADICIONAR PINS INDIVIDUAIS (zoom alto)
-    for (final post in result.visiblePins) {
+    final sortedPins = [...result.visiblePins]
+      ..sort((a, b) => _marketingLevelPriority(a) - _marketingLevelPriority(b));
+    for (final post in sortedPins) {
       final sizeConfig = MarkerSizeConfig.forLevel(
         post.investmentLevel ?? 'prata',
       );
@@ -797,24 +961,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       targetList.add(
         Marker(
           point: LatLng(post.latitude, post.longitude),
-          width: zoomLevel == MarkerZoomLevel.simplified
-              ? 90
-              : sizeConfig.totalWidth,
-          height: zoomLevel == MarkerZoomLevel.simplified
-              ? 32
-              : sizeConfig.totalHeight,
-          child: zoomLevel == MarkerZoomLevel.simplified
-              ? SimplifiedMarketingMarker(
-                  onTap: () => _showMarketingDetails(post),
-                  color: _getMarkerColor(post.investmentLevel),
-                  isSelected: isSelected,
-                )
-              : MarketingPinMarker.fromLegacy(
-                  post: post,
-                  zoomConfig: zoomConfig,
-                  onTap: () => _showMarketingDetails(post),
-                  isSelected: isSelected,
-                ),
+          width: sizeConfig.totalWidth,
+          height: sizeConfig.totalHeight,
+          child: MarketingPinMarker.fromLegacy(
+            post: post,
+            zoomConfig: zoomConfig,
+            onTap: () => _showMarketingDetails(post),
+            isSelected: isSelected,
+          ),
         ),
       );
     }
@@ -853,17 +1007,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  /// Retorna a cor do marker baseada no nível de investimento
-  Color _getMarkerColor(String? level) {
-    switch (level) {
+  int _marketingLevelPriority(MarketingMapPost post) {
+    switch (post.investmentLevel) {
       case 'ouro':
       case 'premium':
-        return const Color(0xFFD4AF37); // Ouro
+        return 2;
       case 'prata':
       case 'medio':
-        return const Color(0xFFB0B0B0); // Prata
+        return 1;
       default:
-        return const Color(0xFFCD7F32); // Bronze
+        return 0;
     }
   }
 
@@ -886,9 +1039,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   void _emitMarketingPublicationSelected(MarketingMapPost post) {
     MarketingInteractionTracker.pinOpened(publicationId: post.id);
-    ref
-        .read(marketingPublicationSheetProvider.notifier)
-        .selectById(post.id);
+    ref.read(marketingPublicationSheetProvider.notifier).selectById(post.id);
   }
 
   // DEPRECATED: Métodos obsoletos mantidos temporariamente para retrocompatibilidade
@@ -1155,15 +1306,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       dashboardCtrl.setTempPin(point);
       Future.delayed(const Duration(milliseconds: 300), () {
         if (!mounted) return;
+
+        // VINCULAR VISITA ATIVA (Se houver)
+        final activeVisit = ref.read(visitControllerProvider).value;
+        final Map<String, dynamic> extraData = {
+          'latitude': point.latitude,
+          'longitude': point.longitude,
+        };
+
+        if (activeVisit != null && activeVisit.status == VisitStatus.ongoing) {
+          extraData['visitId'] = activeVisit.id;
+          extraData['clientId'] =
+              activeVisit.client.id; // Override context clientId if any
+        } else if (widget.clientId != null) {
+          extraData['clientId'] = widget.clientId;
+        }
+
         // Navigate to New Occurrence Screen with coordinates
-        context
-            .push(
-              '/occurrences/new',
-              extra: {'latitude': point.latitude, 'longitude': point.longitude},
-            )
-            .then((_) {
-              dashboardCtrl.cancelPinSelection();
-            });
+        context.push('/occurrences/new', extra: extraData).then((result) {
+          dashboardCtrl.cancelPinSelection();
+          if (result is Occurrence) {
+            ref.read(occurrenceSheetProvider.notifier).select(result);
+          }
+        });
       });
       return;
     }
@@ -2548,10 +2713,12 @@ class _MarketingGalleryScreenState extends State<_MarketingGalleryScreen> {
   Widget build(BuildContext context) {
     final crossAxisCount = MediaQuery.of(context).size.width > 800 ? 4 : 3;
 
-    return Scaffold( // ci: allow-appbar
+    return Scaffold(
+      // ci: allow-appbar
       // ci: allow-appbar
       backgroundColor: Colors.black,
-      appBar: AppBar( // ci: allow-appbar
+      appBar: AppBar(
+        // ci: allow-appbar
         backgroundColor: Colors.black,
         leading: IconButton(icon: const Icon(Icons.close), onPressed: _close),
         title: const Text('Fotos'),
@@ -2727,10 +2894,12 @@ class _MarketingPhotoViewerState extends State<_MarketingPhotoViewer> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold( // ci: allow-appbar
+    return Scaffold(
+      // ci: allow-appbar
       // ci: allow-appbar
       backgroundColor: Colors.black,
-      appBar: AppBar( // ci: allow-appbar
+      appBar: AppBar(
+        // ci: allow-appbar
         backgroundColor: Colors.black,
         leading: IconButton(icon: const Icon(Icons.close), onPressed: _close),
         actions: [
@@ -2812,9 +2981,11 @@ class _MarketingEditScreenState extends State<_MarketingEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold( // ci: allow-appbar
+    return Scaffold(
+      // ci: allow-appbar
       backgroundColor: Colors.white,
-      appBar: AppBar( // ci: allow-appbar
+      appBar: AppBar(
+        // ci: allow-appbar
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),

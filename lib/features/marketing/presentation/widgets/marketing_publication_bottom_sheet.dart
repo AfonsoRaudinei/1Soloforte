@@ -8,63 +8,81 @@
 ///
 /// FLUXO:
 /// MAPA -> Clique -> [MarketingPublicationBottomSheet] (Preview) -> CTA "Ver Completo" -> EDITOR
+library;
 
 import 'package:flutter/material.dart';
 import 'package:soloforte_app/core/theme/app_colors.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_publication.dart';
+import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_reach_icon.dart';
 import 'package:soloforte_app/shared/widgets/modal_handle_bar.dart';
 
 import 'marketing_pin_marker_io.dart'
     if (dart.library.html) 'marketing_pin_marker_web.dart'
     as platform;
 
-class MarketingPublicationBottomSheet extends StatelessWidget {
+class MarketingPublicationBottomSheet extends StatefulWidget {
   final MarketingPublication publication;
   final VoidCallback? onClose;
-  final VoidCallback? onSecondaryAction;
-  final String? secondaryActionLabel;
+  final VoidCallback? onEdit;
+  final VoidCallback? onViewDetails;
+  final String? currentUserId;
 
   const MarketingPublicationBottomSheet({
     super.key,
     required this.publication,
     this.onClose,
-    this.onSecondaryAction,
-    this.secondaryActionLabel,
+    this.onEdit,
+    this.onViewDetails,
+    this.currentUserId,
   });
+
+  @override
+  State<MarketingPublicationBottomSheet> createState() =>
+      _MarketingPublicationBottomSheetState();
+}
+
+class _MarketingPublicationBottomSheetState
+    extends State<MarketingPublicationBottomSheet> {
+  @override
+  void initState() {
+    super.initState();
+    // 🧠 REGISTRO DE VISUALIZAÇÃO (PREVIEW)
+    // Regra: Preview = intenção real de leitura. Conta como view.
+    // Relatórios e Listas NÃO contam.
+    //
+    // TODO: Implementar chamada real ao repositório
+    // repository.recordView(
+    //   publicationId: widget.publication.id,
+    //   userId: widget.currentUserId,
+    // );
+    print(
+      '👁️ Visualização registrada para publicação: ${widget.publication.title}',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     // 🎨 UX CANÔNICA (Conteúdo & Hierarquia)
-    //
-    // OBJETIVO: Resumo rápido ("Glanceable")
-    //
-    // ESTRUTURA OBRIGATÓRIA:
-    // 1. Header: Handle bar + Botão Fechar (X)
-    // 2. Hero: Imagem Principal ou Placeholder de destaque
-    // 3. Info: Título, Cliente, Badges (Tipo/Investimento)
-    // 4. Metrics: Destaque de resultado (ex: +15 sc/ha)
-    // 5. AÇÃO PRIMÁRIA: Botão "Ver case completo" (Leva ao Editor)
-    //
-    // 🚫 PROIBIDO NO PREVIEW:
-    // - Formulários de edição
-    // - Upload de arquivos
-    // - Abas complexas (Tabs)
-    // - AppBars (Use o Header do próprio sheet)
+    // ... (comentários originais mantidos)
 
-    final state = _resolveState(publication);
+    final state = _resolveState(widget.publication);
+    final isAuthor =
+        widget.currentUserId != null &&
+        widget.publication.createdBy != null &&
+        widget.currentUserId == widget.publication.createdBy;
+
     return Column(
       children: [
-        _Header(onClose: onClose),
+        _Header(onClose: widget.onClose),
         const Divider(height: 1),
         Expanded(
-          child: _Body(publication: publication, state: state),
+          child: _Body(publication: widget.publication, state: state),
         ),
-        if (state == _PreviewState.ready &&
-            onSecondaryAction != null &&
-            (secondaryActionLabel ?? 'Ver case completo').trim().isNotEmpty)
-          _FooterCta(
-            label: secondaryActionLabel ?? 'Ver case completo',
-            onPressed: onSecondaryAction,
+        if (state == _PreviewState.ready)
+          _FooterActions(
+            isAuthor: isAuthor,
+            onEdit: widget.onEdit,
+            onViewDetails: widget.onViewDetails,
           ),
       ],
     );
@@ -103,10 +121,7 @@ class _Body extends StatelessWidget {
   final MarketingPublication publication;
   final _PreviewState state;
 
-  const _Body({
-    required this.publication,
-    required this.state,
-  });
+  const _Body({required this.publication, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -141,8 +156,7 @@ class _Body extends StatelessWidget {
           const SizedBox(height: 16),
           _InfoBlock(publication: publication),
           const SizedBox(height: 12),
-          if (_hasHighlight(publication))
-            _MetricCard(publication: publication),
+          if (_hasHighlight(publication)) _MetricCard(publication: publication),
         ],
       ),
     );
@@ -225,6 +239,10 @@ class _InfoBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = _titleValue(publication);
     final client = (publication.clientName ?? '').trim();
+    // Simular contadores (usar mesma lógica de reports_tab.dart)
+    final signaturesCount = _calculateSimulatedSignatures(publication);
+    final viewsCount = _calculateSimulatedViews(publication);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -236,12 +254,71 @@ class _InfoBlock extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             client,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF5A5A5A),
-            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF5A5A5A)),
           ),
         ],
+        // Linha de sinais discretos: visualizações • assinaturas
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            // 👁️ Visualizações (1º lugar)
+            const Icon(
+              Icons.visibility_outlined,
+              size: 14,
+              color: Color(0xFF757575),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$viewsCount visualizações',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            // Badge "Visto" (indicador de leitura)
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                border: Border.all(color: const Color(0xFFE0E0E0)),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check, size: 10, color: Color(0xFF757575)),
+                  SizedBox(width: 2),
+                  Text(
+                    'Visto',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF757575),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              '•',
+              style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            const SizedBox(width: 12),
+            // ✍️ Assinaturas (2º lugar)
+            const Icon(Icons.draw_outlined, size: 14, color: Color(0xFF757575)),
+            const SizedBox(width: 4),
+            Text(
+              '$signaturesCount assinaturas',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF757575)),
+            ),
+            const SizedBox(width: 12),
+            MarketingReachIcon(
+              level: reachLevelFromInvestmentLevel(
+                publication.investmentLevel,
+              ),
+              size: 14,
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -305,11 +382,31 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-class _FooterCta extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
+class _FooterActions extends StatefulWidget {
+  final bool isAuthor;
+  final VoidCallback? onEdit;
+  final VoidCallback? onViewDetails;
 
-  const _FooterCta({required this.label, this.onPressed});
+  const _FooterActions({
+    required this.isAuthor,
+    this.onEdit,
+    this.onViewDetails,
+  });
+
+  @override
+  State<_FooterActions> createState() => _FooterActionsState();
+}
+
+class _FooterActionsState extends State<_FooterActions> {
+  bool _hasSigned = false; // Estado local: se usuário já assinou
+
+  void _handleSign() {
+    if (_hasSigned) return; // Não permite desassinar
+    setState(() {
+      _hasSigned = true;
+    });
+    // TODO: Implementar persistência real (salvar em marketing_publication_signatures)
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -317,23 +414,80 @@ class _FooterCta extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onPressed,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Botão "Ver detalhes" - sempre visível
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: widget.onViewDetails,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  side: BorderSide(color: AppColors.primary),
+                  foregroundColor: AppColors.primary,
+                ),
+                child: const Text(
+                  'Ver detalhes',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
             ),
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+            // Botão "Assinar" discreto - sempre visível, mas muda estado
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _hasSigned ? null : _handleSign,
+                icon: Icon(
+                  _hasSigned ? Icons.check_circle_outline : Icons.draw_outlined,
+                  size: 16,
+                ),
+                label: Text(_hasSigned ? 'Assinado' : 'Assinar'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  side: BorderSide(
+                    color: _hasSigned
+                        ? const Color(0xFFE0E0E0)
+                        : const Color(0xFF757575),
+                  ),
+                  foregroundColor: const Color(0xFF757575),
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
             ),
-          ),
+            // Botão "Editar" - apenas para o autor
+            if (widget.isAuthor && widget.onEdit != null) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: widget.onEdit,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text(
+                    'Editar',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -364,10 +518,7 @@ class _StatePlaceholder extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             Text(
@@ -475,4 +626,22 @@ class _Chip extends StatelessWidget {
       ),
     );
   }
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Simulação de Dados (mesma lógica de marketing_tab.dart)
+// ───────────────────────────────────────────────────────────────────
+
+int _calculateSimulatedViews(MarketingPublication publication) {
+  final daysSincePublished = DateTime.now()
+      .difference(publication.publishedAt ?? publication.createdAt)
+      .inDays;
+  final seed = publication.id.hashCode.abs() % 10;
+  return (daysSincePublished * 2) + seed + 5;
+}
+
+int _calculateSimulatedSignatures(MarketingPublication publication) {
+  final views = _calculateSimulatedViews(publication);
+  final seed = publication.id.hashCode.abs() % 3;
+  return (views * 0.2).round() + seed;
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:soloforte_app/core/config/platform_capabilities.dart';
 import 'package:dio/dio.dart';
 import 'package:soloforte_app/core/services/secure_storage_service.dart';
 import 'package:soloforte_app/core/security/ssl_pinning_service.dart';
@@ -23,7 +23,7 @@ class ApiClient {
     );
 
     // ✅ Configure SSL Pinning
-    if (!kIsWeb) {
+    if (PlatformCapabilities.supportsCertPinning) {
       SslPinningService.configurePinning(_dio);
     }
 

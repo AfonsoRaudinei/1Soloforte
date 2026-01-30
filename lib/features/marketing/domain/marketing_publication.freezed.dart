@@ -925,7 +925,11 @@ mixin _$MarketingPublication {
       throw _privateConstructorUsedError; // Configurações de card
   String get investmentLevel => throw _privateConstructorUsedError;
   bool get isVisible => throw _privateConstructorUsedError; // Observações
-  String? get notes => throw _privateConstructorUsedError; // Timestamps
+  String? get notes =>
+      throw _privateConstructorUsedError; // Autoria (Permissões)
+  String? get createdBy =>
+      throw _privateConstructorUsedError; // ID do usuário que criou a publicação
+  // Timestamps
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime? get updatedAt => throw _privateConstructorUsedError;
   DateTime? get publishedAt => throw _privateConstructorUsedError; // Status
@@ -975,6 +979,7 @@ abstract class $MarketingPublicationCopyWith<$Res> {
     String investmentLevel,
     bool isVisible,
     String? notes,
+    String? createdBy,
     DateTime createdAt,
     DateTime? updatedAt,
     DateTime? publishedAt,
@@ -1026,6 +1031,7 @@ class _$MarketingPublicationCopyWithImpl<
     Object? investmentLevel = null,
     Object? isVisible = null,
     Object? notes = freezed,
+    Object? createdBy = freezed,
     Object? createdAt = null,
     Object? updatedAt = freezed,
     Object? publishedAt = freezed,
@@ -1137,6 +1143,10 @@ class _$MarketingPublicationCopyWithImpl<
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
                       as String?,
+            createdBy: freezed == createdBy
+                ? _value.createdBy
+                : createdBy // ignore: cast_nullable_to_non_nullable
+                      as String?,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -1195,6 +1205,7 @@ abstract class _$$MarketingPublicationImplCopyWith<$Res>
     String investmentLevel,
     bool isVisible,
     String? notes,
+    String? createdBy,
     DateTime createdAt,
     DateTime? updatedAt,
     DateTime? publishedAt,
@@ -1242,6 +1253,7 @@ class __$$MarketingPublicationImplCopyWithImpl<$Res>
     Object? investmentLevel = null,
     Object? isVisible = null,
     Object? notes = freezed,
+    Object? createdBy = freezed,
     Object? createdAt = null,
     Object? updatedAt = freezed,
     Object? publishedAt = freezed,
@@ -1353,6 +1365,10 @@ class __$$MarketingPublicationImplCopyWithImpl<$Res>
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
                   as String?,
+        createdBy: freezed == createdBy
+            ? _value.createdBy
+            : createdBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -1404,6 +1420,7 @@ class _$MarketingPublicationImpl extends _MarketingPublication {
     this.investmentLevel = 'prata',
     this.isVisible = true,
     this.notes,
+    this.createdBy,
     required this.createdAt,
     this.updatedAt,
     this.publishedAt,
@@ -1497,6 +1514,10 @@ class _$MarketingPublicationImpl extends _MarketingPublication {
   // Observações
   @override
   final String? notes;
+  // Autoria (Permissões)
+  @override
+  final String? createdBy;
+  // ID do usuário que criou a publicação
   // Timestamps
   @override
   final DateTime createdAt;
@@ -1511,7 +1532,7 @@ class _$MarketingPublicationImpl extends _MarketingPublication {
 
   @override
   String toString() {
-    return 'MarketingPublication(id: $id, latitude: $latitude, longitude: $longitude, clientId: $clientId, clientName: $clientName, areaId: $areaId, areaName: $areaName, type: $type, title: $title, description: $description, product: $product, campaign: $campaign, harvest: $harvest, sellerName: $sellerName, sellerPhone: $sellerPhone, companyName: $companyName, comparisons: $comparisons, comparisonType: $comparisonType, photos: $photos, highlightMetric: $highlightMetric, highlightValue: $highlightValue, highlightUnit: $highlightUnit, showPercentage: $showPercentage, investmentLevel: $investmentLevel, isVisible: $isVisible, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt, status: $status)';
+    return 'MarketingPublication(id: $id, latitude: $latitude, longitude: $longitude, clientId: $clientId, clientName: $clientName, areaId: $areaId, areaName: $areaName, type: $type, title: $title, description: $description, product: $product, campaign: $campaign, harvest: $harvest, sellerName: $sellerName, sellerPhone: $sellerPhone, companyName: $companyName, comparisons: $comparisons, comparisonType: $comparisonType, photos: $photos, highlightMetric: $highlightMetric, highlightValue: $highlightValue, highlightUnit: $highlightUnit, showPercentage: $showPercentage, investmentLevel: $investmentLevel, isVisible: $isVisible, notes: $notes, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt, status: $status)';
   }
 
   @override
@@ -1565,6 +1586,8 @@ class _$MarketingPublicationImpl extends _MarketingPublication {
             (identical(other.isVisible, isVisible) ||
                 other.isVisible == isVisible) &&
             (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.createdBy, createdBy) ||
+                other.createdBy == createdBy) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -1604,6 +1627,7 @@ class _$MarketingPublicationImpl extends _MarketingPublication {
     investmentLevel,
     isVisible,
     notes,
+    createdBy,
     createdAt,
     updatedAt,
     publishedAt,
@@ -1656,6 +1680,7 @@ abstract class _MarketingPublication extends MarketingPublication {
     final String investmentLevel,
     final bool isVisible,
     final String? notes,
+    final String? createdBy,
     required final DateTime createdAt,
     final DateTime? updatedAt,
     final DateTime? publishedAt,
@@ -1717,7 +1742,10 @@ abstract class _MarketingPublication extends MarketingPublication {
   @override
   bool get isVisible; // Observações
   @override
-  String? get notes; // Timestamps
+  String? get notes; // Autoria (Permissões)
+  @override
+  String? get createdBy; // ID do usuário que criou a publicação
+  // Timestamps
   @override
   DateTime get createdAt;
   @override

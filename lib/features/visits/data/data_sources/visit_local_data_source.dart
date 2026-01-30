@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
+import 'package:soloforte_app/core/config/platform_capabilities.dart';
 import 'package:soloforte_app/core/database/database_helper.dart';
 import '../dtos/visit_dto.dart';
 
@@ -15,6 +16,7 @@ class VisitLocalDataSourceImpl implements VisitLocalDataSource {
 
   @override
   Future<void> saveVisit(VisitDto visit) async {
+    if (!PlatformCapabilities.supportsLocalDatabase) return;
     final db = await _dbHelper.database;
     await db.insert('visits', {
       'id': visit.id,
@@ -27,6 +29,7 @@ class VisitLocalDataSourceImpl implements VisitLocalDataSource {
 
   @override
   Future<List<VisitDto>> getVisits() async {
+    if (!PlatformCapabilities.supportsLocalDatabase) return [];
     final db = await _dbHelper.database;
     final maps = await db.query('visits', orderBy: 'check_in_time DESC');
     return maps.map((e) {
@@ -38,6 +41,7 @@ class VisitLocalDataSourceImpl implements VisitLocalDataSource {
 
   @override
   Future<VisitDto?> getActiveVisit() async {
+    if (!PlatformCapabilities.supportsLocalDatabase) return null;
     final db = await _dbHelper.database;
     final maps = await db.query(
       'visits',
@@ -53,6 +57,7 @@ class VisitLocalDataSourceImpl implements VisitLocalDataSource {
 
   @override
   Future<VisitDto?> getVisitById(String id) async {
+    if (!PlatformCapabilities.supportsLocalDatabase) return null;
     final db = await _dbHelper.database;
     final maps = await db.query(
       'visits',

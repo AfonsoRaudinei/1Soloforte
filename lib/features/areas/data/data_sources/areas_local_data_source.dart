@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:soloforte_app/core/config/platform_capabilities.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:soloforte_app/core/database/database_helper.dart';
 import '../dtos/area_dto.dart';
@@ -16,7 +16,7 @@ class AreasLocalDataSourceImpl implements AreasLocalDataSource {
 
   @override
   Future<void> saveArea(AreaDto area) async {
-    if (kIsWeb) return;
+    if (!PlatformCapabilities.supportsLocalDatabase) return;
     if (area.clientId.isEmpty) {
       throw StateError('clientId obrigatório para salvar área.');
     }
@@ -32,7 +32,7 @@ class AreasLocalDataSourceImpl implements AreasLocalDataSource {
 
   @override
   Future<List<AreaDto>> getAreas() async {
-    if (kIsWeb) return _getMockAreas();
+    if (!PlatformCapabilities.supportsLocalDatabase) return _getMockAreas();
 
     final db = await _dbHelper.database;
     final maps = await db.query('areas');
@@ -54,7 +54,7 @@ class AreasLocalDataSourceImpl implements AreasLocalDataSource {
 
   @override
   Future<AreaDto?> getAreaById(String id) async {
-    if (kIsWeb) {
+    if (!PlatformCapabilities.supportsLocalDatabase) {
       return _getMockAreas().firstWhere(
         (e) => e.id == id,
         orElse: () => _getMockAreas().first,

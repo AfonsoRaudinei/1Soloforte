@@ -13,6 +13,7 @@ class Occurrence with _$Occurrence {
     required String areaName,
     String? areaId,
     required String clientId,
+    String? visitId,
     required DateTime date,
     required String status,
     required List<String> images,

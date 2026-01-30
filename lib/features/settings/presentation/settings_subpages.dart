@@ -746,8 +746,7 @@ class LanguageSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final current =
-        ref.watch(settingsControllerProvider).value?.language ?? 'pt_BR';
+    // Variável 'current' removida pois a seleção é fixa em pt_BR visulamente
 
     return _BaseSettingsPage(
       title: 'Idioma',
@@ -763,19 +762,27 @@ class LanguageSettingsScreen extends ConsumerWidget {
             RadioListTile<String>(
               title: const Text('Português (Brasil)'),
               value: 'pt_BR',
-              groupValue: current,
-              onChanged: (val) => ref
-                  .read(settingsControllerProvider.notifier)
-                  .updateSetting(language: val),
+              groupValue: 'pt_BR', // Força seleção visível
+              activeColor: AppColors.primary,
+              onChanged: (val) {
+                // Já está selecionado
+              },
             ),
             const Divider(height: 1),
-            RadioListTile<String>(
-              title: const Text('English (US)'),
-              value: 'en_US',
-              groupValue: current,
-              onChanged: (val) => ref
-                  .read(settingsControllerProvider.notifier)
-                  .updateSetting(language: val),
+            Opacity(
+              opacity: 0.5,
+              child: RadioListTile<String>(
+                title: const Text('English (US)'),
+                subtitle: Text(
+                  'Em breve',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+                value: 'en_US',
+                groupValue: null, // Nunca selecionado
+                onChanged: null, // Desabilitado
+              ),
             ),
           ],
         ),

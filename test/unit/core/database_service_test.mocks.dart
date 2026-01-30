@@ -61,11 +61,6 @@ class MockDatabaseHelper extends _i1.Mock implements _i4.DatabaseHelper {
             ),
           )
           as _i3.Future<_i2.Database>);
-
-  @override
-  bool get isOpen =>
-      (super.noSuchMethod(Invocation.getter(#isOpen), returnValue: false)
-          as bool);
 }
 
 /// A class which mocks [Database].

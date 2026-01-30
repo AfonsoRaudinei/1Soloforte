@@ -72,6 +72,18 @@ class OccurrenceRepositoryImpl implements OccurrenceRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<List<Occurrence>> getOccurrencesByVisitId(String visitId) async {
+    try {
+      final allOccurrences = await getOccurrences();
+      return allOccurrences.where((occ) => occ.visitId == visitId).toList();
+    } catch (e, s) {
+      LoggerService.e('Failed to get occurrences for visit $visitId',
+          error: e, stackTrace: s);
+      rethrow;
+    }
+  }
 }
 
 @Riverpod(keepAlive: true)

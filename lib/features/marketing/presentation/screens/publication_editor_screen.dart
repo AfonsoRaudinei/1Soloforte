@@ -8,6 +8,7 @@ import 'package:soloforte_app/features/marketing/domain/marketing_publication.da
 import 'package:soloforte_app/features/marketing/data/marketing_publication_repository.dart';
 import 'package:soloforte_app/features/marketing/data/marketing_repository.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_map_post.dart';
+import 'package:soloforte_app/features/auth/presentation/providers/auth_provider.dart';
 
 /// Tela de edição completa de publicação de marketing
 /// Visual atualizado conforme design HTML fornecido.
@@ -33,6 +34,9 @@ class _PublicationEditorScreenState
   MarketingPublication? _publication;
   bool _isLoading = true;
   bool _isSaving = false;
+
+  // 🔒 PERMISSÕES: Controla se o usuário pode editar (proteção contra acesso direto via URL)
+  bool _isReadOnly = false;
 
   // Estado visual
   String _selectedType = 'resultado'; // resultado, antes-depois, avaliacao
@@ -117,13 +121,19 @@ class _PublicationEditorScreenState
     _roiInvestimentoController.dispose();
     _roiRetornoController.dispose();
     _conclusionController.dispose();
-    for (var c in _compLabelControllers.values) c.dispose();
-    for (var c in _compObsControllers.values) c.dispose();
+    for (var c in _compLabelControllers.values) {
+      c.dispose();
+    }
+    for (var c in _compObsControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _loadPublication() async {
     final repository = ref.read(marketingPublicationRepositoryProvider);
+    final authState = ref.read(authStateProvider).valueOrNull;
+    final currentUserId = authState?.userId;
 
     if (widget.publicationId != null) {
       var publication = await repository.getById(widget.publicationId!);
@@ -143,15 +153,25 @@ class _PublicationEditorScreenState
       if (publication != null) {
         _publication = publication;
         _populateFields(publication);
+
+        // 🔒 VALIDAÇÃO DE PERMISSÕES (Proteção contra acesso direto via URL)
+        // Se a publicação tem autor E o usuário atual não é o autor → modo somente leitura
+        if (publication.createdBy != null &&
+            currentUserId != null &&
+            publication.createdBy != currentUserId) {
+          _isReadOnly = true;
+        }
       }
     } else {
-      // Nova publicação
+      // Nova publicação - definir createdBy com o userId atual
       _publication = MarketingPublication.create(
         latitude: widget.initialLatitude ?? 0.0,
         longitude: widget.initialLongitude ?? 0.0,
-      );
+      ).copyWith(createdBy: currentUserId); // Define o autor
       _selectedType = 'resultado';
       _initializeComparisonControllers();
+      // Nova publicação sempre é editável
+      _isReadOnly = false;
     }
 
     setState(() {
@@ -236,18 +256,22 @@ class _PublicationEditorScreenState
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading)
+    if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_publication == null)
+    }
+    if (_publication == null) {
       return const Scaffold(
         body: Center(child: Text("Publicação não encontrada")),
       );
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
           _buildHeader(),
+          // 🔒 BANNER DE MODO SOMENTE LEITURA
+          if (_isReadOnly) _buildReadOnlyBanner(),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 100),
@@ -328,6 +352,39 @@ class _PublicationEditorScreenState
               fontWeight: FontWeight.w600,
               letterSpacing: -0.4,
               color: kGray900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 🔒 Banner informativo de modo somente leitura
+  /// Exibido quando o usuário acessa uma publicação que não é dele
+  Widget _buildReadOnlyBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFF3CD), // Amarelo suave (alerta)
+        border: Border(bottom: BorderSide(color: Color(0xFFFFE69C), width: 1)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.lock_outline,
+            color: Color(0xFF856404), // Marrom escuro
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Modo somente leitura: Apenas o autor pode editar esta publicação',
+              style: TextStyle(
+                color: const Color(0xFF856404),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -842,6 +899,7 @@ class _PublicationEditorScreenState
           const SizedBox(height: 12),
           TextField(
             controller: _conclusionController,
+            enabled: !_isReadOnly, // 🔒 Desabilita em modo somente leitura
             maxLines: 4,
             decoration: InputDecoration(
               fillColor: Colors.white.withValues(alpha: 0.95),
@@ -1037,6 +1095,7 @@ class _PublicationEditorScreenState
       ),
       child: TextField(
         controller: ctrl,
+        enabled: !_isReadOnly, // 🔒 Desabilita em modo somente leitura
         keyboardType: TextInputType.number,
         decoration: const InputDecoration(border: InputBorder.none),
         onChanged: (_) {
@@ -1211,6 +1270,7 @@ class _PublicationEditorScreenState
       title: 'Descrição (opcional)',
       child: TextField(
         controller: _descricaoController,
+        enabled: !_isReadOnly, // 🔒 Desabilita em modo somente leitura
         maxLines: 4,
         decoration: const InputDecoration(
           filled: true,
@@ -1278,7 +1338,8 @@ class _PublicationEditorScreenState
         children: [
           Expanded(
             child: TextButton(
-              onPressed: _isSaving ? null : _save,
+              // 🔒 Desabilita salvamento em modo somente leitura
+              onPressed: (_isSaving || _isReadOnly) ? null : _save,
               style: TextButton.styleFrom(
                 backgroundColor: kGray100,
                 foregroundColor: kGray900,
@@ -1296,7 +1357,8 @@ class _PublicationEditorScreenState
           const SizedBox(width: 12),
           Expanded(
             child: TextButton(
-              onPressed: _isSaving
+              // 🔒 Desabilita publicação em modo somente leitura
+              onPressed: (_isSaving || _isReadOnly)
                   ? null
                   : () {
                       // Publicar action
@@ -1371,10 +1433,11 @@ class _PublicationEditorScreenState
         context.pop(_publication);
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Erro: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

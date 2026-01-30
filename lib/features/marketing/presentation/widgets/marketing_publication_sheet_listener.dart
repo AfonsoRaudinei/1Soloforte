@@ -8,6 +8,7 @@
 ///
 /// O CTA (Botão Secundário) aqui definido é quem faz o `context.push`
 /// para a rota real de edição (/map/marketing/edit).
+library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,9 +17,16 @@ import 'package:soloforte_app/features/marketing/domain/marketing_publication.da
 import 'package:soloforte_app/features/marketing/presentation/providers/marketing_publication_sheet_provider.dart';
 import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_publication_bottom_sheet.dart';
 import 'package:soloforte_app/features/marketing/presentation/services/marketing_interaction_tracker.dart';
+import 'package:soloforte_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:soloforte_app/features/marketing/presentation/widgets/marketing_public_preview_bottom_sheet.dart';
 
 class MarketingPublicationSheetListener extends ConsumerStatefulWidget {
-  const MarketingPublicationSheetListener({super.key});
+  final bool isPublicPreview;
+
+  const MarketingPublicationSheetListener({
+    super.key,
+    this.isPublicPreview = false,
+  });
 
   @override
   ConsumerState<MarketingPublicationSheetListener> createState() =>
@@ -97,25 +105,49 @@ class _MarketingPublicationSheetListenerState
                         if (selected == null) {
                           return const SizedBox.shrink();
                         }
+
+                        if (widget.isPublicPreview) {
+                          return MarketingPublicPreviewBottomSheet(
+                            publication: selected,
+                            onClose: () {
+                              controller.markClosing();
+                              Navigator.of(ctx).pop();
+                            },
+                            onLogin: () {
+                              MarketingInteractionTracker.ctaClicked(
+                                publicationId: selected.id,
+                              );
+                              context.go('/login');
+                            },
+                          );
+                        }
+
+                        // Obter ID do usuário atual para validação de permissões
+                        final authState =
+                            ref.watch(authStateProvider).valueOrNull;
+                        final currentUserId = authState?.userId;
+
                         return MarketingPublicationBottomSheet(
                           publication: selected,
+                          currentUserId: currentUserId,
                           onClose: () {
                             controller.markClosing();
                             Navigator.of(ctx).pop();
                           },
-                          onSecondaryAction: () {
+                          // Ação "Ver detalhes" - modo somente leitura para todos
+                          onViewDetails: () {
                             MarketingInteractionTracker.ctaClicked(
                               publicationId: selected.id,
                             );
-                            // Navegar para tela de edição completa (iOS Maps pattern)
-                            // 📝 CONTRATO CANÔNICO (Preview -> Editor)
-                            // 1. publicationId: OBRIGATÓRIO (via query param)
-                            // 2. source: 'map_preview' (implícito/conceitual)
-                            // 3. mode: 'edit' (implícito/conceitual)
-                            // 🚫 PROIBIDO: Depender de estado global de seleção. Passar tudo explícito.
                             context.push('/map/marketing/edit?id=${selected.id}');
                           },
-                          secondaryActionLabel: 'Ver case completo',
+                          // Ação "Editar" - apenas para o autor
+                          onEdit: () {
+                            MarketingInteractionTracker.ctaClicked(
+                              publicationId: selected.id,
+                            );
+                            context.push('/map/marketing/edit?id=${selected.id}');
+                          },
                         );
                       },
                     ),

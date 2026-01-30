@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:soloforte_app/features/marketing/domain/marketing_map_post.dart';
 
@@ -19,8 +20,10 @@ class PinVisibilityConfig {
   /// Zoom para modo extremamente simplificado
   static const double zoomExtreme = 8.0;
 
-  /// Raio máximo de visualização em km (proteção regional)
-  static const double maxRadiusKm = 50.0;
+  /// Raio de visibilidade por nivel (km)
+  static const double bronzeRadiusKm = 100.0;
+  static const double silverRadiusKm = 200.0;
+  static const double goldRadiusKm = 350.0;
 
   /// Raio de prioridade quando há fazenda ativa (km)
   static const double farmContextRadiusKm = 15.0;
@@ -127,6 +130,7 @@ class PinVisibilityService {
     required MarketingMapPost pin,
     required double currentZoom,
     required LatLng mapCenter,
+    LatLngBounds? mapBounds,
     String? activeClientId,
     LatLng? activeFarmCenter,
   }) {
@@ -139,15 +143,22 @@ class PinVisibilityService {
       );
     }
 
-    // 2️⃣ REGRA DE RAIO MÁXIMO (anti-espionagem agrícola)
+    // 2️⃣ REGRA DE RAIO POR NIVEL (anti-poluição visual)
     final pinLocation = LatLng(pin.latitude, pin.longitude);
+    final visibilityRadiusKm = _visibilityRadiusKm(pin.investmentLevel);
     final distanceFromCenter = calculateDistanceKm(mapCenter, pinLocation);
+    final isWithinVisibility = _isWithinVisibilityRange(
+      pinLocation: pinLocation,
+      mapCenter: mapCenter,
+      mapBounds: mapBounds,
+      visibilityRadiusKm: visibilityRadiusKm,
+    );
 
-    if (distanceFromCenter > PinVisibilityConfig.maxRadiusKm) {
+    if (!isWithinVisibility) {
       return PinVisibilityResult(
         isVisible: false,
         reason:
-            'Fora do raio máximo (${distanceFromCenter.toStringAsFixed(1)} km > ${PinVisibilityConfig.maxRadiusKm} km)',
+            'Fora do raio do nivel (${distanceFromCenter.toStringAsFixed(1)} km > ${visibilityRadiusKm.toStringAsFixed(0)} km)',
         detailLevel: 0,
       );
     }
@@ -212,6 +223,7 @@ class PinVisibilityService {
     required List<MarketingMapPost> allPins,
     required double currentZoom,
     required LatLng mapCenter,
+    LatLngBounds? mapBounds,
     String? activeClientId,
     LatLng? activeFarmCenter,
   }) {
@@ -227,6 +239,7 @@ class PinVisibilityService {
         pin: pin,
         currentZoom: currentZoom,
         mapCenter: mapCenter,
+        mapBounds: mapBounds,
         activeClientId: activeClientId,
         activeFarmCenter: activeFarmCenter,
       );
@@ -368,6 +381,51 @@ class PinVisibilityService {
       return MarkerZoomLevel.extreme;
     }
     return MarkerZoomLevel.hidden;
+  }
+
+  double _visibilityRadiusKm(String? level) {
+    switch (level?.toLowerCase()) {
+      case 'ouro':
+      case 'premium':
+        return PinVisibilityConfig.goldRadiusKm;
+      case 'prata':
+      case 'medio':
+        return PinVisibilityConfig.silverRadiusKm;
+      case 'bronze':
+      default:
+        return PinVisibilityConfig.bronzeRadiusKm;
+    }
+  }
+
+  bool _isWithinVisibilityRange({
+    required LatLng pinLocation,
+    required LatLng mapCenter,
+    required double visibilityRadiusKm,
+    LatLngBounds? mapBounds,
+  }) {
+    final distanceFromCenter = calculateDistanceKm(mapCenter, pinLocation);
+    if (distanceFromCenter <= visibilityRadiusKm) {
+      return true;
+    }
+
+    if (mapBounds == null) {
+      return false;
+    }
+
+    if (mapBounds.contains(pinLocation)) {
+      return true;
+    }
+
+    // Clamp to viewport edges to prevent pin flicker at the boundary.
+    final clampedLat = pinLocation.latitude
+        .clamp(mapBounds.south, mapBounds.north)
+        .toDouble();
+    final clampedLng = pinLocation.longitude
+        .clamp(mapBounds.west, mapBounds.east)
+        .toDouble();
+    final nearestPoint = LatLng(clampedLat, clampedLng);
+    final distanceToViewport = calculateDistanceKm(pinLocation, nearestPoint);
+    return distanceToViewport <= visibilityRadiusKm;
   }
 }
 

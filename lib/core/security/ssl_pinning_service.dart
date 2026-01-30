@@ -1,7 +1,7 @@
 // import 'dart:io';
 // import 'package:dio/io.dart'; // Breaks web
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:soloforte_app/core/config/platform_capabilities.dart';
 
 /// SSL Certificate Pinning Service
 /// Protects against Man-in-the-Middle (MITM) attacks
@@ -17,7 +17,9 @@ class SslPinningService {
 
   /// Configure SSL pinning for Dio client
   static void configurePinning(Dio dio) {
-    if (kIsWeb) return; // Web handles SSL automatically
+    if (!PlatformCapabilities.supportsCertPinning) {
+      return; // Web handles SSL automatically
+    }
     // Native implementation commented out to avoid web build errors for now
     // In a real project, use conditional imports (.stub.dart vs .io.dart)
 
@@ -56,7 +58,9 @@ class SslPinningService {
 
   /// Get certificate hash from URL (for setup)
   static Future<String> getCertificateHash(String url) async {
-    if (kIsWeb) return "Not supported on Web";
+    if (!PlatformCapabilities.supportsCertPinning) {
+      return "Not supported on Web";
+    }
 
     // final uri = Uri.parse(url);
     // final socket = await SecureSocket.connect( ...

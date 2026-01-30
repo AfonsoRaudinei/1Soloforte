@@ -121,6 +121,7 @@ _$MarketingPublicationImpl _$$MarketingPublicationImplFromJson(
   investmentLevel: json['investmentLevel'] as String? ?? 'prata',
   isVisible: json['isVisible'] as bool? ?? true,
   notes: json['notes'] as String?,
+  createdBy: json['createdBy'] as String?,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: json['updatedAt'] == null
       ? null
@@ -160,6 +161,7 @@ Map<String, dynamic> _$$MarketingPublicationImplToJson(
   'investmentLevel': instance.investmentLevel,
   'isVisible': instance.isVisible,
   'notes': instance.notes,
+  'createdBy': instance.createdBy,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt?.toIso8601String(),
   'publishedAt': instance.publishedAt?.toIso8601String(),

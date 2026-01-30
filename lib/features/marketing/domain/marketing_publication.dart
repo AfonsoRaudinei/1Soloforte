@@ -148,6 +148,9 @@ class MarketingPublication with _$MarketingPublication {
     // Observações
     String? notes,
 
+    // Autoria (Permissões)
+    String? createdBy, // ID do usuário que criou a publicação
+
     // Timestamps
     required DateTime createdAt,
     DateTime? updatedAt,
