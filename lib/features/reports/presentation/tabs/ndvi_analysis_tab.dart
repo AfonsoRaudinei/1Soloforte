@@ -9,6 +9,7 @@ import 'package:soloforte_app/shared/widgets/app_card.dart';
 import 'package:soloforte_app/features/map/application/drawing_controller.dart';
 import 'package:soloforte_app/features/reports/presentation/widgets/ndvi_heatmap_widget.dart';
 import 'package:soloforte_app/features/reports/application/telemetry_logger.dart';
+import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
 
 class NdviAnalysisTab extends ConsumerWidget {
   const NdviAnalysisTab({super.key});
@@ -27,8 +28,12 @@ class NdviAnalysisTab extends ConsumerWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Erro ao carregar dados: ${snapshot.error}'),
+          return const Center(
+            child: EmptyStateWidget(
+              title: 'Erro na análise',
+              message: 'Não foi possível processar os dados de NDVI.',
+              icon: Icons.error_outline,
+            ),
           );
         }
 
@@ -55,11 +60,15 @@ class NdviAnalysisTab extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (savedAreas.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  child: const Text(
-                    'Nenhuma área salva para análise. Crie áreas no mapa.',
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(
+                    child: EmptyStateWidget(
+                      title: 'Nenhuma área',
+                      message:
+                          'Desenhe áreas no mapa para ver a análise de NDVI.',
+                      icon: Icons.map,
+                    ),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -88,9 +97,7 @@ class NdviAnalysisTab extends ConsumerWidget {
               Text('Evolução Temporal NDVI', style: AppTypography.h3),
               Text(
                 'Disponível',
-                style: AppTypography.caption.copyWith(
-                  color: Colors.grey[700],
-                ),
+                style: AppTypography.caption.copyWith(color: Colors.grey[700]),
               ),
             ],
           ),
@@ -223,17 +230,17 @@ class NdviAnalysisTab extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           // Usa Heatmap Real (Analítico) se disponível, senão Imagem PNG, senão Mock
           (data.heatmapPoints != null && data.heatmapPoints!.isNotEmpty)
               ? NdviHeatmapWidget(
-                  height: 200,
+                  height: 180,
                   showGrid: true,
                   dataPoints: data.heatmapPoints,
                 )
               : (data.attentionZoneImageBytes != null
                     ? Container(
-                        height: 200,
+                        height: 180,
                         width: double.infinity,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
@@ -246,8 +253,8 @@ class NdviAnalysisTab extends ConsumerWidget {
                           ),
                         ),
                       )
-                    : const NdviHeatmapWidget(height: 200, showGrid: true)),
-          const SizedBox(height: 12),
+                    : const NdviHeatmapWidget(height: 180, showGrid: true)),
+          const SizedBox(height: 8),
           // Legenda do mapa de calor
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -270,7 +277,7 @@ class NdviAnalysisTab extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.blue[50],
               borderRadius: BorderRadius.circular(8),
@@ -326,50 +333,44 @@ class NdviAnalysisTab extends ConsumerWidget {
                   subtitle: Text(
                     'NDVI: ${item.currentNdvi.toStringAsFixed(2)}',
                   ),
-                  trailing:
-                      growth == null
-                          ? const Text(
-                              'Sem dados',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
+                  trailing: growth == null
+                      ? const Text(
+                          'Sem dados',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        )
+                      : Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isPositive
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isPositive
+                                    ? Icons.arrow_upward
+                                    : Icons.arrow_downward,
+                                size: 14,
+                                color: isPositive ? Colors.green : Colors.red,
                               ),
-                            )
-                          : Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                              const SizedBox(width: 4),
+                              Text(
+                                '${growth.abs().toStringAsFixed(1)}%',
+                                style: TextStyle(
+                                  color: isPositive ? Colors.green : Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
-                              decoration: BoxDecoration(
-                                color: isPositive
-                                    ? Colors.green.withValues(alpha: 0.1)
-                                    : Colors.red.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    isPositive
-                                        ? Icons.arrow_upward
-                                        : Icons.arrow_downward,
-                                    size: 14,
-                                    color:
-                                        isPositive ? Colors.green : Colors.red,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${growth.abs().toStringAsFixed(1)}%',
-                                    style: TextStyle(
-                                      color:
-                                          isPositive ? Colors.green : Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            ],
+                          ),
+                        ),
                 );
               },
             ),
@@ -391,23 +392,19 @@ class NdviAnalysisTab extends ConsumerWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: const Text('Influência do clima no vigor atual'),
-        trailing:
-            data.correlationWithWeather == null
-                ? const Text(
-                    'Sem dados',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  )
-                : Text(
-                    '${(data.correlationWithWeather! * 100).toStringAsFixed(0)}%',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blueAccent,
-                    ),
-                  ),
+        trailing: data.correlationWithWeather == null
+            ? const Text(
+                'Sem dados',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              )
+            : Text(
+                '${(data.correlationWithWeather! * 100).toStringAsFixed(0)}%',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
+                ),
+              ),
       ),
     );
   }

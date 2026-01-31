@@ -527,7 +527,9 @@ class _MarketingPlansSettingsScreenState
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(
+              alpha: 0.04,
+            ), // Updated to withValues
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -746,44 +748,184 @@ class LanguageSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Variável 'current' removida pois a seleção é fixa em pt_BR visulamente
-
     return _BaseSettingsPage(
       title: 'Idioma',
-      body: Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            RadioListTile<String>(
-              title: const Text('Português (Brasil)'),
-              value: 'pt_BR',
-              groupValue: 'pt_BR', // Força seleção visível
-              activeColor: AppColors.primary,
-              onChanged: (val) {
-                // Já está selecionado
-              },
-            ),
-            const Divider(height: 1),
-            Opacity(
-              opacity: 0.5,
-              child: RadioListTile<String>(
-                title: const Text('English (US)'),
-                subtitle: Text(
-                  'Em breve',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.primary,
+            // Card informativo
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                value: 'en_US',
-                groupValue: null, // Nunca selecionado
-                onChanged: null, // Desabilitado
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF007AFF).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFF007AFF),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Novos idiomas serão adicionados em breve',
+                      style: TextStyle(
+                        color: Color(0xFF6E6E73),
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: 24),
+
+            // Lista de idiomas
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Português (Brasil) - ATIVO
+                  _buildLanguageItem(
+                    flag: '🇧🇷',
+                    language: 'Português (Brasil)',
+                    isActive: true,
+                    isAvailable: true,
+                    onTap: () {
+                      // Já é o idioma ativo, não faz nada
+                    },
+                  ),
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFE5E5E7),
+                  ),
+
+                  // Inglês - EM BREVE
+                  _buildLanguageItem(
+                    flag: '🇺🇸',
+                    language: 'English (US)',
+                    isActive: false,
+                    isAvailable: false,
+                    onTap: null, // Desabilitado
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageItem({
+    required String flag,
+    required String language,
+    required bool isActive,
+    required bool isAvailable,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: isAvailable ? onTap : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        color: Colors.transparent,
+        child: Row(
+          children: [
+            // Flag
+            Text(flag, style: const TextStyle(fontSize: 28)),
+            const SizedBox(width: 16),
+
+            // Nome do idioma
+            Expanded(
+              child: Text(
+                language,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                  color: isAvailable
+                      ? Colors.black
+                      : const Color(0xFF6E6E73).withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+
+            // Badge/Status
+            if (isActive)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF34C759).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF34C759).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: const Text(
+                  'ATIVO',
+                  style: TextStyle(
+                    color: Color(0xFF34C759),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              )
+            else if (!isAvailable)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF9500).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFFF9500).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: const Text(
+                  'EM BREVE',
+                  style: TextStyle(
+                    color: Color(0xFFFF9500),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

@@ -246,7 +246,6 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
             Text('Página com Problema', style: AppTypography.label),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              // ignore: deprecated_member_use
               value: _pagina,
               items: _paginas
                   .map((p) => DropdownMenuItem(value: p, child: Text(p)))

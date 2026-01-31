@@ -7,35 +7,44 @@ class HelpCenterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
+      appBar: AppBar(
+        title: const Text('Central de Ajuda'),
+        centerTitle: true,
+        backgroundColor: const Color(0xFFF2F2F7),
+        elevation: 0,
       ),
-      child: Column(
-        children: [
-          _buildFaqItem(
-            'Como funciona o modo offline?',
-            'O modo offline permite que você acesse seus mapas e dados mesmo sem internet. Os dados são sincronizados automaticamente quando a conexão for restabelecida.',
-          ),
-          const SizedBox(height: 12),
-          _buildFaqItem(
-            'Como alterar configurações?',
-            'Acesse o menu Configurações no canto superior direito do mapa. Lá você pode ajustar preferências de conta, tema, idioma e dados.',
-          ),
-          const SizedBox(height: 12),
-          _buildFaqItem(
-            'Como funcionam ocorrências e alertas?',
-            'As ocorrências permitem registrar problemas no campo com geolocalização. Alertas são gerados automaticamente baseados na gravidade da ocorrência.',
-          ),
-          const SizedBox(height: 12),
-          _buildFaqItem(
-            'Problemas comuns de sincronização',
-            'Verifique se você está conectado à internet. Se o problema persistir, tente fazer logout e login novamente para forçar uma nova sincronização.',
-          ),
-        ],
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 16,
+          left: 16,
+          right: 16,
+          bottom: 16,
+        ),
+        child: Column(
+          children: [
+            _buildFaqItem(
+              'Como funciona o modo offline?',
+              'O modo offline permite que você acesse seus mapas e dados mesmo sem internet. Os dados são sincronizados automaticamente quando a conexão for restabelecida.',
+            ),
+            const SizedBox(height: 12),
+            _buildFaqItem(
+              'Como alterar configurações?',
+              'Acesse o menu Configurações no canto superior direito do mapa. Lá você pode ajustar preferências de conta, tema, idioma e dados.',
+            ),
+            const SizedBox(height: 12),
+            _buildFaqItem(
+              'Como funcionam ocorrências e alertas?',
+              'As ocorrências permitem registrar problemas no campo com geolocalização. Alertas são gerados automaticamente baseados na gravidade da ocorrência.',
+            ),
+            const SizedBox(height: 12),
+            _buildFaqItem(
+              'Problemas comuns de sincronização',
+              'Verifique se você está conectado à internet. Se o problema persistir, tente fazer logout e login novamente para forçar uma nova sincronização.',
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'package:soloforte_app/features/agenda/domain/event_model.dart';
 import 'package:soloforte_app/features/agenda/presentation/agenda_controller.dart';
 import 'package:soloforte_app/features/agenda/presentation/weekly_planning_screen.dart';
 import 'package:soloforte_app/shared/widgets/premium_card.dart';
+import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
 
 class AgendaScreen extends ConsumerStatefulWidget {
   final String? clientId;
@@ -233,7 +234,23 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Erro: $error')),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'Não foi possível carregar a agenda.',
+                style: TextStyle(color: Colors.grey),
+              ),
+              TextButton(
+                onPressed: () => ref.invalidate(filteredAgendaProvider),
+                child: const Text('Tentar novamente'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -467,13 +484,12 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Center(
-        child: Text(
-          'Nenhum evento para este dia.',
-          style: AppTypography.bodyMedium.copyWith(color: Colors.grey),
-        ),
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      child: EmptyStateWidget(
+        title: 'Sem eventos',
+        message: 'Não há eventos agendados para este dia.',
+        icon: Icons.event_busy,
       ),
     );
   }

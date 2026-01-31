@@ -348,51 +348,49 @@ class SettingsScreen extends ConsumerWidget {
     WidgetRef ref,
     String currentTheme,
   ) {
+    // Observa o tema atual usando o novo provider
+    final currentAppTheme = ref.watch(appThemeProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SettingsSectionLabel('APARÊNCIA'),
-        // Três opções de tema lado a lado
+        const SizedBox(height: 12),
+        // Grid com os 3 temas funcionais
         Row(
           children: [
+            // Clean iOS
             Expanded(
-              child: SettingsStyleOption(
-                id: 'blue',
-                title: 'Clean iOS',
-                subtitle: 'Azul Samsung',
-                icon: Icons.phone_iphone,
+              child: _ThemeOptionCard(
+                theme: AppTheme.cleanIOS,
+                currentTheme: currentAppTheme,
                 gradient: const [Color(0xFF0057FF), Color(0xFF2563EB)],
-                selectedId: currentTheme,
-                onSelected: (id) async {
-                  await ref.setTheme(id);
+                onTap: () async {
+                  await ref.setTheme(AppTheme.cleanIOS);
                 },
               ),
             ),
             const SizedBox(width: 12),
+            // Avenue (Verde Avenue)
             Expanded(
-              child: SettingsStyleOption(
-                id: 'green',
-                title: 'Material 3',
-                subtitle: 'Verde iOS',
-                icon: Icons.android,
+              child: _ThemeOptionCard(
+                theme: AppTheme.avenue,
+                currentTheme: currentAppTheme,
                 gradient: const [Color(0xFF10B981), Color(0xFF059669)],
-                selectedId: currentTheme,
-                onSelected: (id) async {
-                  await ref.setTheme(id);
+                onTap: () async {
+                  await ref.setTheme(AppTheme.avenue);
                 },
               ),
             ),
             const SizedBox(width: 12),
+            // Black & Gold - AGORA FUNCIONAL!
             Expanded(
-              child: SettingsStyleOption(
-                id: 'dark',
-                title: 'Tema Escuro',
-                subtitle: 'Black Gold',
-                icon: Icons.dark_mode,
-                gradient: const [Color(0xFF1E1E1E), Color(0xFF000000)],
-                selectedId: currentTheme,
-                onSelected: (id) async {
-                  await ref.setTheme(id);
+              child: _ThemeOptionCard(
+                theme: AppTheme.dark,
+                currentTheme: currentAppTheme,
+                gradient: const [Color(0xFFD4AF37), Color(0xFFC4A137)],
+                onTap: () async {
+                  await ref.setTheme(AppTheme.dark);
                 },
               ),
             ),
@@ -414,7 +412,108 @@ class SettingsScreen extends ConsumerWidget {
       ],
     );
   }
+}
 
+/// Widget para card de opção de tema
+class _ThemeOptionCard extends StatelessWidget {
+  final AppTheme theme;
+  final AppTheme currentTheme;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+
+  const _ThemeOptionCard({
+    required this.theme,
+    required this.currentTheme,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = theme == currentTheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? gradient[0]
+                : Theme.of(context).colorScheme.outline,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Ícone com gradiente
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradient,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                theme.icon,
+                color: theme == AppTheme.dark ? Colors.white70 : Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Nome do tema
+            Text(
+              theme.displayName,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            // Descrição
+            Text(
+              theme.description,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            // Badge "ATIVO" se selecionado, ou nada se desabilitado
+            if (isSelected)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: gradient[0],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'ATIVO',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+              )
+            else
+              const SizedBox(height: 20), // Placeholder para manter altura
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Helper extension for SettingsScreen methods
+extension _SettingsScreenMethods on SettingsScreen {
   Widget _buildSupportSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,7 +523,7 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             SettingsNavigableRow(
               icon: Icons.help_outline,
-              iconGradient: _defaultGradient,
+              iconGradient: const [Colors.blue, Colors.blueAccent],
               title: 'Central de Ajuda',
               subtitle: 'Perguntas frequentes e tutoriais',
               onTap: () {
@@ -434,7 +533,7 @@ class SettingsScreen extends ConsumerWidget {
             const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
             SettingsNavigableRow(
               icon: Icons.chat_bubble_outline,
-              iconGradient: _purpleGradient,
+              iconGradient: const [Colors.purple, Colors.deepPurple],
               title: 'Falar com Suporte',
               subtitle: 'Atendimento via chat',
               onTap: () {
@@ -456,7 +555,7 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             SettingsNavigableRow(
               icon: Icons.lock_outline,
-              iconGradient: _orangeGradient,
+              iconGradient: const [Colors.orange, Colors.deepOrange],
               title: 'Alterar Senha',
               subtitle: 'Segurança da conta',
               onTap: () {
@@ -466,7 +565,7 @@ class SettingsScreen extends ConsumerWidget {
             const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
             SettingsNavigableRow(
               icon: Icons.description_outlined,
-              iconGradient: _defaultGradient,
+              iconGradient: const [Colors.blue, Colors.blueAccent],
               title: 'Termos de Uso',
               subtitle: 'Regras de utilização',
               onTap: () {
@@ -476,7 +575,7 @@ class SettingsScreen extends ConsumerWidget {
             const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E7)),
             SettingsNavigableRow(
               icon: Icons.privacy_tip_outlined,
-              iconGradient: _purpleGradient,
+              iconGradient: const [Colors.purple, Colors.deepPurple],
               title: 'Política de Privacidade',
               subtitle: 'Como usamos seus dados',
               onTap: () {

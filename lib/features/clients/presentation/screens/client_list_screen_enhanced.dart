@@ -127,7 +127,7 @@ class _ClientListScreenEnhancedState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          error.toString(),
+                          'Não foi possível carregar a lista de clientes. Verifique sua conexão e tente novamente.',
                           style: AppTypography.bodySmall,
                           textAlign: TextAlign.center,
                         ),

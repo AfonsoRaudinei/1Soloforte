@@ -11,9 +11,6 @@ abstract interface class IDatabaseService {
 
   /// Close the database connection.
   Future<void> close();
-
-  /// Check if the database is open.
-  bool get isOpen;
 }
 
 /// Interface for authentication service.

@@ -12,12 +12,9 @@ class DatabaseServiceImpl implements IDatabaseService {
 
   @override
   Future<void> close() async {
-    if (_helper.isOpen) {
-      final db = await _helper.database;
-      await db.close();
-    }
+    // SQLite close() is idempotent and safe to call multiple times.
+    // The database getter ensures proper initialization through DatabaseBootstrap.
+    final db = await _helper.database;
+    await db.close();
   }
-
-  @override
-  bool get isOpen => _helper.isOpen;
 }

@@ -7,7 +7,7 @@ part of 'settings_provider.dart';
 // **************************************************************************
 
 String _$settingsLocalDataSourceHash() =>
-    r'13202009f588cf153db75740a2678844179728b6';
+    r'6f0344f08e30bd44bff96dccd3bf013bb4ac365d';
 
 /// See also [settingsLocalDataSource].
 @ProviderFor(settingsLocalDataSource)
@@ -27,7 +27,7 @@ final settingsLocalDataSourceProvider =
 typedef SettingsLocalDataSourceRef =
     AutoDisposeProviderRef<ISettingsLocalDataSource>;
 String _$settingsRemoteDataSourceHash() =>
-    r'1ea0915fff37fa4532f5061a9c3a65595bd06d20';
+    r'ee192544f40e3a8deddfae5a789ab34ad68ff63c';
 
 /// See also [settingsRemoteDataSource].
 @ProviderFor(settingsRemoteDataSource)
@@ -47,7 +47,7 @@ final settingsRemoteDataSourceProvider =
 typedef SettingsRemoteDataSourceRef =
     AutoDisposeProviderRef<ISettingsRemoteDataSource>;
 String _$settingsRepositoryHash() =>
-    r'7ba8d43577408d49d0059d43fb8e7d16e3697b8c';
+    r'6c069fd2c1890b834c6d055a4eec5239b4812ece';
 
 /// See also [settingsRepository].
 @ProviderFor(settingsRepository)

@@ -17,7 +17,7 @@ class SaveVisit {
 }
 
 @riverpod
-SaveVisit saveVisit(SaveVisitRef ref) {
+SaveVisit saveVisit(Ref ref) {
   final repository = ref.watch(visitRepositoryProvider);
   return SaveVisit(repository);
 }

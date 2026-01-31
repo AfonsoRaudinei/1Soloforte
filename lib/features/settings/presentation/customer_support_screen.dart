@@ -78,60 +78,145 @@ class _CustomerSupportScreenState extends ConsumerState<CustomerSupportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
-      appBar: AppBar(title: const Text('Falar com Suporte'), centerTitle: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Envie sua mensagem e nossa equipe responderá em breve.',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-              const SizedBox(height: 24),
-
-              // Assunto
-              TextFormField(
-                controller: _subjectController,
-                decoration: _inputDecoration('Assunto'),
-                validator: (v) =>
-                    v?.isNotEmpty == true ? null : 'Informe o assunto',
-              ),
-              const SizedBox(height: 16),
-
-              // Mensagem
-              TextFormField(
-                controller: _messageController,
-                maxLines: 5,
-                decoration: _inputDecoration(
-                  'Mensagem',
-                ).copyWith(alignLabelWithHint: true),
-                validator: (v) =>
-                    v?.isNotEmpty == true ? null : 'Escreva sua mensagem',
-              ),
-              const SizedBox(height: 32),
-
-              // Botão Enviar
-              FilledButton(
-                onPressed: _isLoading ? null : _submit,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: AppColors.primary,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+      appBar: AppBar(
+        title: const Text('Falar com Suporte'),
+        centerTitle: true,
+        backgroundColor: const Color(0xFFF2F2F7),
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Card informativo
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      )
-                    : const Text('Enviar Mensagem'),
-              ),
-            ],
+                        child: Icon(
+                          Icons.info_outline,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Nossa equipe responderá em até 24 horas úteis',
+                          style: TextStyle(
+                            color: Color(0xFF6E6E73),
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Assunto
+                TextFormField(
+                  controller: _subjectController,
+                  decoration: _inputDecoration('Assunto'),
+                  style: const TextStyle(fontSize: 16),
+                  validator: (v) =>
+                      v?.isNotEmpty == true ? null : 'Informe o assunto',
+                ),
+                const SizedBox(height: 16),
+
+                // Mensagem
+                TextFormField(
+                  controller: _messageController,
+                  maxLines: 6,
+                  decoration: _inputDecoration(
+                    'Mensagem',
+                  ).copyWith(alignLabelWithHint: true),
+                  style: const TextStyle(fontSize: 16),
+                  validator: (v) =>
+                      v?.isNotEmpty == true ? null : 'Escreva sua mensagem',
+                ),
+                const SizedBox(height: 32),
+
+                // Botão Enviar (estilo iOS)
+                GestureDetector(
+                  onTap: _isLoading ? null : _submit,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      gradient: _isLoading
+                          ? null
+                          : const LinearGradient(
+                              colors: [Color(0xFF0057FF), Color(0xFF2563EB)],
+                            ),
+                      color: _isLoading ? const Color(0xFFE5E5E7) : null,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: _isLoading
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF0057FF,
+                                ).withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                    ),
+                    child: Center(
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF6E6E73),
+                              ),
+                            )
+                          : const Text(
+                              'Enviar Mensagem',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Texto de contato alternativo
+                Center(
+                  child: Text(
+                    'Ou entre em contato: suporte@soloforte.com.br',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -141,19 +226,29 @@ class _CustomerSupportScreenState extends ConsumerState<CustomerSupportScreen> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
+      labelStyle: const TextStyle(color: Color(0xFF6E6E73), fontSize: 16),
       filled: true,
       fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: Color(0xFFE5E5E7)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: Color(0xFFE5E5E7)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.blue, width: 1.5),
+        borderSide: const BorderSide(color: Color(0xFF0057FF), width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFFF3B30)),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFFF3B30), width: 2),
       ),
     );
   }

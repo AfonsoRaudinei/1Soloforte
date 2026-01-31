@@ -2,17 +2,89 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Theme identifier preference key for SharedPreferences.
-const _themeIdKey = 'theme_id';
+/// Enum representing the 3 exclusive app themes.
+enum AppTheme {
+  cleanIOS, // Clean iOS (Light) - Blue theme
+  avenue, // Avenue (Light) - Green theme
+  dark; // Dark theme - Black & Gold
 
-/// Provider for the current theme identifier.
-final themeIdProvider = StateNotifierProvider<ThemeIdNotifier, String>(
-  (ref) => ThemeIdNotifier(),
+  /// Get the internal theme ID for backwards compatibility.
+  String get id {
+    switch (this) {
+      case AppTheme.cleanIOS:
+        return 'blue';
+      case AppTheme.avenue:
+        return 'green';
+      case AppTheme.dark:
+        return 'dark';
+    }
+  }
+
+  /// Get theme name for display.
+  String get displayName {
+    switch (this) {
+      case AppTheme.cleanIOS:
+        return 'Clean iOS';
+      case AppTheme.avenue:
+        return 'Avenue';
+      case AppTheme.dark:
+        return 'Black & Gold';
+    }
+  }
+
+  /// Get theme description.
+  String get description {
+    switch (this) {
+      case AppTheme.cleanIOS:
+        return 'Azul Samsung';
+      case AppTheme.avenue:
+        return 'Verde Avenue';
+      case AppTheme.dark:
+        return 'Modo escuro';
+    }
+  }
+
+  /// Get theme icon.
+  IconData get icon {
+    switch (this) {
+      case AppTheme.cleanIOS:
+        return Icons.smartphone;
+      case AppTheme.avenue:
+        return Icons.android;
+      case AppTheme.dark:
+        return Icons.dark_mode;
+    }
+  }
+
+  /// Check if this theme uses dark mode.
+  bool get isDark => this == AppTheme.dark;
+
+  /// Parse theme from ID string.
+  static AppTheme fromId(String id) {
+    switch (id) {
+      case 'blue':
+        return AppTheme.cleanIOS;
+      case 'green':
+        return AppTheme.avenue;
+      case 'dark':
+        return AppTheme.dark;
+      default:
+        return AppTheme.cleanIOS; // Default
+    }
+  }
+}
+
+/// Theme preference key for SharedPreferences.
+const _themeKey = 'app_theme';
+
+/// Provider for the current app theme.
+final appThemeProvider = StateNotifierProvider<AppThemeNotifier, AppTheme>(
+  (ref) => AppThemeNotifier(),
 );
 
-/// Notifier that manages theme id and persists to SharedPreferences.
-class ThemeIdNotifier extends StateNotifier<String> {
-  ThemeIdNotifier() : super('blue') {
+/// Notifier that manages app theme and persists to SharedPreferences.
+class AppThemeNotifier extends StateNotifier<AppTheme> {
+  AppThemeNotifier() : super(AppTheme.cleanIOS) {
     _loadTheme();
   }
 
@@ -20,43 +92,51 @@ class ThemeIdNotifier extends StateNotifier<String> {
   Future<void> _loadTheme() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final themeId = prefs.getString(_themeIdKey);
-      if (themeId != null && ['blue', 'green', 'dark'].contains(themeId)) {
-        state = themeId;
+      final themeId = prefs.getString(_themeKey);
+      if (themeId != null) {
+        state = AppTheme.fromId(themeId);
       }
     } catch (_) {
       // Use default on error
     }
   }
 
-  /// Set theme id and persist.
-  Future<void> setThemeId(String id) async {
-    if (!['blue', 'green', 'dark'].contains(id)) return;
-
-    state = id;
+  /// Set theme and persist.
+  Future<void> setTheme(AppTheme theme) async {
+    state = theme;
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_themeIdKey, id);
+      await prefs.setString(_themeKey, theme.id);
     } catch (_) {
       // Ignore persistence errors
     }
   }
 
   /// Check if dark mode is active.
-  bool get isDarkMode => state == 'dark';
+  bool get isDarkMode => state.isDark;
 }
+
+/// Legacy provider for backwards compatibility.
+/// Maps new AppTheme to old string-based theme IDs.
+final themeIdProvider = Provider<String>((ref) {
+  final theme = ref.watch(appThemeProvider);
+  return theme.id;
+});
 
 /// Extension for easy theme access in widgets.
 extension ThemeExtension on WidgetRef {
-  /// Get current theme id.
+  /// Get current theme.
+  AppTheme get appTheme => watch(appThemeProvider);
+
+  /// Get current theme id (legacy).
   String get themeId => watch(themeIdProvider);
 
   /// Check if dark mode is currently active.
-  bool get isDarkMode => watch(themeIdProvider) == 'dark';
+  bool get isDarkMode => watch(appThemeProvider).isDark;
 
   /// Set specific theme.
-  Future<void> setTheme(String themeId) async {
-    await read(themeIdProvider.notifier).setThemeId(themeId);
+  Future<void> setTheme(AppTheme theme) async {
+    await read(appThemeProvider.notifier).setTheme(theme);
   }
 }
 
@@ -73,15 +153,7 @@ extension ThemeContextExtension on BuildContext {
 }
 
 // Mantém compatibilidade com código antigo usando ThemeMode
-final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((
-  ref,
-) {
-  final themeId = ref.watch(themeIdProvider);
-  return ThemeModeNotifier(
-    themeId == 'dark' ? ThemeMode.dark : ThemeMode.light,
-  );
+final themeModeProvider = Provider<ThemeMode>((ref) {
+  final theme = ref.watch(appThemeProvider);
+  return theme.isDark ? ThemeMode.dark : ThemeMode.light;
 });
-
-class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  ThemeModeNotifier(ThemeMode mode) : super(mode);
-}

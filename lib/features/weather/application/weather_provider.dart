@@ -7,17 +7,13 @@ import 'package:soloforte_app/core/database/database_helper.dart';
 part 'weather_provider.g.dart';
 
 @riverpod
-WeatherService weatherService(WeatherServiceRef ref) {
+WeatherService weatherService(Ref ref) {
   final DatabaseHelper dbHelper = DatabaseHelper.instance;
   return WeatherService(Dio(), dbHelper);
 }
 
 @riverpod
-Future<WeatherForecast> weatherForecast(
-  WeatherForecastRef ref,
-  double lat,
-  double lon,
-) {
+Future<WeatherForecast> weatherForecast(Ref ref, double lat, double lon) {
   final service = ref.watch(weatherServiceProvider);
   return service.getWeather(lat, lon);
 }

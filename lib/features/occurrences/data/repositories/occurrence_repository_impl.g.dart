@@ -7,7 +7,7 @@ part of 'occurrence_repository_impl.dart';
 // **************************************************************************
 
 String _$occurrenceRepositoryHash() =>
-    r'8d43f2cb7f705b554ee0d5c5a45fd1f36babcbcd';
+    r'2b5e4986e213b5e924e24d2be1fc54352a450bcf';
 
 /// See also [occurrenceRepository].
 @ProviderFor(occurrenceRepository)

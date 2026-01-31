@@ -6,7 +6,7 @@ part of 'save_visit.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$saveVisitHash() => r'1876d1e4f6a84cda9974850830e071d7e0972d97';
+String _$saveVisitHash() => r'673bbcc525d3bbbb9c86d6543d8e2b400ac3bdde';
 
 /// See also [saveVisit].
 @ProviderFor(saveVisit)

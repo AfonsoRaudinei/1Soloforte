@@ -79,14 +79,17 @@ class OccurrenceRepositoryImpl implements OccurrenceRepository {
       final allOccurrences = await getOccurrences();
       return allOccurrences.where((occ) => occ.visitId == visitId).toList();
     } catch (e, s) {
-      LoggerService.e('Failed to get occurrences for visit $visitId',
-          error: e, stackTrace: s);
+      LoggerService.e(
+        'Failed to get occurrences for visit $visitId',
+        error: e,
+        stackTrace: s,
+      );
       rethrow;
     }
   }
 }
 
 @Riverpod(keepAlive: true)
-OccurrenceRepository occurrenceRepository(OccurrenceRepositoryRef ref) {
+OccurrenceRepository occurrenceRepository(Ref ref) {
   return OccurrenceRepositoryImpl(OccurrenceLocalDataSourceImpl());
 }

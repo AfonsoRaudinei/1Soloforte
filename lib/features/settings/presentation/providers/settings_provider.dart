@@ -13,21 +13,17 @@ part 'settings_provider.g.dart';
 // --- Data Layer Providers ---
 
 @riverpod
-ISettingsLocalDataSource settingsLocalDataSource(
-  SettingsLocalDataSourceRef ref,
-) {
+ISettingsLocalDataSource settingsLocalDataSource(Ref ref) {
   return SettingsLocalDataSource();
 }
 
 @riverpod
-ISettingsRemoteDataSource settingsRemoteDataSource(
-  SettingsRemoteDataSourceRef ref,
-) {
+ISettingsRemoteDataSource settingsRemoteDataSource(Ref ref) {
   return SettingsRemoteDataSource(Supabase.instance.client);
 }
 
 @riverpod
-ISettingsRepository settingsRepository(SettingsRepositoryRef ref) {
+ISettingsRepository settingsRepository(Ref ref) {
   final localDataSource = ref.watch(settingsLocalDataSourceProvider);
   final remoteDataSource = ref.watch(settingsRemoteDataSourceProvider);
   return SettingsRepositoryImpl(localDataSource, remoteDataSource);

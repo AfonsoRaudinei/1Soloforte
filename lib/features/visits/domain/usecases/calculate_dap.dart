@@ -10,6 +10,6 @@ class CalculateDap {
 }
 
 @riverpod
-CalculateDap calculateDap(CalculateDapRef ref) {
+CalculateDap calculateDap(Ref ref) {
   return CalculateDap();
 }

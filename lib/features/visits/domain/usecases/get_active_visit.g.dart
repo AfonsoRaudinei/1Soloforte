@@ -6,7 +6,7 @@ part of 'get_active_visit.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$getActiveVisitHash() => r'db5bbeb528550603444b120e97d75dbc53769e9e';
+String _$getActiveVisitHash() => r'affd4528b05b25875b65cde72eb5be74bebfbc94';
 
 /// See also [getActiveVisit].
 @ProviderFor(getActiveVisit)

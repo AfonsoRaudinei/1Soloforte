@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soloforte_app/features/marketing/presentation/providers/marketing_selection_provider.dart';
+import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
 
 class CasesDashboard extends ConsumerWidget {
   const CasesDashboard({super.key});
@@ -131,6 +132,20 @@ class CasesDashboard extends ConsumerWidget {
         'size': 'prata',
       },
     ];
+
+    if (cases.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: EmptyStateWidget(
+          title: 'Nenhum case publicado',
+          message:
+              'Crie seu primeiro case de sucesso para compartilhar resultados.',
+          icon: Icons.campaign_outlined,
+          actionLabel: 'Criar Novo Case',
+          // Action handled by parent usually, or we can wire it up
+        ),
+      );
+    }
 
     return GridView.builder(
       shrinkWrap: true,

@@ -37,7 +37,7 @@ class VisitRepositoryImpl implements VisitRepository {
 }
 
 @Riverpod(keepAlive: true)
-VisitRepository visitRepository(VisitRepositoryRef ref) {
+VisitRepository visitRepository(Ref ref) {
   // We can also provide the DataSource via a provider if we want more granularity
   return VisitRepositoryImpl(VisitLocalDataSourceImpl());
 }

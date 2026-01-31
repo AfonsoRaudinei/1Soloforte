@@ -6,6 +6,6 @@ import 'database_helper.dart';
 part 'database_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-IDatabaseService databaseService(DatabaseServiceRef ref) {
+IDatabaseService databaseService(Ref ref) {
   return DatabaseServiceImpl(DatabaseHelper.instance);
 }

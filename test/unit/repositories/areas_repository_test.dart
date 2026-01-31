@@ -45,16 +45,7 @@ void main() {
       expect(statuses.contains('monitoring'), isTrue);
     });
 
-    test('getAreas simulates network delay', () async {
-      // Arrange
-      final stopwatch = Stopwatch()..start();
-
-      // Act
-      await repository.getAreas();
-
-      // Assert
-      stopwatch.stop();
-      expect(stopwatch.elapsedMilliseconds, greaterThanOrEqualTo(400));
-    });
+    // Test removed: Local DB is too fast to simulate network delay reliably without artificial delay in repository
+    // and we shouldn't add artificial delay to production code just for this test.
   });
 }

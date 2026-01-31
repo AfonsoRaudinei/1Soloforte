@@ -6,7 +6,7 @@ part of 'calculate_dap.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$calculateDapHash() => r'bed7aa08a1bd4b0e7b2cc08a4e547d1fee992e1d';
+String _$calculateDapHash() => r'235d7c11d2b6f8650d54e52fdb2480d0371816f1';
 
 /// See also [calculateDap].
 @ProviderFor(calculateDap)

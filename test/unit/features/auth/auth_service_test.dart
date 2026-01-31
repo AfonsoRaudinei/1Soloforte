@@ -19,23 +19,23 @@ import 'auth_service_test.mocks.dart';
 ])
 void main() {
   late MockFirebaseAuth mockAuth;
-  late MockFirebaseFirestore mockFirestore;
   late AuthService authService;
 
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
     // Mock flutter_secure_storage channel to avoid MissingPluginException
-    const MethodChannel(
-      'plugins.it_nomads.com/flutter_secure_storage',
-    ).setMockMethodCallHandler((MethodCall methodCall) async {
-      if (methodCall.method == 'read') return null;
-      return null;
-    });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          (MethodCall methodCall) async {
+            if (methodCall.method == 'read') return null;
+            return null;
+          },
+        );
   });
 
   setUp(() {
     mockAuth = MockFirebaseAuth();
-    mockFirestore = MockFirebaseFirestore();
 
     // Stub authStateChanges to return empty stream by default to avoid constructor hang
     when(mockAuth.authStateChanges()).thenAnswer((_) => Stream.empty());
@@ -78,7 +78,6 @@ void main() {
       'register throws Exception when Firebase fails and Mock credentials fallback fails',
       () async {
         // Arrange
-        final name = 'Test User';
         final email = 'fail@test.com';
         final password = 'password';
 

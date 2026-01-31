@@ -16,7 +16,7 @@ class GetActiveVisit {
 }
 
 @riverpod
-GetActiveVisit getActiveVisit(GetActiveVisitRef ref) {
+GetActiveVisit getActiveVisit(Ref ref) {
   final repository = ref.watch(visitRepositoryProvider);
   return GetActiveVisit(repository);
 }

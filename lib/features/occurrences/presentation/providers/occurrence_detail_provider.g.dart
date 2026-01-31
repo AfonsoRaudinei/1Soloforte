@@ -6,7 +6,7 @@ part of 'occurrence_detail_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$occurrenceDetailHash() => r'65edf6a63e262fead4aaa7d0a95b05a843745e18';
+String _$occurrenceDetailHash() => r'3ccbbfd7364cbed7a97e71af2653bc47743bb6dc';
 
 /// Copied from Dart SDK
 class _SystemHash {

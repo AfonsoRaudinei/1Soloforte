@@ -537,6 +537,8 @@ class _VisitReportScreenState extends ConsumerState<VisitReportScreen> {
                 groupValue: _occurrenceType,
                 onChanged: (v) => setState(() => _occurrenceType = v!),
                 visualDensity: VisualDensity.compact,
+                // activeColor is deprecated in some contexts, relying on Theme is safer
+                // or using fillColor if customization is needed.
               ),
               const SizedBox(width: 4),
               Text(label, style: const TextStyle(fontSize: 14)),

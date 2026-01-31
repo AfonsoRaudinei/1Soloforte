@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'database_bootstrap.dart';
 
 class DatabaseHelper {
   static const _databaseName = "soloforte.db";
@@ -29,6 +30,10 @@ class DatabaseHelper {
   static const _databaseVersion = 9; // Incremented version to 9
 
   Future<Database> _initDatabase() async {
+    // Aguardar até que o SQLite FFI esteja completamente inicializado
+    // Isso garante que openDatabase() nunca seja chamado prematuramente
+    await DatabaseBootstrap.waitUntilReady();
+
     final path = join(await getDatabasesPath(), _databaseName);
     return await openDatabase(
       path,

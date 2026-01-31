@@ -54,6 +54,8 @@ dependencies:
   pdf: ^3.11.3
   printing: ^5.14.2
   sqflite: ^2.4.2
+  sqflite_common_ffi: ^2.3.0
+  sqflite_common_ffi_web: ^0.4.2+2
   path: ^1.9.1
   image_picker: ^1.2.1
   geocoding: ^4.0.0
@@ -76,8 +78,6 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
-  sqflite_common_ffi_web: ^1.1.0
-  sqflite_common_ffi: ^2.4.0+1
   archive: ^4.0.7
   image: ^4.5.4
   supabase_flutter: ^2.12.0

@@ -1,9 +1,14 @@
 import 'package:soloforte_app/l10n/generated/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'core/config/env_config.dart';
+import 'core/database/database_bootstrap.dart';
 
 import 'core/error/global_error_handler.dart';
 import 'core/router.dart';
@@ -12,6 +17,35 @@ import 'core/theme/theme_provider.dart';
 import 'package:soloforte_app/core/services/logger_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
+
+/// Inicializa o SQLite FFI para plataformas que necessitam (Web/Desktop).
+/// Para mobile (iOS/Android), o sqflite nativo é usado diretamente.
+///
+/// IMPORTANTE: Esta função DEVE ser await para garantir que o databaseFactory
+/// esteja completamente pronto antes de qualquer acesso ao banco.
+Future<void> _initializeSQLiteFFI() async {
+  if (kIsWeb) {
+    // Web: usa IndexedDB via FFI Web
+    databaseFactory = databaseFactoryFfiWeb;
+
+    // Aguarda um frame para garantir que o factory está completamente pronto
+    await Future.delayed(const Duration(milliseconds: 100));
+  } else {
+    // Desktop: verifica se é Windows, macOS ou Linux
+    final platform = defaultTargetPlatform;
+    if (platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux) {
+      // Desktop: usa SQLite FFI nativo
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+
+      // Aguarda um frame para garantir que o factory está completamente pronto
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    // Mobile (iOS/Android): não faz nada, sqflite nativo funciona diretamente
+  }
+}
 
 Future<void> main() async {
   // Run app with error zone protection - all initialization must be inside
@@ -25,12 +59,11 @@ Future<void> main() async {
       LoggerService.e('Error loading .env file', error: e, tag: 'INIT');
     }
 
-    /*
-    if (kIsWeb) {
-      // Initialize database factory for Web
-      databaseFactory = databaseFactoryFfiWeb;
-    }
-    */
+    // Initialize SQLite FFI for Web/Desktop platforms
+    await _initializeSQLiteFFI();
+
+    // Mark SQLite as ready for use (gate de bootstrap)
+    DatabaseBootstrap.markAsReady();
 
     // Initialize Firebase
     try {
@@ -66,13 +99,13 @@ class SoloForteApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final routerAsync = ref.watch(routerProvider);
-    final themeId = ref.watch(themeIdProvider);
+    final appTheme = ref.watch(appThemeProvider);
 
-    // Seleciona o tema baseado no ID
-    final theme = switch (themeId) {
-      'green' => AppTheme.green(),
-      'dark' => AppTheme.dark(),
-      _ => AppTheme.blue(), // default: blue
+    // Seleciona o tema baseado no enum AppTheme
+    final theme = switch (appTheme) {
+      AppTheme.avenue => AppThemeData.green(),
+      AppTheme.dark => AppThemeData.dark(),
+      AppTheme.cleanIOS => AppThemeData.blue(), // default: Clean iOS
     };
 
     return routerAsync.when(

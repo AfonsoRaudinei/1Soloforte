@@ -8,6 +8,7 @@ import 'package:soloforte_app/features/occurrences/domain/entities/occurrence.da
 import 'package:soloforte_app/features/occurrences/presentation/providers/occurrence_controller.dart';
 import 'package:soloforte_app/shared/widgets/app_card.dart';
 import 'package:soloforte_app/shared/widgets/custom_text_input.dart';
+import 'package:soloforte_app/shared/widgets/empty_state_widget.dart';
 
 class OccurrenceListView extends ConsumerStatefulWidget {
   const OccurrenceListView({super.key});
@@ -125,27 +126,13 @@ class _OccurrenceListViewState extends ConsumerState<OccurrenceListView> {
               }
 
               if (filteredList.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Nenhuma ocorrência encontrada',
-                        style: AppTypography.h3.copyWith(
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tente ajustar seus filtros ou crie uma nova ocorrência.',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: Colors.grey[500],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: EmptyStateWidget(
+                    title: 'Nenhuma ocorrência',
+                    message:
+                        'Ajuste os filtros ou registre um novo problema no campo.',
+                    icon: Icons.search_off,
                   ),
                 );
               }
@@ -168,26 +155,30 @@ class _OccurrenceListViewState extends ConsumerState<OccurrenceListView> {
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: AppColors.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Erro ao carregar ocorrências',
-                    style: AppTypography.bodyLarge,
-                  ),
-                  TextButton(
-                    onPressed: () => ref
-                        .read(occurrenceControllerProvider.notifier)
-                        .refresh(),
-                    child: const Text('Tentar Novamente'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: AppColors.error,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Não foi possível carregar as ocorrências.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    TextButton(
+                      onPressed: () => ref
+                          .read(occurrenceControllerProvider.notifier)
+                          .refresh(),
+                      child: const Text('Tentar Novamente'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -329,7 +320,9 @@ class _OccurrenceCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(occurrence.status).withValues(alpha: 0.1),
+                  color: _getStatusColor(
+                    occurrence.status,
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _getStatusColor(occurrence.status)),
                 ),

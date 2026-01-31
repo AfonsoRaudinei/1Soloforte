@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:soloforte_app/core/database/database_bootstrap.dart';
 
 /// Global test setup for SoloForte tests.
 ///
@@ -9,13 +9,27 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Initialize the test environment.
 /// Call this in setUpAll() of each test file that needs database access.
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 void setupTestEnvironment() {
-  // Initialize FFI for SQLite in tests
+  // Disable debug prints during tests
+  debugPrint = (String? message, {int? wrapWidth}) {};
+
+  // Initialize SQLite FFI for testing
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  // Disable debug prints during tests
-  debugPrint = (String? message, {int? wrapWidth}) {};
+  // Mock dotenv for testing environment
+  dotenv.testLoad(
+    fileInput: '''
+DEMO_EMAIL=demo@soloforte.com.br
+DEMO_PASSWORD=demo123
+''',
+  );
+
+  // Ensure DB bootstrap logic doesn't hang tests that don't do full app bootstrap
+  DatabaseBootstrap.markAsReady();
 }
 
 /// Reset the test environment.
