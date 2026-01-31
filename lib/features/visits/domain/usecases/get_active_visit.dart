@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../entities/visit.dart';
 import '../repositories/visit_repository.dart';
 import '../../data/repositories/visit_repository_impl.dart'; // Import provider

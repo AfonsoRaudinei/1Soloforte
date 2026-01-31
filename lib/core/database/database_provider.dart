@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soloforte_app/core/interfaces/service_interfaces.dart';
 import 'database_service.dart';
 import 'database_helper.dart';

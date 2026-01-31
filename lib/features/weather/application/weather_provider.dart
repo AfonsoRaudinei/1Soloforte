@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/weather_service.dart';
 import '../domain/weather_model.dart';
 import 'package:dio/dio.dart';

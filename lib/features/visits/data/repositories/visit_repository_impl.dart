@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/visit.dart';
 import '../../domain/repositories/visit_repository.dart';
 import '../data_sources/visit_local_data_source.dart';

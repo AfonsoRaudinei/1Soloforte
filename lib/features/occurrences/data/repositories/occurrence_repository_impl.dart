@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/occurrence.dart';
 import '../../domain/repositories/occurrence_repository.dart';
 import '../data_sources/occurrence_local_data_source.dart';
