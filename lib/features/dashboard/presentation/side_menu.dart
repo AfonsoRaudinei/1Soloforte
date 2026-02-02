@@ -101,6 +101,13 @@ class SideMenu extends ConsumerWidget {
                     onTap: () => context.go('/map/reports'),
                   ),
                   _DrawerItem(
+                    icon: Icons.compare_outlined,
+                    label: 'Comparativo de Produtos',
+                    isSelected: location.startsWith('/map/product-comparison'),
+                    isCompact: false,
+                    onTap: () => context.go('/map/product-comparison'),
+                  ),
+                  _DrawerItem(
                     icon: Icons.people_outline,
                     label: 'Clientes',
                     isSelected: location.startsWith('/map/clients'),

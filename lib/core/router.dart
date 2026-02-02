@@ -70,6 +70,7 @@ import '../features/support/presentation/help_center_screen.dart';
 import '../features/settings/presentation/customer_support_screen.dart';
 import '../features/settings/presentation/terms_of_use_screen.dart';
 import '../features/consultancy/communication/presentation/screens/system_documentation_screen.dart';
+import '../features/product_comparison/presentation/comparison_screen.dart';
 
 // Keys
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -172,6 +173,10 @@ final routerProvider = FutureProvider<GoRouter>((ref) async {
           GoRoute(
             path: '/map/reports',
             builder: (context, state) => const ReportsScreen(),
+          ),
+          GoRoute(
+            path: '/map/product-comparison',
+            builder: (context, state) => const ComparisonScreen(),
           ),
           GoRoute(
             path: '/map/clients',
